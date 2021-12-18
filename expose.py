@@ -1,7 +1,7 @@
 import json
 import logging
 from json import dump, load
-from os import environ, path, system
+from os import environ, path, system, getcwd
 from sys import stdout
 from time import perf_counter, sleep
 from urllib.request import urlopen
@@ -11,6 +11,7 @@ from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
+from route_53 import change_record_set
 
 disable_warnings(InsecureRequestWarning)  # Disable warnings for self-signed certificates
 
@@ -401,7 +402,7 @@ class VirtualMachine:
                     instance_info = self.ec2_resource.Instance(instance_id)
                     return instance_info.public_dns_name, instance_info.public_ip_address
 
-    def startup_vm(self, port: int = environ.get('PORT')) -> None:
+    def startup_tunnel(self, port: int = environ.get('PORT')) -> None:
         """Calls the class methods ``_create_ec2_instance`` and ``_instance_info`` to configure the VirtualMachine.
 
         Args:
@@ -446,9 +447,123 @@ class VirtualMachine:
         self.logger.info('Waiting for SSH origin to be active.')
         _sleeper(sleep_time=20)
 
-        # todo: continue configuration steps here
+        self._configure_vm(public_dns=public_dns, public_ip=public_ip, port=port)
 
-    def shutdown_vm(self) -> None:
+    def _configure_vm(self, public_dns: str, public_ip: str, port: int,
+                      domain_name: str = environ.get('DOMAIN'), subdomain: str = environ.get('SUBDOMAIN')):
+        """Configures the VirtualMachine to redirect traffic from localhost.
+
+        Args:
+            public_dns: Public DNS name of the EC2 that was created.
+            public_ip: Public IP of the EC2 that was created.
+            port: Port number on which the app/api is running.
+            domain_name: Name of the hosted zone in which an ``A`` record has to be added. [``example.com``]
+            subdomain: Subdomain using which the localhost has to be accessed. [``tunnel`` or ``tunnel.example.com``]
+        """
+        self.logger.info('Gathering pieces for configuration.')
+        custom_servers = f"{public_dns} {public_ip}"
+        endpoint = None
+        if domain_name and subdomain:
+            if subdomain.endswith(domain_name):
+                endpoint = subdomain
+                custom_servers += f' {subdomain}'
+            else:
+                endpoint = f'{subdomain}.{domain_name}'
+                custom_servers += f' {subdomain}.{domain_name}'
+
+        with open('server.conf') as file:
+            configuration = file.read()
+        configuration = configuration.replace('PERSONALIZATION', custom_servers)
+        with open('server.conf', 'w') as file:
+            file.write(configuration)
+
+        nginx_config = f"""osascript -e '
+tell application "Terminal"
+    delay 5
+    set currentTab to do script ("cd {getcwd()}")
+    set current settings of currentTab to settings set "Ocean"
+    delay 2
+    do script ("scp -i {self.key_name}.pem server.conf ubuntu@{public_dns}:/home/ubuntu/") in currentTab
+    delay 2
+    do script ("yes") in currentTab
+    delay 5
+    do script ("scp -i {self.key_name}.pem nginx.conf ubuntu@{public_dns}:/home/ubuntu/") in currentTab
+    delay 5
+    do script ("ssh -i VirtualMachine.pem ubuntu@{public_dns}") in currentTab
+    delay 10
+    do script ("sudo apt update")  in currentTab
+    delay 20
+    do script ("echo Y | sudo -S apt install nginx") in currentTab
+    delay 25
+    do script ("sudo mv /home/ubuntu/server.conf /etc/nginx/conf.d/server.conf") in currentTab
+    delay 5
+    do script ("sudo mv /home/ubuntu/nginx.conf /etc/nginx/nginx.conf") in currentTab
+    delay 5
+    do script ("sudo service nginx start") in currentTab
+    delay 5
+    do script ("logout") in currentTab
+    delay 2
+    do script ("exit") in currentTab
+end tell
+' > /dev/null 2>&1
+"""
+
+        start_tunnel = f"""osascript -e '
+tell application "Terminal"
+    delay 5
+    set currentTab to do script ("cd {getcwd()}")
+    set current settings of currentTab to settings set "Ocean"
+    delay 2
+    do script ("ssh -i {self.key_name}.pem -R 8080:localhost:{port} ubuntu@{public_dns}") in currentTab
+end tell
+' > /dev/null 2>&1
+"""
+
+        restart_server = f"""osascript -e '
+tell application "Terminal"
+    delay 5
+    set currentTab to do script ("cd {getcwd()}")
+    set current settings of currentTab to settings set "Ocean"
+    delay 2
+    do script ("ssh -i VirtualMachine.pem ubuntu@{public_dns}") in currentTab
+    delay 10
+    do script ("sudo service nginx stop") in currentTab
+    delay 3
+    do script ("sudo service nginx start") in currentTab
+    delay 3
+    do script ("logout") in currentTab
+    delay 2
+    do script ("exit") in currentTab
+end tell
+' > /dev/null 2>&1
+"""
+
+        self.logger.info(f'Configuring nginx server.')
+        config_status = system(nginx_config)
+        if config_status == 256:
+            self.logger.info(f'Failed to configure nginx server. Run the commands in {self.server_file} manually.')
+            return
+
+        self.logger.info('Nginx server was configured successfully.')
+        system('git checkout -- server.conf')
+
+        self.logger.info('Initiating tunnel')
+        tunnel_status = system(start_tunnel)
+        if tunnel_status == 256:
+            self.logger.info('Failed to start up tunnel. `ssh` manually and restart the nginx server.')
+            return
+
+        self.logger.info('Initiating restart')
+        restart_status = system(restart_server)
+        if restart_status == 256:
+            self.logger.info('Restart failed. Restart the server manually.')
+            return
+
+        if endpoint:
+            self.logger.info(f'Localhost can be accessed via http://{endpoint} [OR] http://{public_dns}')
+            change_record_set(dns_name=domain_name, source=subdomain, destination=public_ip, record_type='A')
+
+    def shutdown_tunnel(self) -> None:
         """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created.
 
         See Also:
@@ -469,7 +584,10 @@ class VirtualMachine:
                 else:
                     _sleeper(sleep_time=60)
             system(f'rm {self.server_file}')
+            if (domain_name := environ.get('DOMAIN')) and (subdomain := environ.get('SUBDOMAIN')):
+                change_record_set(dns_name=domain_name, source=subdomain, destination=data.get('public_ip'),
+                                  record_type='A', action='DELETE')
 
 
 if __name__ == '__main__':
-    VirtualMachine().startup_vm()
+    VirtualMachine().startup_tunnel()

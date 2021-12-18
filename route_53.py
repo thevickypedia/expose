@@ -37,7 +37,8 @@ def get_zone_id(dns: str = None) -> str or None:
         return
 
 
-def add_record_set(dns_name: str, source: str, destination: str, record_type: str) -> dict or None:
+def change_record_set(dns_name: str, source: str, destination: str, record_type: str,
+                      action: str = 'UPSERT') -> dict or None:
     """Adds a record set under an existing hosted zone.
 
     Args:
@@ -45,6 +46,7 @@ def add_record_set(dns_name: str, source: str, destination: str, record_type: st
         source: Source DNS name. Can be either ``subdomain.domain.com`` or just the ``subdomain``.
         destination: Destination hostnames or IP addresses.
         record_type: Type of the record to be added.
+        action: The action to perform.
 
     Returns:
         dict or None:
@@ -55,6 +57,13 @@ def add_record_set(dns_name: str, source: str, destination: str, record_type: st
         LOGGER.error('Unsupported record type passed.')
         LOGGER.warning(f"Should be one of {', '.join(sorted(supported_records))}")
         return
+
+    supported_actions = ['CREATE', 'DELETE', 'UPSERT']
+    if action not in supported_actions:
+        LOGGER.error('Unsupported action type passed.')
+        LOGGER.warning(f"Should be one of {', '.join(sorted(supported_actions))}")
+        return
+
     if not source.endswith(dns_name):
         source = f'{source}.{dns_name}'
     response = client.change_resource_record_sets(
@@ -63,7 +72,7 @@ def add_record_set(dns_name: str, source: str, destination: str, record_type: st
             'Comment': f'{record_type}: {source} -> {destination}',
             'Changes': [
                 {
-                    'Action': 'UPSERT',
+                    'Action': action,
                     'ResourceRecordSet': {
                         'Name': source,
                         'Type': record_type,
@@ -78,4 +87,4 @@ def add_record_set(dns_name: str, source: str, destination: str, record_type: st
         LOGGER.error(response)
         return
     LOGGER.info(response.get('ChangeInfo', {}).get('Comment'))
-    return response.get('ChangeInfo')
+    LOGGER.info(response.get('ChangeInfo'))
