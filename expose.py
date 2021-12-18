@@ -65,7 +65,7 @@ def get_public_ip() -> str:
         Returns the public IP address.
     """
     public_ip = json.load(urlopen('https://ipinfo.io/json')).get('ip') or \
-                json.loads(urlopen('http://ip.jsontest.com').read()).get('ip')
+        json.loads(urlopen('http://ip.jsontest.com').read()).get('ip')
     return public_ip
 
 
@@ -96,7 +96,12 @@ class VirtualMachine:
 
         # Logger setup
         self.logger = logging.getLogger(__name__)
+        formatter = logging.Formatter(
+            fmt='%(asctime)s - %(levelname)s - [%(module)s:%(lineno)d] - %(funcName)s - %(message)s',
+            datefmt='%b-%d-%Y %I:%M:%S %p'
+        )
         handler = logging.StreamHandler()
+        handler.setFormatter(fmt=formatter)
         handler.setLevel(level=logging.DEBUG)
         self.logger.addHandler(hdlr=handler)
         self.logger.setLevel(level=logging.DEBUG)
