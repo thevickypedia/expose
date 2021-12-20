@@ -1,6 +1,7 @@
 import logging
 
 import boto3
+from botocore.exceptions import ClientError
 
 LOGGER = logging.getLogger(__name__)
 handler = logging.StreamHandler()
@@ -13,7 +14,7 @@ LOGGER.setLevel(level=logging.DEBUG)
 client = boto3.client('route53')
 
 
-def get_zone_id(dns: str = None) -> str or None:
+def _get_zone_id(dns: str = None) -> str or None:
     """Gets the zone ID of a DNS name registered in route53.
 
     Args:
@@ -58,6 +59,7 @@ def change_record_set(dns_name: str, source: str, destination: str, record_type:
         LOGGER.warning(f"Should be one of {', '.join(sorted(supported_records))}")
         return
 
+    action = action.upper()
     supported_actions = ['CREATE', 'DELETE', 'UPSERT']
     if action not in supported_actions:
         LOGGER.error('Unsupported action type passed.')
@@ -66,23 +68,27 @@ def change_record_set(dns_name: str, source: str, destination: str, record_type:
 
     if not source.endswith(dns_name):
         source = f'{source}.{dns_name}'
-    response = client.change_resource_record_sets(
-        HostedZoneId=get_zone_id(dns=dns_name),
-        ChangeBatch={
-            'Comment': f'{record_type}: {source} -> {destination}',
-            'Changes': [
-                {
-                    'Action': action,
-                    'ResourceRecordSet': {
-                        'Name': source,
-                        'Type': record_type,
-                        'TTL': 300,
-                        'ResourceRecords': [{'Value': destination}],
-                    }
-                },
-            ]
-        }
-    )
+    try:
+        response = client.change_resource_record_sets(
+            HostedZoneId=_get_zone_id(dns=dns_name),
+            ChangeBatch={
+                'Comment': f'{record_type}: {source} -> {destination}',
+                'Changes': [
+                    {
+                        'Action': action,
+                        'ResourceRecordSet': {
+                            'Name': source,
+                            'Type': record_type,
+                            'TTL': 300,
+                            'ResourceRecords': [{'Value': destination}],
+                        }
+                    },
+                ]
+            }
+        )
+    except ClientError as error:
+        LOGGER.error(error)
+        return
     if response.get('ResponseMetadata', {}).get('HTTPStatusCode') != 200:
         LOGGER.error(response)
         return
