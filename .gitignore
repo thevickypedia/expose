@@ -10,3 +10,9 @@ venv
 
 # Cert file for accessing EC2
 *.pem
+
+# Sphinx
+_build
+
+# Test script
+test.py

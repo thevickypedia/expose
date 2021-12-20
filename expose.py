@@ -2,7 +2,6 @@ import json
 import logging
 from os import environ, path, system
 from time import perf_counter, sleep
-from urllib.request import urlopen
 
 from boto3 import client, resource
 from botocore.exceptions import ClientError
@@ -10,9 +9,9 @@ from dotenv import load_dotenv
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
-from helpers.nginx_server import run_interactive_ssh
+from helpers.auxiliary import get_public_ip, sleeper, time_converter
+from helpers.nginx_server import DATETIME_FORMAT, run_interactive_ssh
 from helpers.route_53 import change_record_set
-from helpers.sleeper import sleeper
 
 disable_warnings(InsecureRequestWarning)  # Disable warnings for self-signed certificates
 
@@ -20,44 +19,6 @@ if path.isfile('.env'):
     load_dotenv(dotenv_path='.env', verbose=True, override=True)
 
 HOME_DIR = path.expanduser('~')
-
-
-def time_converter(seconds: float) -> str:
-    """Modifies seconds to appropriate days/hours/minutes/seconds.
-
-    Args:
-        seconds: Takes number of seconds as argument.
-
-    Returns:
-        str:
-        Seconds converted to days or hours or minutes or seconds.
-    """
-    days = round(seconds // 86400)
-    seconds = round(seconds % (24 * 3600))
-    hours = round(seconds // 3600)
-    seconds %= 3600
-    minutes = round(seconds // 60)
-    seconds %= 60
-    if days:
-        return f'{days} days, {hours} hours, {minutes} minutes, and {seconds} seconds'
-    elif hours:
-        return f'{hours} hours, {minutes} minutes, and {seconds} seconds'
-    elif minutes:
-        return f'{minutes} minutes, and {seconds} seconds'
-    elif seconds:
-        return f'{seconds} seconds'
-
-
-def get_public_ip() -> str:
-    """Gets the public IP address from ``ipinfo.io`` or ``ip.jsontest.com``.
-
-    Returns:
-        str:
-        Returns the public IP address.
-    """
-    public_ip = json.load(urlopen('https://ipinfo.io/json')).get('ip') or \
-                json.loads(urlopen('http://ip.jsontest.com').read()).get('ip')
-    return public_ip
 
 
 class Tunnel:
@@ -89,7 +50,7 @@ class Tunnel:
         self.logger = logging.getLogger(__name__)
         formatter = logging.Formatter(
             fmt='%(asctime)s - %(levelname)s - [%(module)s:%(lineno)d] - %(funcName)s - %(message)s',
-            datefmt='%b-%d-%Y %I:%M:%S %p'
+            datefmt=DATETIME_FORMAT
         )
         handler = logging.StreamHandler()
         handler.setFormatter(fmt=formatter)
@@ -245,7 +206,7 @@ class Tunnel:
             self.logger.error('Failed to created the SecurityGroup')
 
     def _create_ec2_instance(self, image_id: str = environ.get('AMI_ID')) -> str or None:
-        """Creates an EC2 instance of type ``t2.micro`` with the pre-configured AMI id.
+        """Creates an EC2 instance of type ``t2.nano`` with the pre-configured AMI id.
 
         Args:
             image_id: Takes image ID as an argument. Defaults to ``ami_id`` in environment variable. Exits if `null`.
@@ -398,9 +359,8 @@ class Tunnel:
         Args:
             port: Port number where the application/API is running in localhost.
         """
-
         if path.isfile(self.server_file) and path.isfile(f'{self.key_name}.pem'):
-            self.logger.warning(f'Received request to start VM, but looks like a session is up and running already.')
+            self.logger.warning('Received request to start VM, but looks like a session is up and running already.')
             self.logger.warning('Initiating re-configuration.')
             sleeper(sleep_time=10)
             system('git checkout -- nginx-ssl.conf server.conf')
@@ -502,7 +462,7 @@ class Tunnel:
             return
         self.logger.info(f'Copied required files to {public_dns}')
 
-        self.logger.info(f'Configuring nginx server.')
+        self.logger.info('Configuring nginx server.')
         nginx_status = run_interactive_ssh(hostname=public_dns,
                                            pem_file=f'{self.key_name}.pem',
                                            commands={
