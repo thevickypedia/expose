@@ -1,8 +1,6 @@
 import json
 import logging
-from json import dump, load
-from os import environ, path, system, getcwd
-from sys import stdout
+from os import environ, path, system
 from time import perf_counter, sleep
 from urllib.request import urlopen
 
@@ -11,7 +9,10 @@ from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
-from route_53 import change_record_set
+
+from helpers.nginx_server import run_interactive_ssh
+from helpers.route_53 import change_record_set
+from helpers.sleeper import sleeper
 
 disable_warnings(InsecureRequestWarning)  # Disable warnings for self-signed certificates
 
@@ -47,19 +48,6 @@ def time_converter(seconds: float) -> str:
         return f'{seconds} seconds'
 
 
-def _sleeper(sleep_time: int) -> None:
-    """Sleeps for a particular duration and prints the remaining time in console output.
-
-    Args:
-        sleep_time: Takes the time script has to sleep, as an argument.
-    """
-    sleep(1)
-    for i in range(sleep_time):
-        stdout.write(f'\rRemaining: {sleep_time - i:0{len(str(sleep_time))}}s')
-        sleep(1)
-    stdout.write('\r')
-
-
 def get_public_ip() -> str:
     """Gets the public IP address from ``ipinfo.io`` or ``ip.jsontest.com``.
 
@@ -68,7 +56,7 @@ def get_public_ip() -> str:
         Returns the public IP address.
     """
     public_ip = json.load(urlopen('https://ipinfo.io/json')).get('ip') or \
-        json.loads(urlopen('http://ip.jsontest.com').read()).get('ip')
+                json.loads(urlopen('http://ip.jsontest.com').read()).get('ip')
     return public_ip
 
 
@@ -386,7 +374,7 @@ class VirtualMachine:
             A tuple object of Public DNS Name and Public IP Address.
         """
         self.logger.info('Waiting for the instance to go live.')
-        _sleeper(sleep_time=30)
+        sleeper(sleep_time=30)
         while True:
             sleep(3)
             try:
@@ -412,6 +400,13 @@ class VirtualMachine:
         """
         if path.isfile(self.server_file) and path.isfile(f'{self.key_name}.pem'):
             self.logger.warning(f'Received request to start VM, but looks like a session is up and running already.')
+            self.logger.warning('Initiating re-configuration.')
+            sleeper(sleep_time=10)
+            system('git checkout -- nginx-ssl.conf server.conf')
+            system('rm nginx.conf')
+            with open(self.server_file, 'r') as file:
+                data = json.load(file)
+            self._configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'), port=port)
             return
 
         if instance_basic := self._create_ec2_instance():
@@ -443,10 +438,10 @@ class VirtualMachine:
         system(f'chmod 400 {self.key_name}.pem')
 
         with open(self.server_file, 'w') as file:
-            dump(instance_info, file, indent=2)
+            json.dump(instance_info, file, indent=2)
 
         self.logger.info('Waiting for SSH origin to be active.')
-        _sleeper(sleep_time=20)
+        sleeper(sleep_time=20)
 
         self._configure_vm(public_dns=public_dns, public_ip=public_ip, port=port)
 
@@ -485,53 +480,6 @@ class VirtualMachine:
             file.truncate()
             file.write(ssl_conf)
 
-        nginx_config = f"""osascript -e '
-tell application "Terminal"
-    delay 5
-    set currentTab to do script ("cd {getcwd()}")
-    set current settings of currentTab to settings set "Ocean"
-    delay 2
-    do script ("ssh -i {self.key_name}.pem ubuntu@{public_dns}") in currentTab
-    delay 10
-    do script ("yes") in currentTab
-    delay 15
-    do script ("sudo apt-get update")  in currentTab
-    delay 20
-    do script ("echo Y | sudo -S apt install nginx") in currentTab
-    delay 25
-    do script ("sudo service nginx start") in currentTab
-    delay 5
-    do script ("logout") in currentTab
-    delay 2
-    do script ("exit") in currentTab
-end tell
-' > /dev/null 2>&1
-"""
-
-        start_tunnel = f"""osascript -e '
-tell application "Terminal"
-    delay 5
-    set currentTab to do script ("cd {getcwd()}")
-    set current settings of currentTab to settings set "Ocean"
-    delay 2
-    do script ("ssh -i {self.key_name}.pem -R 8080:localhost:{port} ubuntu@{public_dns}") in currentTab
-    delay 10
-    do script ("sudo mv /home/ubuntu/server.conf /etc/nginx/conf.d/server.conf") in currentTab
-    delay 5
-    do script ("sudo mv /home/ubuntu/nginx.conf /etc/nginx/nginx.conf") in currentTab
-    delay 5
-    do script ("sudo systemctl restart nginx") in currentTab
-    delay 2
-end tell
-' > /dev/null 2>&1
-"""
-
-        self.logger.info(f'Configuring nginx server.')
-        config_status = system(nginx_config)
-        if config_status == 256:
-            self.logger.info(f'Failed to configure nginx server. Run the commands in {self.server_file} manually.')
-            return
-
         copy_files = "server.conf nginx.conf"
         if path.isfile(f"{HOME_DIR}/.ssh/cert.pem") and path.isfile(f"{HOME_DIR}/.ssh/key.pem"):
             secured = True
@@ -545,29 +493,43 @@ end tell
             secured = False
             system("cp -p nginx-non-ssl.conf nginx.conf")
 
-        server_copy_status = system(f"scp -i {self.key_name}.pem {copy_files} ubuntu@{public_dns}:/home/ubuntu/")
+        server_copy_status = system(
+            f"scp -o StrictHostKeyChecking=no -i {self.key_name}.pem {copy_files} ubuntu@{public_dns}:/home/ubuntu/"
+        )
         if server_copy_status == 256:
             self.logger.error(f"Unable to copy configuration files to {public_dns}")
             return
-
         self.logger.info(f'Copied required files to {public_dns}')
-        self.logger.info('Nginx server was configured successfully.')
 
-        self.logger.info('Initiating tunnel')
-        tunnel_status = system(start_tunnel)
-        if tunnel_status == 256:
-            self.logger.error('Failed to start up tunnel. `ssh` manually and restart the nginx server.')
-            self.logger.warning(start_tunnel)
+        self.logger.info(f'Configuring nginx server.')
+        nginx_status = run_interactive_ssh(hostname=public_dns,
+                                           pem_file=f'{self.key_name}.pem',
+                                           commands={
+                                               "sudo apt-get update": 5,
+                                               "echo Y | sudo -S apt-get install nginx": 5,
+                                               "sudo mv /home/ubuntu/server.conf /etc/nginx/conf.d/server.conf": 1,
+                                               "sudo mv /home/ubuntu/nginx.conf /etc/nginx/nginx.conf": 1,
+                                               "sudo systemctl restart nginx": 2
+                                           })
+        if not nginx_status:
+            self.logger.error('Nginx server was not configured. Please configure manually.')
+            return
+
+        self.logger.info('Nginx server was configured successfully.')
+        system('git checkout -- nginx-ssl.conf server.conf')
+        system('rm nginx.conf')
 
         if endpoint:
             change_record_set(dns_name=domain_name, source=subdomain, destination=public_ip, record_type='A')
             if secured:
-                self.logger.info(f'Localhost can be accessed via https://{endpoint} [OR] https://{public_dns}')
+                self.logger.info(f'https://{endpoint} → http://localhost:{port}')
             else:
-                self.logger.info(f'Localhost can be accessed via http://{endpoint} [OR] http://{public_dns}')
+                self.logger.info(f'http://{endpoint} → http://localhost:{port}')
+        else:
+            self.logger.info(f'http://{public_dns} → http://localhost:{port}')
 
-        system('git checkout -- nginx-ssl.conf server.conf')
-        system('rm nginx.conf')
+        self.logger.info('Initiating tunnel')
+        system(f"ssh -o StrictHostKeyChecking=no -i {self.key_name}.pem -R 8080:localhost:{port} ubuntu@{public_dns}")
 
     def shutdown_tunnel(self) -> None:
         """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created.
@@ -580,7 +542,7 @@ end tell
             return
 
         with open(self.server_file, 'r') as file:
-            data = load(file)
+            data = json.load(file)
 
         if self._delete_key_pair() and self._terminate_ec2_instance(instance_id=data.get('instance_id')):
             self.logger.info('Waiting for dependent objects to delete SecurityGroup.')
@@ -588,7 +550,7 @@ end tell
                 if self._delete_security_group(security_group_id=data.get('security_group_id')):
                     break
                 else:
-                    _sleeper(sleep_time=60)
+                    sleeper(sleep_time=60)
             system(f'rm {self.server_file}')
             if (domain_name := environ.get('DOMAIN')) and (subdomain := environ.get('SUBDOMAIN')):
                 change_record_set(dns_name=domain_name, source=subdomain, destination=data.get('public_ip'),
