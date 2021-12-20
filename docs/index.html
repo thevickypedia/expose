@@ -57,11 +57,255 @@
 </ul>
 </div>
 </section>
-<section id="expose-main-module">
-<h1>Expose - Main Module<a class="headerlink" href="#expose-main-module" title="Permalink to this headline">¶</a></h1>
+<section id="module-expose">
+<span id="expose-main-module"></span><h1>Expose - Main Module<a class="headerlink" href="#module-expose" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="expose.Tunnel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">expose.</span></span><span class="sig-name descname"><span class="pre">Tunnel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aws_access_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_secret_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_region_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'us-west-2'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#expose.Tunnel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initiates <code class="docutils literal notranslate"><span class="pre">Tunnel</span></code> object to spin up an EC2 instance with a pre-configured AMI which acts as a tunnel.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Tunnel</span>
+</pre></div>
+</div>
+<p>Assigns a name to the PEM file, initiates the logger, client and resource for EC2 using <code class="docutils literal notranslate"><span class="pre">boto3</span></code> module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws_access_key</strong> – Access token for AWS account.</p></li>
+<li><p><strong>aws_secret_key</strong> – Secret ID for AWS account.</p></li>
+<li><p><strong>aws_region_name</strong> – Region where the instance should live. Defaults to <code class="docutils literal notranslate"><span class="pre">us-west-2</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p>If no values (for aws authentication) are passed during object initialization, script checks for env vars.</p></li>
+<li><p>If the environment variables are <code class="docutils literal notranslate"><span class="pre">null</span></code>, gets the default credentials from <code class="docutils literal notranslate"><span class="pre">~/.aws/credentials</span></code>.</p></li>
+</ul>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.Tunnel._create_key_pair">
+<span class="sig-name descname"><span class="pre">_create_key_pair</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.Tunnel._create_key_pair" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a <code class="docutils literal notranslate"><span class="pre">KeyPair</span></code> of type <code class="docutils literal notranslate"><span class="pre">RSA</span></code> stored as a <code class="docutils literal notranslate"><span class="pre">PEM</span></code> file to use with <code class="docutils literal notranslate"><span class="pre">OpenSSH</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Flag to indicate the calling function if a <code class="docutils literal notranslate"><span class="pre">KeyPair</span></code> was created.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.Tunnel._get_vpc_id">
+<span class="sig-name descname"><span class="pre">_get_vpc_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.Tunnel._get_vpc_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the default VPC id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Default VPC id.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.Tunnel._authorize_security_group">
+<span class="sig-name descname"><span class="pre">_authorize_security_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">security_group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_ip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.Tunnel._authorize_security_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Authorizes the security group for certain ingress list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>security_group_id</strong> – Takes the SecurityGroup ID as an argument.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Flag to indicate the calling function if or not the security group was authorized.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.Tunnel._create_security_group">
+<span class="sig-name descname"><span class="pre">_create_security_group</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.Tunnel._create_security_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls the class method <code class="docutils literal notranslate"><span class="pre">_get_vpc_id</span></code> and uses the VPC ID to create a <code class="docutils literal notranslate"><span class="pre">SecurityGroup</span></code> for the instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>SecurityGroup ID</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.Tunnel._create_ec2_instance">
+<span class="sig-name descname"><span class="pre">_create_ec2_instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.Tunnel._create_ec2_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an EC2 instance of type <code class="docutils literal notranslate"><span class="pre">t2.nano</span></code> with the pre-configured AMI id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image_id</strong> – Takes image ID as an argument. Defaults to <code class="docutils literal notranslate"><span class="pre">ami_id</span></code> in environment variable. Exits if <cite>null</cite>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Instance ID.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.Tunnel._delete_key_pair">
+<span class="sig-name descname"><span class="pre">_delete_key_pair</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.Tunnel._delete_key_pair" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes the <code class="docutils literal notranslate"><span class="pre">KeyPair</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Flag to indicate the calling function if the KeyPair was deleted.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.Tunnel._delete_security_group">
+<span class="sig-name descname"><span class="pre">_delete_security_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">security_group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.Tunnel._delete_security_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes the security group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>security_group_id</strong> – Takes the SecurityGroup ID as an argument.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Flag to indicate the calling function if or not the SecurityGroup was deleted.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.Tunnel._terminate_ec2_instance">
+<span class="sig-name descname"><span class="pre">_terminate_ec2_instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.Tunnel._terminate_ec2_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Terminates the requested instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance_id</strong> – Takes instance ID as an argument. Defaults to the instance that was created previously.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Flag to indicate the calling function if or not the instance was terminated.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.Tunnel._instance_info">
+<span class="sig-name descname"><span class="pre">_instance_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#expose.Tunnel._instance_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes a <code class="docutils literal notranslate"><span class="pre">describe_instance_status</span></code> API call to get the status of the instance that was created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance_id</strong> – Takes the instance ID as an argument.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A tuple object of Public DNS Name and Public IP Address.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.Tunnel.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#expose.Tunnel.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls the class methods <code class="docutils literal notranslate"><span class="pre">_create_ec2_instance</span></code> and <code class="docutils literal notranslate"><span class="pre">_instance_info</span></code> to configure the ec2 instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>port</strong> – Port number where the application/API is running in localhost.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.Tunnel._configure_vm">
+<span class="sig-name descname"><span class="pre">_configure_vm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">public_dns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_ip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdomain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#expose.Tunnel._configure_vm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configures the ec2 instance to take traffic from localhost.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>public_dns</strong> – Public DNS name of the EC2 that was created.</p></li>
+<li><p><strong>public_ip</strong> – Public IP of the EC2 that was created.</p></li>
+<li><p><strong>port</strong> – Port number on which the app/api is running.</p></li>
+<li><p><strong>domain_name</strong> – Name of the hosted zone in which an <code class="docutils literal notranslate"><span class="pre">A</span></code> record has to be added. [<code class="docutils literal notranslate"><span class="pre">example.com</span></code>]</p></li>
+<li><p><strong>subdomain</strong> – Subdomain using which the localhost has to be accessed. [<code class="docutils literal notranslate"><span class="pre">tunnel</span></code> or <code class="docutils literal notranslate"><span class="pre">tunnel.example.com</span></code>]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.Tunnel.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#expose.Tunnel.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disables tunnelling by terminating the <code class="docutils literal notranslate"><span class="pre">EC2</span></code> instance, <code class="docutils literal notranslate"><span class="pre">KeyPair</span></code>, and the <code class="docutils literal notranslate"><span class="pre">SecurityGroup</span></code> created.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>There is a minute delay to delete the SecurityGroup as it awaits instance termination. This may run twice.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="expose-configuration">
-<h1>Expose - Configuration<a class="headerlink" href="#expose-configuration" title="Permalink to this headline">¶</a></h1>
+<section id="module-helpers.nginx_server">
+<span id="expose-configuration"></span><h1>Expose - Configuration<a class="headerlink" href="#module-helpers.nginx_server" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="helpers.nginx_server.prefix">
+<span class="sig-prename descclassname"><span class="pre">helpers.nginx_server.</span></span><span class="sig-name descname"><span class="pre">prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'DEBUG'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#helpers.nginx_server.prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replicates the logging config to print colored statements accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>level</strong> – Takes the log level as an argument.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A well formatted prefix to be added before a print statement.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="helpers.nginx_server.run_interactive_ssh">
+<span class="sig-prename descclassname"><span class="pre">helpers.nginx_server.</span></span><span class="sig-name descname"><span class="pre">run_interactive_ssh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pem_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commands</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ubuntu'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#helpers.nginx_server.run_interactive_ssh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Authenticates remote server using a <code class="docutils literal notranslate"><span class="pre">*.pem</span></code> file and runs interactive ssh commands using <code class="docutils literal notranslate"><span class="pre">paramiko</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hostname</strong> – Hostname of the server to connect to.</p></li>
+<li><p><strong>pem_file</strong> – Takes the .pem filename to authenticate.</p></li>
+<li><p><strong>commands</strong> – Takes a dictionary of commands as keys and the post command idle time as the values.</p></li>
+<li><p><strong>username</strong> – Takes the username of the server to authenticate.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns a boolean flag if all commands were successful.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-helpers.route_53">
 <span id="expose-route53"></span><h1>Expose - Route53<a class="headerlink" href="#module-helpers.route_53" title="Permalink to this headline">¶</a></h1>
@@ -170,8 +414,8 @@
   <h3><a href="#">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Welcome to Expose’s documentation!</a></li>
-<li><a class="reference internal" href="#expose-main-module">Expose - Main Module</a></li>
-<li><a class="reference internal" href="#expose-configuration">Expose - Configuration</a></li>
+<li><a class="reference internal" href="#module-expose">Expose - Main Module</a></li>
+<li><a class="reference internal" href="#module-helpers.nginx_server">Expose - Configuration</a></li>
 <li><a class="reference internal" href="#module-helpers.route_53">Expose - Route53</a></li>
 <li><a class="reference internal" href="#module-helpers.auxiliary">Expose - Auxiliary</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>

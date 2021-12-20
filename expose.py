@@ -1,16 +1,18 @@
 import json
 import logging
-from os import environ, path, system
+from os import environ, getpid, path, system
 from time import perf_counter, sleep
 
 from boto3 import client, resource
 from botocore.exceptions import ClientError
+from click import argument, command, pass_context, secho
 from dotenv import load_dotenv
+from psutil import Process
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
 from helpers.auxiliary import get_public_ip, sleeper, time_converter
-from helpers.nginx_server import DATETIME_FORMAT, run_interactive_ssh
+from helpers.nginx_server import DATETIME_FORMAT, prefix, run_interactive_ssh
 from helpers.route_53 import change_record_set
 
 disable_warnings(InsecureRequestWarning)  # Disable warnings for self-signed certificates
@@ -518,5 +520,46 @@ class Tunnel:
                                   record_type='A', action='DELETE')
 
 
+@command()
+@pass_context
+@argument('initiator', required=False)
+@argument('port', required=False)
+def main(*args, initiator: str, port: int):
+    """Handles the CLI initiation.
+
+    Args:
+        *args: Context object of click. This will be ignored
+        initiator: Command to start or stop the tunneling. Options are: ``START`` or ``STOP``
+        port: Port number which should be tunnelled via nginx server running on EC2 instance.
+    """
+    run_env = Process(getpid()).parent().name()
+    if not run_env.endswith('sh'):
+        print(f"\033[31m{prefix(level='ERROR')}This is a CLI tool.\n\n"
+              f"Please use a terminal to run the script and pass the arg `start` or `stop`\033[00m")
+        exit(1)
+
+    if not initiator:
+        secho(message='Please pass the arg `start` or `stop`', fg='bright_red')
+        exit(1)
+    if initiator.upper() == 'START':
+        port = port or environ.get('PORT')
+        if not port:
+            secho(message=f'{prefix(level="ERROR")}Port number should be passed as `python expose.py start 2021`'
+                          f'or stored as an env var `export PORT=2021`.',
+                  fg='bright_red')
+        else:
+            secho(message=f'{prefix(level="INFO")}Initiating localhost tunneling on {port}.', fg='bright_green')
+            Tunnel().start(port=port)
+    elif initiator.upper() == 'STOP':
+        secho(message=f'{prefix(level="INFO")}Shutting down localhost tunneling.', fg='bright_yellow')
+        Tunnel().stop()
+    else:
+        secho(message='The allowed options are:\n\t'
+                      '1. python expose.py start\n\t'
+                      '2. python expose.py start [PORT_NUMBER]\n\t'
+                      '3. python expose.py stop',
+              fg='bright_red')
+
+
 if __name__ == '__main__':
-    Tunnel().start()
+    main()
