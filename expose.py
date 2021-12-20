@@ -60,10 +60,10 @@ def get_public_ip() -> str:
     return public_ip
 
 
-class VirtualMachine:
-    """Initiates ``VirtualMachine`` object to spin up an EC2 instance with a pre-configured AMI which acts as a tunnel.
+class Tunnel:
+    """Initiates ``Tunnel`` object to spin up an EC2 instance with a pre-configured AMI which acts as a tunnel.
 
-    >>> VirtualMachine
+    >>> Tunnel
 
     """
 
@@ -81,9 +81,9 @@ class VirtualMachine:
             - If the environment variables are ``null``, gets the default credentials from ``~/.aws/credentials``.
         """
         # Hard-coded certificate file name, server information file name, security group name
-        self.key_name = 'VirtualMachine'
+        self.key_name = 'Tunnel'
         self.server_file = 'server_info.json'
-        self.security_group_name = 'VirtualMachine Access Server'
+        self.security_group_name = 'Expose Localhost'
 
         # Logger setup
         self.logger = logging.getLogger(__name__)
@@ -392,12 +392,13 @@ class VirtualMachine:
                     instance_info = self.ec2_resource.Instance(instance_id)
                     return instance_info.public_dns_name, instance_info.public_ip_address
 
-    def startup_tunnel(self, port: int = environ.get('PORT')) -> None:
-        """Calls the class methods ``_create_ec2_instance`` and ``_instance_info`` to configure the VirtualMachine.
+    def start(self, port: int = environ.get('PORT')) -> None:
+        """Calls the class methods ``_create_ec2_instance`` and ``_instance_info`` to configure the ec2 instance.
 
         Args:
             port: Port number where the application/API is running in localhost.
         """
+
         if path.isfile(self.server_file) and path.isfile(f'{self.key_name}.pem'):
             self.logger.warning(f'Received request to start VM, but looks like a session is up and running already.')
             self.logger.warning('Initiating re-configuration.')
@@ -447,7 +448,7 @@ class VirtualMachine:
 
     def _configure_vm(self, public_dns: str, public_ip: str, port: int,
                       domain_name: str = environ.get('DOMAIN'), subdomain: str = environ.get('SUBDOMAIN')):
-        """Configures the VirtualMachine to redirect traffic from localhost.
+        """Configures the ec2 instance to take traffic from localhost.
 
         Args:
             public_dns: Public DNS name of the EC2 that was created.
@@ -505,8 +506,8 @@ class VirtualMachine:
         nginx_status = run_interactive_ssh(hostname=public_dns,
                                            pem_file=f'{self.key_name}.pem',
                                            commands={
-                                               "sudo apt-get update": 5,
-                                               "echo Y | sudo -S apt-get install nginx": 5,
+                                               "sudo apt-get update -y": 5,
+                                               "echo Y | sudo -S apt-get install nginx -y": 10,
                                                "sudo mv /home/ubuntu/server.conf /etc/nginx/conf.d/server.conf": 1,
                                                "sudo mv /home/ubuntu/nginx.conf /etc/nginx/nginx.conf": 1,
                                                "sudo systemctl restart nginx": 2
@@ -531,7 +532,7 @@ class VirtualMachine:
         self.logger.info('Initiating tunnel')
         system(f"ssh -o StrictHostKeyChecking=no -i {self.key_name}.pem -R 8080:localhost:{port} ubuntu@{public_dns}")
 
-    def shutdown_tunnel(self) -> None:
+    def stop(self) -> None:
         """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created.
 
         See Also:
@@ -558,4 +559,4 @@ class VirtualMachine:
 
 
 if __name__ == '__main__':
-    VirtualMachine().startup_tunnel()
+    Tunnel().start()
