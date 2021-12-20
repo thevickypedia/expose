@@ -21,6 +21,7 @@ if path.isfile('.env'):
     load_dotenv(dotenv_path='.env', verbose=True, override=True)
 
 HOME_DIR = path.expanduser('~')
+SEP = path.sep
 
 
 class Tunnel:
@@ -444,9 +445,9 @@ class Tunnel:
             file.write(ssl_conf)
 
         copy_files = "server.conf nginx.conf"
-        if path.isfile(f"{HOME_DIR}/.ssh/cert.pem") and path.isfile(f"{HOME_DIR}/.ssh/key.pem"):
+        if path.isfile(f"{HOME_DIR}{SEP}.ssh{SEP}") and path.isfile(f"{HOME_DIR}{SEP}.ssh{SEP}key.pem"):
             secured = True
-            copy_files += f" {HOME_DIR}/.ssh/cert.pem {HOME_DIR}/.ssh/key.pem options-ssl-nginx.conf"
+            copy_files += f" {HOME_DIR}{SEP}.ssh{SEP}cert.pem {HOME_DIR}{SEP}.ssh{SEP}key.pem options-ssl-nginx.conf"
             system("cp -p nginx-ssl.conf nginx.conf")
         elif path.isfile('cert.pem') and path.isfile('key.pem'):
             secured = True
