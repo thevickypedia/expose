@@ -18,6 +18,8 @@ disable_warnings(InsecureRequestWarning)  # Disable warnings for self-signed cer
 if path.isfile('.env'):
     load_dotenv(dotenv_path='.env', verbose=True, override=True)
 
+HOME_DIR = path.expanduser('~')
+
 
 def time_converter(seconds: float) -> str:
     """Modifies seconds to appropriate days/hours/minutes/seconds.
@@ -409,8 +411,7 @@ class VirtualMachine:
             port: Port number where the application/API is running in localhost.
         """
         if path.isfile(self.server_file) and path.isfile(f'{self.key_name}.pem'):
-            self.logger.warning(f'Received request to start VM, '
-                                f'but {self.server_file} and {self.key_name}.pem')
+            self.logger.warning(f'Received request to start VM, but looks like a session is up and running already.')
             return
 
         if instance_basic := self._create_ec2_instance():
@@ -462,6 +463,7 @@ class VirtualMachine:
         """
         self.logger.info('Gathering pieces for configuration.')
         custom_servers = f"{public_dns} {public_ip}"
+
         endpoint = None
         if domain_name and subdomain:
             if subdomain.endswith(domain_name):
@@ -471,11 +473,17 @@ class VirtualMachine:
                 endpoint = f'{subdomain}.{domain_name}'
                 custom_servers += f' {subdomain}.{domain_name}'
 
-        with open('server.conf') as file:
-            configuration = file.read()
-        configuration = configuration.replace('PERSONALIZATION', custom_servers)
-        with open('server.conf', 'w') as file:
-            file.write(configuration)
+        with open('server.conf', 'r+') as file:
+            server_conf = file.read().replace('SERVER_NAME_HERE', custom_servers)
+            file.seek(0)
+            file.truncate()
+            file.write(server_conf)
+
+        with open('nginx-ssl.conf', 'r+') as file:
+            ssl_conf = file.read().replace('SERVER_NAME_HERE', custom_servers)
+            file.seek(0)
+            file.truncate()
+            file.write(ssl_conf)
 
         nginx_config = f"""osascript -e '
 tell application "Terminal"
@@ -483,22 +491,14 @@ tell application "Terminal"
     set currentTab to do script ("cd {getcwd()}")
     set current settings of currentTab to settings set "Ocean"
     delay 2
-    do script ("scp -i {self.key_name}.pem server.conf ubuntu@{public_dns}:/home/ubuntu/") in currentTab
-    delay 2
-    do script ("yes") in currentTab
-    delay 5
-    do script ("scp -i {self.key_name}.pem nginx.conf ubuntu@{public_dns}:/home/ubuntu/") in currentTab
-    delay 5
-    do script ("ssh -i VirtualMachine.pem ubuntu@{public_dns}") in currentTab
+    do script ("ssh -i {self.key_name}.pem ubuntu@{public_dns}") in currentTab
     delay 10
-    do script ("sudo apt update")  in currentTab
+    do script ("yes") in currentTab
+    delay 15
+    do script ("sudo apt-get update")  in currentTab
     delay 20
     do script ("echo Y | sudo -S apt install nginx") in currentTab
     delay 25
-    do script ("sudo mv /home/ubuntu/server.conf /etc/nginx/conf.d/server.conf") in currentTab
-    delay 5
-    do script ("sudo mv /home/ubuntu/nginx.conf /etc/nginx/nginx.conf") in currentTab
-    delay 5
     do script ("sudo service nginx start") in currentTab
     delay 5
     do script ("logout") in currentTab
@@ -515,25 +515,13 @@ tell application "Terminal"
     set current settings of currentTab to settings set "Ocean"
     delay 2
     do script ("ssh -i {self.key_name}.pem -R 8080:localhost:{port} ubuntu@{public_dns}") in currentTab
-end tell
-' > /dev/null 2>&1
-"""
-
-        restart_server = f"""osascript -e '
-tell application "Terminal"
-    delay 5
-    set currentTab to do script ("cd {getcwd()}")
-    set current settings of currentTab to settings set "Ocean"
-    delay 2
-    do script ("ssh -i VirtualMachine.pem ubuntu@{public_dns}") in currentTab
     delay 10
-    do script ("sudo service nginx stop") in currentTab
-    delay 3
-    do script ("sudo service nginx start") in currentTab
-    delay 3
-    do script ("logout") in currentTab
+    do script ("sudo mv /home/ubuntu/server.conf /etc/nginx/conf.d/server.conf") in currentTab
+    delay 5
+    do script ("sudo mv /home/ubuntu/nginx.conf /etc/nginx/nginx.conf") in currentTab
+    delay 5
+    do script ("sudo systemctl restart nginx") in currentTab
     delay 2
-    do script ("exit") in currentTab
 end tell
 ' > /dev/null 2>&1
 """
@@ -544,24 +532,42 @@ end tell
             self.logger.info(f'Failed to configure nginx server. Run the commands in {self.server_file} manually.')
             return
 
+        copy_files = "server.conf nginx.conf"
+        if path.isfile(f"{HOME_DIR}/.ssh/cert.pem") and path.isfile(f"{HOME_DIR}/.ssh/key.pem"):
+            secured = True
+            copy_files += f" {HOME_DIR}/.ssh/cert.pem {HOME_DIR}/.ssh/key.pem options-ssl-nginx.conf"
+            system("cp -p nginx-ssl.conf nginx.conf")
+        elif path.isfile('cert.pem') and path.isfile('key.pem'):
+            secured = True
+            copy_files += " cert.pem key.pem options-ssl-nginx.conf"
+            system("cp -p nginx-ssl.conf nginx.conf")
+        else:
+            secured = False
+            system("cp -p nginx-non-ssl.conf nginx.conf")
+
+        server_copy_status = system(f"scp -i {self.key_name}.pem {copy_files} ubuntu@{public_dns}:/home/ubuntu/")
+        if server_copy_status == 256:
+            self.logger.error(f"Unable to copy configuration files to {public_dns}")
+            return
+
+        self.logger.info(f'Copied required files to {public_dns}')
         self.logger.info('Nginx server was configured successfully.')
-        system('git checkout -- server.conf')
 
         self.logger.info('Initiating tunnel')
         tunnel_status = system(start_tunnel)
         if tunnel_status == 256:
-            self.logger.info('Failed to start up tunnel. `ssh` manually and restart the nginx server.')
-            return
-
-        self.logger.info('Initiating restart')
-        restart_status = system(restart_server)
-        if restart_status == 256:
-            self.logger.info('Restart failed. Restart the server manually.')
-            return
+            self.logger.error('Failed to start up tunnel. `ssh` manually and restart the nginx server.')
+            self.logger.warning(start_tunnel)
 
         if endpoint:
-            self.logger.info(f'Localhost can be accessed via http://{endpoint} [OR] http://{public_dns}')
             change_record_set(dns_name=domain_name, source=subdomain, destination=public_ip, record_type='A')
+            if secured:
+                self.logger.info(f'Localhost can be accessed via https://{endpoint} [OR] https://{public_dns}')
+            else:
+                self.logger.info(f'Localhost can be accessed via http://{endpoint} [OR] http://{public_dns}')
+
+        system('git checkout -- nginx-ssl.conf server.conf')
+        system('rm nginx.conf')
 
     def shutdown_tunnel(self) -> None:
         """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created.
