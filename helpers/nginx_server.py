@@ -1,6 +1,5 @@
 from datetime import datetime
-from inspect import getframeinfo, stack
-from pathlib import PurePath
+from inspect import currentframe, getframeinfo, getouterframes, stack
 
 import paramiko
 
@@ -19,7 +18,8 @@ def prefix(level: str = 'DEBUG') -> str:
         str:
         A well formatted prefix to be added before a print statement.
     """
-    return f"{datetime.now().strftime(DATETIME_FORMAT)} - {level} - [{PurePath(__file__).stem}:" \
+    calling_file = getouterframes(currentframe(), 2)[1][1].split('/')[-1].rstrip('.py')
+    return f"{datetime.now().strftime(DATETIME_FORMAT)} - {level} - [{calling_file}:" \
            f"{getframeinfo(stack()[1][0]).lineno}] - {stack()[1].function} - "
 
 

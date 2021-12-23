@@ -18,6 +18,8 @@ Expose an app/api running on local host to public internet using AWS EC2
 
 The public DNS names for EC2 instances are long and messy. To avoid that, an `A` record can be added to the `route53` hosted zone.
 
+:warning: &nbsp; Requires an active hosted zone on `route53`.
+
 - **[Optional]** `DOMAIN`: If the domain name is registered using `route53`. *Example: `mywebsite.com`*
 - **[Optional]** `SUBDOMAIN`: Sub-domain that has to be added for the domain name. *Example: `tunnel.mywebsite.com`*
 
@@ -36,6 +38,10 @@ The public DNS names for EC2 instances are long and messy. To avoid that, an `A`
 
 Unfortunately not many SSL certificate providers give the liberty to download key files. But `expose`, can use private certificates.
 
+:warning: &nbsp; Some web browsers might throw a warning and some might even block a self-signed certificate/private CA.
+
+To generate a self-signed cert:
+
 > `openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout ~/.ssh/key.pem -out ~/.ssh/cert.pem`
 
 </details>
@@ -46,14 +52,14 @@ Startup tunneling:
 - `python expose.py start 2021`: Takes the port number as the second arg.
 - `python expose.py start`: Port number can also be stored as an env var `PORT`.
 
-Shutdown tunnel:
+Stop tunneling:
 `python expose.py stop`
 
 <details>
 <summary><strong>Troubleshooting</strong></summary>
 
 > If `E: Could not get lock /var/lib/dpkg/lock-frontend` occurs during startup, simply rerun the script with start command.
-> This occurs when `apt` hasn't released the resources yet.
+> This occurs when `apt` hasn't released the resources yet. Re-running the script with the arg `start` will simply re-configure the instance.
 
 </details>
 

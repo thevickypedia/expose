@@ -68,6 +68,7 @@ def change_record_set(dns_name: str, source: str, destination: str, record_type:
 
     if not source.endswith(dns_name):
         source = f'{source}.{dns_name}'
+    LOGGER.info(f'{action} `{record_type}` record::{source} -> {destination}')
     try:
         response = client.change_resource_record_sets(
             HostedZoneId=_get_zone_id(dns=dns_name),

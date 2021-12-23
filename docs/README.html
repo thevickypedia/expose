@@ -63,6 +63,7 @@
 <p>        :bulb:   Can also be passed as an arg. <em>Example: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">expose.py</span> <span class="pre">start</span> <span class="pre">2021</span></code></em></p>
 <details>
 <summary><strong>Setup a custom endpoint</strong></summary><p>The public DNS names for EC2 instances are long and messy. To avoid that, an <code class="docutils literal notranslate"><span class="pre">A</span></code> record can be added to the <code class="docutils literal notranslate"><span class="pre">route53</span></code> hosted zone.</p>
+<p>:warning:   Requires an active hosted zone on <code class="docutils literal notranslate"><span class="pre">route53</span></code>.</p>
 <ul class="simple">
 <li><p><strong>[Optional]</strong> <code class="docutils literal notranslate"><span class="pre">DOMAIN</span></code>: If the domain name is registered using <code class="docutils literal notranslate"><span class="pre">route53</span></code>. <em>Example: <code class="docutils literal notranslate"><span class="pre">mywebsite.com</span></code></em></p></li>
 <li><p><strong>[Optional]</strong> <code class="docutils literal notranslate"><span class="pre">SUBDOMAIN</span></code>: Sub-domain that has to be added for the domain name. <em>Example: <code class="docutils literal notranslate"><span class="pre">tunnel.mywebsite.com</span></code></em></p></li>
@@ -79,6 +80,8 @@
 </ul>
 <details>
 <summary><strong>Generate private SSL certificate</strong></summary><p>Unfortunately not many SSL certificate providers give the liberty to download key files. But <code class="docutils literal notranslate"><span class="pre">expose</span></code>, can use private certificates.</p>
+<p>:warning:   Some web browsers might throw a warning and some might even block a self-signed certificate/private CA.</p>
+<p>To generate a self-signed cert:</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">req</span> <span class="pre">-newkey</span> <span class="pre">rsa:2048</span> <span class="pre">-new</span> <span class="pre">-nodes</span> <span class="pre">-x509</span> <span class="pre">-days</span> <span class="pre">3650</span> <span class="pre">-keyout</span> <span class="pre">~/.ssh/key.pem</span> <span class="pre">-out</span> <span class="pre">~/.ssh/cert.pem</span></code></p>
 </div></blockquote>
@@ -90,12 +93,12 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">expose.py</span> <span class="pre">start</span> <span class="pre">2021</span></code>: Takes the port number as the second arg.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">expose.py</span> <span class="pre">start</span></code>: Port number can also be stored as an env var <code class="docutils literal notranslate"><span class="pre">PORT</span></code>.</p></li>
 </ul>
-<p>Shutdown tunnel:
+<p>Stop tunneling:
 <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">expose.py</span> <span class="pre">stop</span></code></p>
 <details>
 <summary><strong>Troubleshooting</strong></summary><blockquote>
 <div><p>If <code class="docutils literal notranslate"><span class="pre">E:</span> <span class="pre">Could</span> <span class="pre">not</span> <span class="pre">get</span> <span class="pre">lock</span> <span class="pre">/var/lib/dpkg/lock-frontend</span></code> occurs during startup, simply rerun the script with start command.
-This occurs when <code class="docutils literal notranslate"><span class="pre">apt</span></code> hasn’t released the resources yet.</p>
+This occurs when <code class="docutils literal notranslate"><span class="pre">apt</span></code> hasn’t released the resources yet. Re-running the script with the arg <code class="docutils literal notranslate"><span class="pre">start</span></code> will simply re-configure the instance.</p>
 </div></blockquote>
 </details></section>
 <section id="linting">
