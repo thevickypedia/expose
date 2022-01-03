@@ -131,7 +131,7 @@ class Tunnel:
 
         Returns:
             bool:
-            Flag to indicate the calling function if or not the security group was authorized.
+            Flag to indicate the calling function whether the security group was authorized.
         """
         try:
             response = self.ec2_client.authorize_security_group_ingress(
@@ -285,7 +285,7 @@ class Tunnel:
 
         Returns:
             bool:
-            Flag to indicate the calling function if or not the SecurityGroup was deleted.
+            Flag to indicate the calling function whether the SecurityGroup was deleted.
         """
         try:
             response = self.ec2_client.delete_security_group(
@@ -311,7 +311,7 @@ class Tunnel:
 
         Returns:
             bool:
-            Flag to indicate the calling function if or not the instance was terminated.
+            Flag to indicate the calling function whether the instance was terminated.
         """
         try:
             response = self.ec2_client.terminate_instances(
@@ -338,7 +338,7 @@ class Tunnel:
             A tuple object of Public DNS Name and Public IP Address.
         """
         self.logger.info('Waiting for the instance to go live.')
-        sleeper(sleep_time=30)
+        sleeper(sleep_time=15)
         while True:
             sleep(3)
             try:
@@ -405,7 +405,7 @@ class Tunnel:
             json.dump(instance_info, file, indent=2)
 
         self.logger.info('Waiting for SSH origin to be active.')
-        sleeper(sleep_time=20)
+        sleeper(sleep_time=15)
 
         self._configure_vm(public_dns=public_dns, public_ip=public_ip, port=port)
 
@@ -510,11 +510,12 @@ class Tunnel:
 
         if self._delete_key_pair() and self._terminate_ec2_instance(instance_id=data.get('instance_id')):
             self.logger.info('Waiting for dependent objects to delete SecurityGroup.')
+            sleeper(sleep_time=90)
             while True:
                 if self._delete_security_group(security_group_id=data.get('security_group_id')):
                     break
                 else:
-                    sleeper(sleep_time=60)
+                    sleeper(sleep_time=20)
             system(f'rm {self.server_file}')
             if (domain_name := environ.get('DOMAIN')) and (subdomain := environ.get('SUBDOMAIN')):
                 change_record_set(dns_name=domain_name, source=subdomain, destination=data.get('public_ip'),
@@ -540,7 +541,7 @@ def main(*args, initiator: str, port: int):
         exit(1)
 
     if not initiator:
-        secho(message='Please pass the arg `start` or `stop`', fg='bright_red')
+        secho(message='Please pass the arg `START` [OR] `STOP`', fg='bright_red')
         exit(1)
     if initiator.upper() == 'START':
         port = port or environ.get('PORT')
