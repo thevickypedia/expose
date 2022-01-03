@@ -2,7 +2,6 @@ from datetime import datetime
 from inspect import currentframe, getframeinfo, getouterframes, stack
 
 import paramiko
-
 from helpers.auxiliary import sleeper
 
 DATETIME_FORMAT = '%b-%d-%Y %I:%M:%S %p'

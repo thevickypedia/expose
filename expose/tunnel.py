@@ -7,13 +7,12 @@ from boto3 import client, resource
 from botocore.exceptions import ClientError
 from click import argument, command, pass_context, secho
 from dotenv import load_dotenv
-from psutil import Process
-from urllib3 import disable_warnings
-from urllib3.exceptions import InsecureRequestWarning
-
 from helpers.auxiliary import get_public_ip, sleeper, time_converter
 from helpers.nginx_server import DATETIME_FORMAT, prefix, run_interactive_ssh
 from helpers.route_53 import change_record_set
+from psutil import Process
+from urllib3 import disable_warnings
+from urllib3.exceptions import InsecureRequestWarning
 
 disable_warnings(InsecureRequestWarning)  # Disable warnings for self-signed certificates
 

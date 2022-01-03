@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+0.1.9 (01/03/2022)
+------------------
+- Add MANIFEST.in to include helpers directory
+- Rename tunnel.py to expose.py
+
 0.1.8 (01/03/2022)
 ------------------
 - Bump version
