@@ -1,0 +1,77 @@
+Change Log
+==========
+
+0.1.6 (01/03/2022)
+------------------
+- Create python-publish.yml
+
+0.1.5 (01/03/2022)
+------------------
+- Change wait times and typos
+
+0.1.4 (12/23/2021)
+------------------
+- Get name of the calling file gracefully
+- Log the action in route_53.py
+- Update README.md
+
+0.1.3 (12/20/2021)
+------------------
+- Update README.md
+- Get rid of hard coded / for path
+
+0.1.2 (12/20/2021)
+------------------
+- Make expose as a CLI tool
+
+0.1.1 (12/20/2021)
+------------------
+- Add lost changes on nginx_server.py
+
+0.1.0 (12/20/2021)
+------------------
+- Add sphinx auto-gen docs
+- Fix docstrings and module names
+
+0.0.9 (12/20/2021)
+------------------
+- Format print statements in config to logger type
+- Change some function names
+
+0.0.8 (12/20/2021)
+------------------
+- Use `paramiko` for interactive ssh setup
+
+0.0.7 (12/20/2021)
+------------------
+- Add boto3 error handling
+
+0.0.6 (12/19/2021)
+------------------
+- Enable `https` for the endpoints
+- Requires .pem files in .ssh or cwd
+
+0.0.5 (12/19/2021)
+------------------
+- Add config files for SSL to enable https on the endpoint serving the app/api
+
+0.0.4 (12/18/2021)
+------------------
+- Setup automatic configuration
+- Delete Route53 record when tunneling is to be closed
+- Onboard nginx.conf and server.conf
+
+0.0.3 (12/18/2021)
+------------------
+- Onboard a script to add DNS records to a hosted zone
+- Modify logger formatting
+
+0.0.2 (12/18/2021)
+------------------
+- Replicate EC2 creation part from vpn-server
+- Update .gitignore, LICENSE and README.md
+- Add requirements.txt and expose.py
+
+0.0.1 (12/18/2021)
+------------------
+- Initial commit
