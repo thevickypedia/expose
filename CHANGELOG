@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+0.2.0 (01/03/2022)
+------------------
+- Try using find_packages to include helpers directory
+- Update module name for docs
+
 0.1.9 (01/03/2022)
 ------------------
 - Add MANIFEST.in to include helpers directory
