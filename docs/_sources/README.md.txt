@@ -8,10 +8,15 @@ Expose an app/api running on local host to public internet using AWS EC2
 
 ### Setup
 #### Environment Variables:
-- `AMI_ID`: ID of any public AMI with an Ubuntu OS.
-- `PORT`: Port number on which a localhost `service/app/api` is running.
+If a `.env` file is present in current working directory, there is no need for env vars.
 
-&nbsp; &nbsp; &nbsp; &nbsp; :bulb: &nbsp; Can also be passed as an arg. *Example: `python expose.py start 2021`*
+- `PORT`: Port number on which a localhost `service/app/api` is running.
+- `AMI_ID`: ID of any public AMI with an Ubuntu OS.
+- `ACCESS_KEY`: **[Optional]** Access key to access AWS resources. Defaults to `~/.aws/credentials`
+- `SECRET_KEY`: **[Optional]** Secret key to access AWS resources. Defaults to `~/.aws/credentials`
+- `REGION_NAME`: **[Optional]** Region name where the instance should live. Defaults to `US-WEST-2`
+- `DOMAIN`: **[Optional]** Domain name on `route53`
+- `SUBDOMAIN`: **[Optional]** Sub domain name to be mapped on `route53`
 
 <details>
 <summary><strong>Setup a custom endpoint</strong></summary>
@@ -28,10 +33,10 @@ The public DNS names for EC2 instances are long and messy. To avoid that, an `A`
 </details>
 
 #### Certificate:
-- [`expose`](https://github.com/thevickypedia/expose) uses downloaded certs for SSL handshake.
 - Securing the tunnel requires the certificate chain and the key file.
 - These two files should be saved as `cert.pem` and `key.pem` in either `~.ssh/*.pem` or within `expose` repository.
-- No certs? No problem. [`expose`](https://github.com/thevickypedia/expose) still works without certificates. The `nginx` sever is configured accordingly.
+- No certs? No problem. [`expose`](https://github.com/thevickypedia/expose/blob/main/expose/helpers/cert.py) will 
+generate a self-signed certificate and a private key automatically.
 
 <details>
 <summary><strong>Generate private SSL certificate</strong></summary>
@@ -46,14 +51,33 @@ To generate a self-signed cert:
 
 </details>
 
-#### CLI commands
+#### Installation
+[`python3 -m pip install --upgrade expose-localhost`](https://pypi.org/project/expose-localhost/)
 
-Startup tunneling:
-- `python expose.py start 2021`: Takes the port number as the second arg.
-- `python expose.py start`: Port number can also be stored as an env var `PORT`.
+###### Start tunneling:
+```python
+from expose.tunnel import Tunnel
 
-Stop tunneling:
-`python expose.py stop`
+Tunnel().start()
+```
+
+###### Stop tunneling:
+```python
+from expose.tunnel import Tunnel
+
+Tunnel().stop()
+```
+
+###### Class Instantiation
+```python
+from expose.tunnel import Tunnel
+
+Tunnel(port=2021, image_id='ami-04406fdec0f245050',
+       domain_name='example.com', subdomain='expose',
+       aws_access_key='A1YSAIEPAJK1830AB1N',
+       aws_secret_key='e38409/afjeafjllvi19io90eskqn',
+       aws_region_name='us-east-2')
+```
 
 <details>
 <summary><strong>Troubleshooting</strong></summary>
@@ -71,6 +95,11 @@ Stop tunneling:
 
 #### Usage
 `pre-commit run --all-files`
+
+### Pypi Package
+[![pypi-module](https://img.shields.io/badge/Software%20Repository-pypi-1f425f.svg)](https://packaging.python.org/tutorials/packaging-projects/)
+
+[https://pypi.org/project/expose-localhost/](https://pypi.org/project/expose-localhost/)
 
 ### Runbook
 [![made-with-sphinx-doc](https://img.shields.io/badge/Code%20Docs-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/en/master/man/sphinx-autogen.html)

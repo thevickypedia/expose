@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
-from expose.helpers.auxiliary import sleeper, time_converter, DATETIME_FORMAT, prefix
+from expose.helpers.auxiliary import DATETIME_FORMAT, sleeper, time_converter
 from expose.helpers.cert import generate_cert, get_public_ip
 from expose.helpers.nginx_server import ServerConfig
 from expose.helpers.route_53 import change_record_set

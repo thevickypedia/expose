@@ -49,6 +49,7 @@
 <li class="toctree-l1"><a class="reference internal" href="README.html">Expose localhost using EC2</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="README.html#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#setup">Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="README.html#pypi-package">Pypi Package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#runbook">Runbook</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#license-copyright">License &amp; copyright</a></li>
 </ul>
@@ -60,7 +61,7 @@
 <span id="expose-main-module"></span><h1>Expose - Main Module<a class="headerlink" href="#module-tunnel" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="tunnel.Tunnel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tunnel.</span></span><span class="sig-name descname"><span class="pre">Tunnel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aws_access_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_secret_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_region_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'us-west-2'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdomain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tunnel.Tunnel" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tunnel.</span></span><span class="sig-name descname"><span class="pre">Tunnel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdomain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_access_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_secret_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_region_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'us-west-2'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tunnel.Tunnel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initiates <code class="docutils literal notranslate"><span class="pre">Tunnel</span></code> object to spin up an EC2 instance with a pre-configured AMI which acts as a tunnel.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Tunnel</span>
 </pre></div>
@@ -69,13 +70,13 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>port</strong> – Port number where the application/API is running in localhost.</p></li>
+<li><p><strong>image_id</strong> – Takes image ID as an argument. Defaults to <code class="docutils literal notranslate"><span class="pre">ami_id</span></code> in environment variable.</p></li>
+<li><p><strong>domain_name</strong> – Name of the hosted zone in which an <code class="docutils literal notranslate"><span class="pre">A</span></code> record has to be added. [<code class="docutils literal notranslate"><span class="pre">example.com</span></code>]</p></li>
+<li><p><strong>subdomain</strong> – Subdomain using which the localhost has to be accessed. [<code class="docutils literal notranslate"><span class="pre">tunnel</span></code> or <code class="docutils literal notranslate"><span class="pre">tunnel.example.com</span></code>]</p></li>
 <li><p><strong>aws_access_key</strong> – Access token for AWS account.</p></li>
 <li><p><strong>aws_secret_key</strong> – Secret ID for AWS account.</p></li>
 <li><p><strong>aws_region_name</strong> – Region where the instance should live. Defaults to <code class="docutils literal notranslate"><span class="pre">us-west-2</span></code></p></li>
-<li><p><strong>image_id</strong> – Takes image ID as an argument. Defaults to <code class="docutils literal notranslate"><span class="pre">ami_id</span></code> in environment variable.</p></li>
-<li><p><strong>port</strong> – Port number where the application/API is running in localhost.</p></li>
-<li><p><strong>domain_name</strong> – Name of the hosted zone in which an <code class="docutils literal notranslate"><span class="pre">A</span></code> record has to be added. [<code class="docutils literal notranslate"><span class="pre">example.com</span></code>]</p></li>
-<li><p><strong>subdomain</strong> – Subdomain using which the localhost has to be accessed. [<code class="docutils literal notranslate"><span class="pre">tunnel</span></code> or <code class="docutils literal notranslate"><span class="pre">tunnel.example.com</span></code>]</p></li>
 </ul>
 </dd>
 </dl>
@@ -255,23 +256,6 @@
 </section>
 <section id="module-helpers.nginx_server">
 <span id="expose-configuration"></span><h1>Expose - Configuration<a class="headerlink" href="#module-helpers.nginx_server" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="helpers.nginx_server.prefix">
-<span class="sig-prename descclassname"><span class="pre">helpers.nginx_server.</span></span><span class="sig-name descname"><span class="pre">prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'DEBUG'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#helpers.nginx_server.prefix" title="Permalink to this definition">¶</a></dt>
-<dd><p>Replicates the logging config to print colored statements accordingly.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>level</strong> – Takes the log level as an argument.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A well formatted prefix to be added before a print statement.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py class">
 <dt class="sig sig-object py" id="helpers.nginx_server.ServerConfig">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">helpers.nginx_server.</span></span><span class="sig-name descname"><span class="pre">ServerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pem_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ubuntu'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#helpers.nginx_server.ServerConfig" title="Permalink to this definition">¶</a></dt>
@@ -393,6 +377,23 @@
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="helpers.auxiliary.prefix">
+<span class="sig-prename descclassname"><span class="pre">helpers.auxiliary.</span></span><span class="sig-name descname"><span class="pre">prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'DEBUG'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#helpers.auxiliary.prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replicates the logging config to print colored statements accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>level</strong> – Takes the log level as an argument.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A well formatted prefix to be added before a print statement.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-helpers.cert">
 <span id="expose-certificates"></span><h1>Expose - Certificates<a class="headerlink" href="#module-helpers.cert" title="Permalink to this headline">¶</a></h1>
@@ -416,7 +417,10 @@
 <dd><p>Generates a serial number for the self-signed SSL.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
-<p>This function is not called, but it is here only as a just in case measure to insert serial number manually.</p>
+<ul class="simple">
+<li><p>This function is not called, but it is here only as a just in case measure to insert serial number manually.</p></li>
+<li><p>Serial Number is a unique identifier assigned by the CA which issued the certificate.</p></li>
+</ul>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -462,7 +466,6 @@
 <li><p><strong>state_or_province_name</strong> – Name of the state/province. Defaults to <code class="docutils literal notranslate"><span class="pre">New</span> <span class="pre">York</span></code></p></li>
 <li><p><strong>organization_name</strong> – Name of the organization. Defaults to <code class="docutils literal notranslate"><span class="pre">common_name</span></code></p></li>
 <li><p><strong>organization_unit_name</strong> – Name of the organization unit. Defaults to <code class="docutils literal notranslate"><span class="pre">Information</span> <span class="pre">Technology</span></code></p></li>
-<li><p><strong># serial_number</strong> – Unique identifier assigned by the CA which issued the certificate. Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
 <li><p><strong>validity_start_in_seconds</strong> – From when the cert validity begins. Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 <li><p><strong>validity_end_in_seconds</strong> – Expiration duration of the cert. Defaults to <code class="docutils literal notranslate"><span class="pre">10</span> <span class="pre">years</span></code></p></li>
 <li><p><strong>key_file</strong> – Name of the key file.</p></li>

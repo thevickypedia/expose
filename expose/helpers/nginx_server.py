@@ -1,7 +1,7 @@
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from scp import SCPClient
 
-from expose.helpers.auxiliary import sleeper, prefix
+from expose.helpers.auxiliary import prefix, sleeper
 
 
 class ServerConfig:

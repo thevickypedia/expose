@@ -32,7 +32,8 @@ def _get_serial() -> bytes:
     """Generates a serial number for the self-signed SSL.
 
     See Also:
-        This function is not called, but it is here only as a just in case measure to insert serial number manually.
+        - This function is not called, but it is here only as a just in case measure to insert serial number manually.
+        - Serial Number is a unique identifier assigned by the CA which issued the certificate.
 
     Returns:
         bytes:
@@ -77,7 +78,6 @@ def generate_cert(common_name: str,
         state_or_province_name: Name of the state/province. Defaults to ``New York``
         organization_name: Name of the organization. Defaults to ``common_name``
         organization_unit_name: Name of the organization unit. Defaults to ``Information Technology``
-        # serial_number: Unique identifier assigned by the CA which issued the certificate. Defaults to ``0``
         validity_start_in_seconds: From when the cert validity begins. Defaults to ``0``.
         validity_end_in_seconds: Expiration duration of the cert. Defaults to ``10 years``
         key_file: Name of the key file.

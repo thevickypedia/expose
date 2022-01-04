@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+0.2.9 (01/04/2022)
+------------------
+- Update docs and make isort happy
+
 0.2.8 (01/04/2022)
 ------------------
 - Move `prefix` function to auxiliary.py
