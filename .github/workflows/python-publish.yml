@@ -30,7 +30,7 @@ jobs:
         pip install setuptools wheel twine
     - name: Build and publish
       run: |
-        rm -rf build dist gmail_connector.egg-info
+        rm -rf build dist expose_localhost.egg-info
         python setup.py bdist_wheel --universal
         python setup.py sdist
         twine upload -r pypi --repository-url https://upload.pypi.org/legacy/ dist/* -u ${{ secrets.PYPI_USER }} -p ${{ secrets.PYPI_API_TOKEN }}
