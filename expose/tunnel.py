@@ -1,18 +1,18 @@
 import json
 import logging
-from os import environ, getpid, path, system
-from time import perf_counter, sleep
+from os import environ, path, system
+from time import perf_counter
 
+import requests
 from boto3 import client, resource
 from botocore.exceptions import ClientError
-from click import argument, command, pass_context, secho
 from dotenv import load_dotenv
-from helpers.auxiliary import get_public_ip, sleeper, time_converter
-from helpers.nginx_server import DATETIME_FORMAT, prefix, run_interactive_ssh
-from helpers.route_53 import change_record_set
-from psutil import Process
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
+
+from expose.helpers.auxiliary import get_public_ip, sleeper, time_converter
+from expose.helpers.nginx_server import DATETIME_FORMAT, run_interactive_ssh
+from expose.helpers.route_53 import change_record_set
 
 disable_warnings(InsecureRequestWarning)  # Disable warnings for self-signed certificates
 
@@ -21,6 +21,7 @@ if path.isfile('.env'):
 
 HOME_DIR = path.expanduser('~')
 SEP = path.sep
+CONFIGURATION_FILES = ['server.conf', 'nginx-ssl.conf', 'nginx-non-ssl.conf', 'options-ssl-nginx.conf']
 
 
 class Tunnel:
@@ -30,14 +31,25 @@ class Tunnel:
 
     """
 
-    def __init__(self, aws_access_key: str = environ.get('ACCESS_KEY'), aws_secret_key: str = environ.get('SECRET_KEY'),
-                 aws_region_name: str = environ.get('REGION_NAME', 'us-west-2')):
+    def __init__(self,
+                 aws_access_key: str = environ.get('ACCESS_KEY'),
+                 aws_secret_key: str = environ.get('SECRET_KEY'),
+                 aws_region_name: str = environ.get('REGION_NAME', 'us-west-2'),
+                 image_id: str = environ.get('AMI_ID'),
+                 port: int = environ.get('PORT'),
+                 domain_name: str = environ.get('DOMAIN'),
+                 subdomain: str = environ.get('SUBDOMAIN')
+                 ):
         """Assigns a name to the PEM file, initiates the logger, client and resource for EC2 using ``boto3`` module.
 
         Args:
             aws_access_key: Access token for AWS account.
             aws_secret_key: Secret ID for AWS account.
             aws_region_name: Region where the instance should live. Defaults to ``us-west-2``
+            image_id: Takes image ID as an argument. Defaults to ``ami_id`` in environment variable.
+            port: Port number where the application/API is running in localhost.
+            domain_name: Name of the hosted zone in which an ``A`` record has to be added. [``example.com``]
+            subdomain: Subdomain using which the localhost has to be accessed. [``tunnel`` or ``tunnel.example.com``]
 
         See Also:
             - If no values (for aws authentication) are passed during object initialization, script checks for env vars.
@@ -66,6 +78,12 @@ class Tunnel:
                                  aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
         self.ec2_resource = resource(service_name='ec2', region_name=aws_region_name,
                                      aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+
+        # Others
+        self.image_id = image_id
+        self.port = port
+        self.domain_name = domain_name
+        self.subdomain = subdomain
 
     def __del__(self):
         """Destructor to print the run time at the end."""
@@ -207,17 +225,14 @@ class Tunnel:
         else:
             self.logger.error('Failed to created the SecurityGroup')
 
-    def _create_ec2_instance(self, image_id: str = environ.get('AMI_ID')) -> str or None:
+    def _create_ec2_instance(self) -> str or None:
         """Creates an EC2 instance of type ``t2.nano`` with the pre-configured AMI id.
-
-        Args:
-            image_id: Takes image ID as an argument. Defaults to ``ami_id`` in environment variable. Exits if `null`.
 
         Returns:
             str or None:
             Instance ID.
         """
-        if not image_id:
+        if not self.image_id:
             self.logger.error('AMI is mandatory to spin up an EC2 instance. Received `null`')
             return
 
@@ -233,7 +248,7 @@ class Tunnel:
                 InstanceType="t2.nano",
                 MaxCount=1,
                 MinCount=1,
-                ImageId=image_id,
+                ImageId=self.image_id,
                 KeyName=self.key_name,
                 SecurityGroupIds=[security_group_id]
             )
@@ -337,9 +352,9 @@ class Tunnel:
             A tuple object of Public DNS Name and Public IP Address.
         """
         self.logger.info('Waiting for the instance to go live.')
-        sleeper(sleep_time=15)
+        sleeper(sleep_time=25)
         while True:
-            sleep(3)
+            sleeper(sleep_time=5)
             try:
                 response = self.ec2_client.describe_instance_status(
                     InstanceIds=[instance_id]
@@ -355,21 +370,15 @@ class Tunnel:
                     instance_info = self.ec2_resource.Instance(instance_id)
                     return instance_info.public_dns_name, instance_info.public_ip_address
 
-    def start(self, port: int = environ.get('PORT')) -> None:
-        """Calls the class methods ``_create_ec2_instance`` and ``_instance_info`` to configure the ec2 instance.
-
-        Args:
-            port: Port number where the application/API is running in localhost.
-        """
+    def start(self) -> None:
+        """Calls the class methods ``_create_ec2_instance`` and ``_instance_info`` to configure the ec2 instance."""
         if path.isfile(self.server_file) and path.isfile(f'{self.key_name}.pem'):
             self.logger.warning('Received request to start VM, but looks like a session is up and running already.')
             self.logger.warning('Initiating re-configuration.')
             sleeper(sleep_time=10)
-            system('git checkout -- nginx-ssl.conf server.conf')
-            system('rm nginx.conf')
             with open(self.server_file, 'r') as file:
                 data = json.load(file)
-            self._configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'), port=port)
+            self._configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'))
             return
 
         if instance_basic := self._create_ec2_instance():
@@ -394,7 +403,7 @@ class Tunnel:
             'public_ip': public_ip,
             'security_group_id': security_group_id,
             'ssh_endpoint': f'ssh -i {self.key_name}.pem ubuntu@{public_dns}',
-            'start_tunneling': f"ssh -i {self.key_name}.pem -R 8080:localhost:{port} ubuntu@{public_dns}"
+            'start_tunneling': f"ssh -i {self.key_name}.pem -R 8080:localhost:{self.port} ubuntu@{public_dns}"
         }
 
         self.logger.info(f'Restricting wide open permissions to {self.key_name}.pem')
@@ -406,45 +415,39 @@ class Tunnel:
         self.logger.info('Waiting for SSH origin to be active.')
         sleeper(sleep_time=15)
 
-        self._configure_vm(public_dns=public_dns, public_ip=public_ip, port=port)
+        self._configure_vm(public_dns=public_dns, public_ip=public_ip)
 
-    def _configure_vm(self, public_dns: str, public_ip: str, port: int,
-                      domain_name: str = environ.get('DOMAIN'), subdomain: str = environ.get('SUBDOMAIN')):
+    def _configure_vm(self, public_dns: str, public_ip: str):
         """Configures the ec2 instance to take traffic from localhost.
 
         Args:
             public_dns: Public DNS name of the EC2 that was created.
             public_ip: Public IP of the EC2 that was created.
-            port: Port number on which the app/api is running.
-            domain_name: Name of the hosted zone in which an ``A`` record has to be added. [``example.com``]
-            subdomain: Subdomain using which the localhost has to be accessed. [``tunnel`` or ``tunnel.example.com``]
         """
         self.logger.info('Gathering pieces for configuration.')
         custom_servers = f"{public_dns} {public_ip}"
 
         endpoint = None
-        if domain_name and subdomain:
-            if subdomain.endswith(domain_name):
-                endpoint = subdomain
-                custom_servers += f' {subdomain}'
+        if self.domain_name and self.subdomain:
+            if self.subdomain.endswith(self.domain_name):
+                endpoint = self.subdomain
+                custom_servers += f' {self.subdomain}'
             else:
-                endpoint = f'{subdomain}.{domain_name}'
-                custom_servers += f' {subdomain}.{domain_name}'
+                endpoint = f'{self.subdomain}.{self.domain_name}'
+                custom_servers += f' {self.subdomain}.{self.domain_name}'
 
-        with open('server.conf', 'r+') as file:
-            server_conf = file.read().replace('SERVER_NAME_HERE', custom_servers)
-            file.seek(0)
-            file.truncate()
-            file.write(server_conf)
-
-        with open('nginx-ssl.conf', 'r+') as file:
-            ssl_conf = file.read().replace('SERVER_NAME_HERE', custom_servers)
-            file.seek(0)
-            file.truncate()
-            file.write(ssl_conf)
+        for conf_file in CONFIGURATION_FILES:
+            self.logger.info(f'Downloading the configuration file: {conf_file}.')
+            conf_content = requests.get(
+                url=f'https://raw.githubusercontent.com/thevickypedia/expose/main/configuration/{conf_file}'
+            ).text
+            with open(conf_file, 'w') as file:
+                file.write(conf_content.replace('SERVER_NAME_HERE', custom_servers))
 
         copy_files = "server.conf nginx.conf"
-        if path.isfile(f"{HOME_DIR}{SEP}.ssh{SEP}") and path.isfile(f"{HOME_DIR}{SEP}.ssh{SEP}key.pem"):
+        if path.isdir(f"{HOME_DIR}{SEP}.ssh") and \
+                path.isfile(f"{HOME_DIR}{SEP}.ssh{SEP}key.pem") and \
+                path.isfile(f"{HOME_DIR}{SEP}.ssh{SEP}cert.pem"):
             secured = True
             copy_files += f" {HOME_DIR}{SEP}.ssh{SEP}cert.pem {HOME_DIR}{SEP}.ssh{SEP}key.pem options-ssl-nginx.conf"
             system("cp -p nginx-ssl.conf nginx.conf")
@@ -479,20 +482,21 @@ class Tunnel:
             return
 
         self.logger.info('Nginx server was configured successfully.')
-        system('git checkout -- nginx-ssl.conf server.conf')
-        system('rm nginx.conf')
+        system(f"rm {' '.join(CONFIGURATION_FILES)} nginx.conf")
 
         if endpoint:
-            change_record_set(dns_name=domain_name, source=subdomain, destination=public_ip, record_type='A')
+            change_record_set(dns_name=self.domain_name, source=self.subdomain, destination=public_ip, record_type='A')
             if secured:
-                self.logger.info(f'https://{endpoint} → http://localhost:{port}')
+                self.logger.info(f'https://{endpoint} → http://localhost:{self.port}')
             else:
-                self.logger.info(f'http://{endpoint} → http://localhost:{port}')
+                self.logger.info(f'http://{endpoint} → http://localhost:{self.port}')
         else:
-            self.logger.info(f'http://{public_dns} → http://localhost:{port}')
+            self.logger.info(f'http://{public_dns} → http://localhost:{self.port}')
 
         self.logger.info('Initiating tunnel')
-        system(f"ssh -o StrictHostKeyChecking=no -i {self.key_name}.pem -R 8080:localhost:{port} ubuntu@{public_dns}")
+        system(
+            f"ssh -o StrictHostKeyChecking=no -i {self.key_name}.pem -R 8080:localhost:{self.port} ubuntu@{public_dns}"
+        )
 
     def stop(self) -> None:
         """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created.
@@ -508,6 +512,9 @@ class Tunnel:
             data = json.load(file)
 
         if self._delete_key_pair() and self._terminate_ec2_instance(instance_id=data.get('instance_id')):
+            if (domain_name := self.domain_name) and (subdomain := self.subdomain):
+                change_record_set(dns_name=domain_name, source=subdomain, destination=data.get('public_ip'),
+                                  record_type='A', action='DELETE')
             self.logger.info('Waiting for dependent objects to delete SecurityGroup.')
             sleeper(sleep_time=90)
             while True:
@@ -516,51 +523,3 @@ class Tunnel:
                 else:
                     sleeper(sleep_time=20)
             system(f'rm {self.server_file}')
-            if (domain_name := environ.get('DOMAIN')) and (subdomain := environ.get('SUBDOMAIN')):
-                change_record_set(dns_name=domain_name, source=subdomain, destination=data.get('public_ip'),
-                                  record_type='A', action='DELETE')
-
-
-@command()
-@pass_context
-@argument('initiator', required=False)
-@argument('port', required=False)
-def main(*args, initiator: str, port: int):
-    """Handles the CLI initiation.
-
-    Args:
-        *args: Context object of click. This will be ignored
-        initiator: Command to start or stop the tunneling. Options are: ``START`` or ``STOP``
-        port: Port number which should be tunnelled via nginx server running on EC2 instance.
-    """
-    run_env = Process(getpid()).parent().name()
-    if not run_env.endswith('sh'):
-        print(f"\033[31m{prefix(level='ERROR')}This is a CLI tool.\n\n"
-              f"Please use a terminal to run the script and pass the arg `start` or `stop`\033[00m")
-        exit(1)
-
-    if not initiator:
-        secho(message='Please pass the arg `START` [OR] `STOP`', fg='bright_red')
-        exit(1)
-    if initiator.upper() == 'START':
-        port = port or environ.get('PORT')
-        if not port:
-            secho(message=f'{prefix(level="ERROR")}Port number should be passed as `python expose.py start 2021`'
-                          f'or stored as an env var `export PORT=2021`.',
-                  fg='bright_red')
-        else:
-            secho(message=f'{prefix(level="INFO")}Initiating localhost tunneling on {port}.', fg='bright_green')
-            Tunnel().start(port=port)
-    elif initiator.upper() == 'STOP':
-        secho(message=f'{prefix(level="INFO")}Shutting down localhost tunneling.', fg='bright_yellow')
-        Tunnel().stop()
-    else:
-        secho(message='The allowed options are:\n\t'
-                      '1. python expose.py start\n\t'
-                      '2. python expose.py start [PORT_NUMBER]\n\t'
-                      '3. python expose.py stop',
-              fg='bright_red')
-
-
-if __name__ == '__main__':
-    main()

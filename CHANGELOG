@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+0.2.6 (01/04/2022)
+------------------
+- Download configuration files from git during run time
+- Take all env vars as optional arguments during class initialization
+
+0.2.5 (01/04/2022)
+------------------
+- Move configuration files into a dedicated directory
+
 0.2.4 (01/03/2022)
 ------------------
 - Fix `requirements.txt` path in `setup.py`

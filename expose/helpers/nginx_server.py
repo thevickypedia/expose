@@ -1,8 +1,9 @@
 from datetime import datetime
 from inspect import currentframe, getframeinfo, getouterframes, stack
 
-import paramiko
-from helpers.auxiliary import sleeper
+from paramiko import AutoAddPolicy, RSAKey, SSHClient
+
+from expose.helpers.auxiliary import sleeper
 
 DATETIME_FORMAT = '%b-%d-%Y %I:%M:%S %p'
 
@@ -35,9 +36,9 @@ def run_interactive_ssh(hostname: str, pem_file: str, commands: dict, username: 
         bool:
         Returns a boolean flag if all commands were successful.
     """
-    pem_key = paramiko.RSAKey.from_private_key_file(filename=pem_file)
-    ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    pem_key = RSAKey.from_private_key_file(filename=pem_file)
+    ssh_client = SSHClient()
+    ssh_client.set_missing_host_key_policy(AutoAddPolicy())
     ssh_client.connect(hostname=hostname, username=username, pkey=pem_key)
 
     for command in commands:
