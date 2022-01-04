@@ -37,7 +37,7 @@ def dependencies() -> list:
     Returns:
         List of dependencies to be installed.
     """
-    requirement_file = dirname(realpath(__file__)) + f'{sep}requirements.txt'
+    requirement_file = dirname(realpath(__file__)) + f'{sep}expose{sep}requirements.txt'
     if isfile(requirement_file):
         with open(requirement_file) as requirements:
             install_requires = requirements.read().splitlines()

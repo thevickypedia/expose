@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+0.2.4 (01/03/2022)
+------------------
+- Fix `requirements.txt` path in `setup.py`
+
+0.2.3 (01/03/2022)
+------------------
+- Update python-publish.yml
+
 0.2.2 (01/03/2022)
 ------------------
 - Try using `package_data` to include helpers directory
