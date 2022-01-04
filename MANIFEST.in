@@ -1,4 +1,5 @@
 recursive-include expose *
+recursive-include helpers *
 recursive-exclude venv *
 recursive-exclude docs *
 recursive-exclude doc_generator *

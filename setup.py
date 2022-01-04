@@ -37,7 +37,7 @@ def dependencies() -> list:
     Returns:
         List of dependencies to be installed.
     """
-    requirement_file = dirname(realpath(__file__)) + f'{sep}expose{sep}requirements.txt'
+    requirement_file = dirname(realpath(__file__)) + f'{sep}requirements.txt'
     if isfile(requirement_file):
         with open(requirement_file) as requirements:
             install_requires = requirements.read().splitlines()
@@ -56,7 +56,9 @@ setup(
     classifiers=classifiers,
     keywords='route53, certificate, ec2, ngrok-alternative, tunnel',
     packages=['.expose'],
-    scripts=[f'expose{sep}tunnel.py', f'expose{sep}helpers{sep}auxiliary.py',
-             f'expose{sep}helpers{sep}nginx_server.py', f'expose{sep}helpers{sep}route_53.py'],
-    install_requires=dependencies()
+    install_requires=dependencies(),
+    package_data={
+        'expose': [f'helpers{sep}auxiliary.py', f'helpers{sep}nginx_server.py', f'helpers{sep}route_53.py'],
+    },
+    include_package_data=True
 )
