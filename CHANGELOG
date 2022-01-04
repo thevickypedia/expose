@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+0.2.7 (01/04/2022)
+------------------
+- Create SSL certificate by default
+- Use paramiko to perform server copy
+- Make application compatible as a perfect module
+
 0.2.6 (01/04/2022)
 ------------------
 - Download configuration files from git during run time

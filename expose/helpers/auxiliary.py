@@ -1,7 +1,5 @@
-import json
 import sys
 from time import sleep
-from urllib.request import urlopen
 
 
 def sleeper(sleep_time: int) -> None:
@@ -41,15 +39,3 @@ def time_converter(seconds: float) -> str:
         return f'{minutes} minutes, and {seconds} seconds'
     elif seconds:
         return f'{seconds} seconds'
-
-
-def get_public_ip() -> str:
-    """Gets the public IP address from ``ipinfo.io`` or ``ip.jsontest.com``.
-
-    Returns:
-        str:
-        Returns the public IP address.
-    """
-    public_ip = json.load(urlopen('https://ipinfo.io/json')).get('ip') or \
-        json.loads(urlopen('http://ip.jsontest.com').read()).get('ip')
-    return public_ip

@@ -19,14 +19,12 @@ Expose - Main Module
    :members:
    :undoc-members:
 
-
 Expose - Configuration
 ======================
 
 .. automodule:: helpers.nginx_server
    :members:
    :undoc-members:
-
 
 Expose - Route53
 ================
@@ -35,11 +33,17 @@ Expose - Route53
    :members:
    :undoc-members:
 
-
 Expose - Auxiliary
 ==================
 
 .. automodule:: helpers.auxiliary
+   :members:
+   :undoc-members:
+
+Expose - Certificates
+=====================
+
+.. automodule:: helpers.cert
    :members:
    :undoc-members:
 

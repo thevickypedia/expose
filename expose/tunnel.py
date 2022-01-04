@@ -1,6 +1,7 @@
 import json
 import logging
-from os import environ, path, system
+from os import environ, getcwd, path, remove, rename, system
+from subprocess import check_output
 from time import perf_counter
 
 import requests
@@ -10,8 +11,9 @@ from dotenv import load_dotenv
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
-from expose.helpers.auxiliary import get_public_ip, sleeper, time_converter
-from expose.helpers.nginx_server import DATETIME_FORMAT, run_interactive_ssh
+from expose.helpers.auxiliary import sleeper, time_converter
+from expose.helpers.cert import generate_cert, get_public_ip
+from expose.helpers.nginx_server import DATETIME_FORMAT, ServerConfig
 from expose.helpers.route_53 import change_record_set
 
 disable_warnings(InsecureRequestWarning)  # Disable warnings for self-signed certificates
@@ -19,9 +21,12 @@ disable_warnings(InsecureRequestWarning)  # Disable warnings for self-signed cer
 if path.isfile('.env'):
     load_dotenv(dotenv_path='.env', verbose=True, override=True)
 
-HOME_DIR = path.expanduser('~')
 SEP = path.sep
-CONFIGURATION_FILES = ['server.conf', 'nginx-ssl.conf', 'nginx-non-ssl.conf', 'options-ssl-nginx.conf']
+HOME_DIR = path.expanduser('~') + SEP
+CURRENT_DIR = getcwd() + SEP
+CONFIGURATION_FILES = [f'{CURRENT_DIR}server.conf', f'{CURRENT_DIR}nginx-ssl.conf',
+                       f'{CURRENT_DIR}nginx-non-ssl.conf', f'{CURRENT_DIR}options-ssl-nginx.conf']
+CONFIGURATION_LOCATION = 'https://raw.githubusercontent.com/thevickypedia/expose/main/configuration/'
 
 
 class Tunnel:
@@ -31,15 +36,13 @@ class Tunnel:
 
     """
 
-    def __init__(self,
-                 aws_access_key: str = environ.get('ACCESS_KEY'),
+    def __init__(self, aws_access_key: str = environ.get('ACCESS_KEY'),
                  aws_secret_key: str = environ.get('SECRET_KEY'),
                  aws_region_name: str = environ.get('REGION_NAME', 'us-west-2'),
                  image_id: str = environ.get('AMI_ID'),
                  port: int = environ.get('PORT'),
                  domain_name: str = environ.get('DOMAIN'),
-                 subdomain: str = environ.get('SUBDOMAIN')
-                 ):
+                 subdomain: str = environ.get('SUBDOMAIN')):
         """Assigns a name to the PEM file, initiates the logger, client and resource for EC2 using ``boto3`` module.
 
         Args:
@@ -286,7 +289,7 @@ class Tunnel:
             self.logger.info(f'{self.key_name} has been deleted from KeyPairs.')
             if path.exists(f'{self.key_name}.pem'):
                 system(f'chmod 700 {self.key_name}.pem')  # reset file permissions before deleting
-                system(f'rm {self.key_name}.pem')
+                remove(f'{self.key_name}.pem')
             return True
         else:
             self.logger.error(f'Failed to delete the key: {self.key_name}')
@@ -427,7 +430,7 @@ class Tunnel:
         self.logger.info('Gathering pieces for configuration.')
         custom_servers = f"{public_dns} {public_ip}"
 
-        endpoint = None
+        endpoint, email = None, None
         if self.domain_name and self.subdomain:
             if self.subdomain.endswith(self.domain_name):
                 endpoint = self.subdomain
@@ -435,63 +438,77 @@ class Tunnel:
             else:
                 endpoint = f'{self.subdomain}.{self.domain_name}'
                 custom_servers += f' {self.subdomain}.{self.domain_name}'
+            if git_email := check_output('git config user.email', shell=True):
+                email = git_email.decode('UTF-8').strip()
 
         for conf_file in CONFIGURATION_FILES:
-            self.logger.info(f'Downloading the configuration file: {conf_file}.')
-            conf_content = requests.get(
-                url=f'https://raw.githubusercontent.com/thevickypedia/expose/main/configuration/{conf_file}'
-            ).text
+            download_file = conf_file.removeprefix(CURRENT_DIR)
+            self.logger.info(f'Downloading the configuration file: {download_file}.')
+            response = requests.get(url=f'{CONFIGURATION_LOCATION}{download_file}')
+            if not response.ok:
+                raise ConnectionError(f'Failed to download the config file: {download_file}')
             with open(conf_file, 'w') as file:
-                file.write(conf_content.replace('SERVER_NAME_HERE', custom_servers))
+                file.write(response.text.replace('SERVER_NAME_HERE', custom_servers))
 
-        copy_files = "server.conf nginx.conf"
-        if path.isdir(f"{HOME_DIR}{SEP}.ssh") and \
-                path.isfile(f"{HOME_DIR}{SEP}.ssh{SEP}key.pem") and \
-                path.isfile(f"{HOME_DIR}{SEP}.ssh{SEP}cert.pem"):
+        copy_files = [f"{CURRENT_DIR}server.conf", f"{CURRENT_DIR}nginx.conf"]
+        if path.isdir(f"{HOME_DIR}.ssh") and \
+                path.isfile(f"{HOME_DIR}.ssh{SEP}key.pem") and \
+                path.isfile(f"{HOME_DIR}.ssh{SEP}cert.pem"):
+            self.logger.info(f'Found certificate and key in {HOME_DIR}')
             secured = True
-            copy_files += f" {HOME_DIR}{SEP}.ssh{SEP}cert.pem {HOME_DIR}{SEP}.ssh{SEP}key.pem options-ssl-nginx.conf"
-            system("cp -p nginx-ssl.conf nginx.conf")
-        elif path.isfile('cert.pem') and path.isfile('key.pem'):
+            copy_files.extend([f"{HOME_DIR}.ssh{SEP}cert.pem", f"{HOME_DIR}.ssh{SEP}key.pem",
+                              f"{CURRENT_DIR}options-ssl-nginx.conf"])
+            rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
+        elif path.isfile(f'{CURRENT_DIR}cert.pem') and path.isfile(f'{CURRENT_DIR}key.pem'):
+            self.logger.info(f'Found certificate and key in {path}')
             secured = True
-            copy_files += " cert.pem key.pem options-ssl-nginx.conf"
-            system("cp -p nginx-ssl.conf nginx.conf")
+            copy_files.extend([f"{CURRENT_DIR}cert.pem", f"{CURRENT_DIR}key.pem",
+                               f"{CURRENT_DIR}options-ssl-nginx.conf"])
+            rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
+        elif generate_cert(common_name=endpoint or public_dns, email_address=email):
+            self.logger.info('Generated self-signed SSL certificate and private key.')
+            secured = True
+            CONFIGURATION_FILES.extend([f'{CURRENT_DIR}cert.pem', f'{CURRENT_DIR}key.pem'])
+            copy_files.extend([f"{CURRENT_DIR}cert.pem", f"{CURRENT_DIR}key.pem",
+                               f"{CURRENT_DIR}options-ssl-nginx.conf"])
+            rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
         else:
+            self.logger.warning('Failed to generate self-signed SSL certificate and private key.')
             secured = False
-            system("cp -p nginx-non-ssl.conf nginx.conf")
+            rename(src=f"{CURRENT_DIR}nginx-non-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
 
-        server_copy_status = system(
-            f"scp -o StrictHostKeyChecking=no -i {self.key_name}.pem {copy_files} ubuntu@{public_dns}:/home/ubuntu/"
-        )
-        if server_copy_status == 256:
-            self.logger.error(f"Unable to copy configuration files to {public_dns}")
-            return
+        nginx_server = ServerConfig(hostname=public_dns, pem_file=f'{self.key_name}.pem')
+        nginx_server.server_copy(files=copy_files)
         self.logger.info(f'Copied required files to {public_dns}')
 
+        CONFIGURATION_FILES.extend([f'{CURRENT_DIR}nginx.conf'])
+        for file in CONFIGURATION_FILES:
+            if path.isfile(file):
+                self.logger.info(f'Removing {file}')
+                remove(file)
+
         self.logger.info('Configuring nginx server.')
-        nginx_status = run_interactive_ssh(hostname=public_dns,
-                                           pem_file=f'{self.key_name}.pem',
-                                           commands={
-                                               "sudo apt-get update -y": 5,
-                                               "echo Y | sudo -S apt-get install nginx -y": 10,
-                                               "sudo mv /home/ubuntu/server.conf /etc/nginx/conf.d/server.conf": 1,
-                                               "sudo mv /home/ubuntu/nginx.conf /etc/nginx/nginx.conf": 1,
-                                               "sudo systemctl restart nginx": 2
-                                           })
+        nginx_status = nginx_server.run_interactive_ssh(
+            commands={
+                "sudo apt-get update -y": 5,
+                "sudo apt-get upgrade -y": 5,
+                "echo Y | sudo -S apt-get install nginx -y": 10,
+                "sudo mv /home/ubuntu/server.conf /etc/nginx/conf.d/server.conf": 1,
+                "sudo mv /home/ubuntu/nginx.conf /etc/nginx/nginx.conf": 1,
+                "sudo systemctl restart nginx": 2
+            })
         if not nginx_status:
-            self.logger.error('Nginx server was not configured. Please configure manually.')
+            self.logger.error('Nginx server was not configured. Cleaning up AWS resources acquired.')
+            self.stop()
             return
 
         self.logger.info('Nginx server was configured successfully.')
-        system(f"rm {' '.join(CONFIGURATION_FILES)} nginx.conf")
-
+        protocol = 'https' if secured else 'http'
         if endpoint:
             change_record_set(dns_name=self.domain_name, source=self.subdomain, destination=public_ip, record_type='A')
-            if secured:
-                self.logger.info(f'https://{endpoint} → http://localhost:{self.port}')
-            else:
-                self.logger.info(f'http://{endpoint} → http://localhost:{self.port}')
+            self.logger.info(f'{protocol}://{endpoint} → http://localhost:{self.port}')
         else:
-            self.logger.info(f'http://{public_dns} → http://localhost:{self.port}')
+            self.logger.info(f'{protocol}://{public_dns} → http://localhost:{self.port}')
 
         self.logger.info('Initiating tunnel')
         system(
@@ -499,11 +516,7 @@ class Tunnel:
         )
 
     def stop(self) -> None:
-        """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created.
-
-        See Also:
-            There is a minute delay to delete the SecurityGroup as it awaits instance termination. This may run twice.
-        """
+        """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created."""
         if not path.exists(self.server_file):
             self.logger.info(f'Input file: {self.server_file} is missing. CANNOT proceed.')
             return
@@ -522,4 +535,4 @@ class Tunnel:
                     break
                 else:
                     sleeper(sleep_time=20)
-            system(f'rm {self.server_file}')
+            remove(self.server_file)
