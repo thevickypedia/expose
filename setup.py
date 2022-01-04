@@ -1,6 +1,6 @@
 from os.path import dirname, isfile, join, realpath, sep
 
-from setuptools import find_packages, setup
+from setuptools import setup
 
 from version import version_info
 
@@ -55,7 +55,7 @@ setup(
     License='MIT',
     classifiers=classifiers,
     keywords='route53, certificate, ec2, ngrok-alternative, tunnel',
-    packages=['.expose', find_packages],
+    packages=['.expose'],
     scripts=[f'expose{sep}tunnel.py', f'expose{sep}helpers{sep}auxiliary.py',
              f'expose{sep}helpers{sep}nginx_server.py', f'expose{sep}helpers{sep}route_53.py'],
     install_requires=dependencies()

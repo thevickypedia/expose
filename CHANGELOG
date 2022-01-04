@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+0.2.1 (01/03/2022)
+------------------
+- Remove find_packages
+
 0.2.0 (01/03/2022)
 ------------------
 - Try using find_packages to include helpers directory
