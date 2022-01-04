@@ -11,9 +11,9 @@ from dotenv import load_dotenv
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
-from expose.helpers.auxiliary import sleeper, time_converter
+from expose.helpers.auxiliary import sleeper, time_converter, DATETIME_FORMAT, prefix
 from expose.helpers.cert import generate_cert, get_public_ip
-from expose.helpers.nginx_server import DATETIME_FORMAT, ServerConfig
+from expose.helpers.nginx_server import ServerConfig
 from expose.helpers.route_53 import change_record_set
 
 disable_warnings(InsecureRequestWarning)  # Disable warnings for self-signed certificates
@@ -36,23 +36,23 @@ class Tunnel:
 
     """
 
-    def __init__(self, aws_access_key: str = environ.get('ACCESS_KEY'),
-                 aws_secret_key: str = environ.get('SECRET_KEY'),
-                 aws_region_name: str = environ.get('REGION_NAME', 'us-west-2'),
+    def __init__(self, port: int = environ.get('PORT'),
                  image_id: str = environ.get('AMI_ID'),
-                 port: int = environ.get('PORT'),
                  domain_name: str = environ.get('DOMAIN'),
-                 subdomain: str = environ.get('SUBDOMAIN')):
+                 subdomain: str = environ.get('SUBDOMAIN'),
+                 aws_access_key: str = environ.get('ACCESS_KEY'),
+                 aws_secret_key: str = environ.get('SECRET_KEY'),
+                 aws_region_name: str = environ.get('REGION_NAME', 'us-west-2')):
         """Assigns a name to the PEM file, initiates the logger, client and resource for EC2 using ``boto3`` module.
 
         Args:
+            port: Port number where the application/API is running in localhost.
+            image_id: Takes image ID as an argument. Defaults to ``ami_id`` in environment variable.
+            domain_name: Name of the hosted zone in which an ``A`` record has to be added. [``example.com``]
+            subdomain: Subdomain using which the localhost has to be accessed. [``tunnel`` or ``tunnel.example.com``]
             aws_access_key: Access token for AWS account.
             aws_secret_key: Secret ID for AWS account.
             aws_region_name: Region where the instance should live. Defaults to ``us-west-2``
-            image_id: Takes image ID as an argument. Defaults to ``ami_id`` in environment variable.
-            port: Port number where the application/API is running in localhost.
-            domain_name: Name of the hosted zone in which an ``A`` record has to be added. [``example.com``]
-            subdomain: Subdomain using which the localhost has to be accessed. [``tunnel`` or ``tunnel.example.com``]
 
         See Also:
             - If no values (for aws authentication) are passed during object initialization, script checks for env vars.

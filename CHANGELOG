@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+0.2.8 (01/04/2022)
+------------------
+- Move `prefix` function to auxiliary.py
+- Re-arrange args
+- Update README.md and requirements.txt
+
 0.2.7 (01/04/2022)
 ------------------
 - Create SSL certificate by default

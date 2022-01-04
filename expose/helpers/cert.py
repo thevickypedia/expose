@@ -18,6 +18,7 @@ def get_public_ip() -> str:
         str:
         Returns the public IP address.
     """
+    # noinspection HttpUrlsUsage
     if data := (json.load(urlopen('http://ipinfo.io/json')) or json.load(urlopen('http://ip.jsontest.com'))):
         CERTIFICATE_INFO.update({
             "city": data.get('city'),
