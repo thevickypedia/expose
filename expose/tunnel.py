@@ -13,6 +13,7 @@ from urllib3.exceptions import InsecureRequestWarning
 
 from expose.helpers.auxiliary import DATETIME_FORMAT, sleeper, time_converter
 from expose.helpers.cert import generate_cert, get_public_ip
+from expose.helpers.defaults import AWSDefaults
 from expose.helpers.nginx_server import ServerConfig
 from expose.helpers.route_53 import change_record_set
 
@@ -78,16 +79,15 @@ class Tunnel:
         self.logger.setLevel(level=logging.DEBUG)
 
         # AWS client and resource setup
-        self.region = aws_region_name
+        self.region = aws_region_name.lower()
+        if not AWSDefaults.REGIONS.get(aws_region_name):
+            raise ValueError(f'Incorrect region name. {aws_region_name} does not exist.')
         self.ec2_client = client(service_name='ec2', region_name=aws_region_name,
                                  aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
         self.ec2_resource = resource(service_name='ec2', region_name=aws_region_name,
                                      aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
 
         # Tunnelling requirements setup
-        if not image_id and aws_region_name == 'us-west-2':
-            self.logger.warning(f'Since AMI_ID was `null` using the default image for {aws_region_name} region.')
-            image_id = 'ami-06e20d17437157772'
         self.image_id = image_id
         self.port = port
         self.domain_name = domain_name
@@ -98,6 +98,27 @@ class Tunnel:
     def __del__(self):
         """Destructor to print the run time at the end."""
         self.logger.info(f'Total runtime: {time_converter(perf_counter())}')
+
+    def _get_image_id(self) -> None:
+        """Fetches AMI ID from public images."""
+        if self.region.startswith('us'):
+            self.image_id = AWSDefaults.IMAGE_MAP[self.region]
+            return
+
+        try:
+            images = self.ec2_client.describe_images(Filters=[
+                {
+                    'Name': 'name',
+                    'Values': [AWSDefaults.DEFAULT_AMI_NAME]
+                },
+            ])
+        except ClientError as error:
+            self.logger.error(f'API call to retrieve AMI ID for {self.region} has failed.\n{error}')
+            raise
+
+        if not (retrieved := images.get('Images', [{}])[0].get('ImageId')):
+            raise LookupError(f'Failed to retrieve AMI ID for {self.region}. Set one manually.')
+        self.image_id = retrieved
 
     def _create_key_pair(self) -> bool:
         """Creates a ``KeyPair`` of type ``RSA`` stored as a ``PEM`` file to use with ``OpenSSH``.
@@ -376,22 +397,7 @@ class Tunnel:
                     instance_info = self.ec2_resource.Instance(instance_id)
                     return instance_info.public_dns_name, instance_info.public_ip_address
 
-    def mandatory_args(self) -> bool:
-        """Checks for the mandatory arguments/env vars.
-
-        Returns:
-            bool:
-            A boolean flag to indicate whether the necessary args are present before startup.
-        """
-        if self.image_id and self.port:
-            return True
-        if not self.image_id:
-            self.logger.error('AMI is mandatory to spin up an EC2 instance. Received `null`')
-        if not self.port:
-            self.logger.error('Port number is mandatory to initiate tunneling. Received `null`')
-        return False
-
-    def optional_args(self) -> bool:
+    def _optional_args(self) -> bool:
         """Checks for the optional arguments/env vars.
 
         Returns:
@@ -413,12 +419,20 @@ class Tunnel:
             self._configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'))
             return
 
-        if not self.mandatory_args():
+        if not self.port:
+            self.logger.error('Port number is mandatory to initiate tunneling. Received `null`')
             self.logger.error('Check https://github.com/thevickypedia/expose#environment-variables for more information'
                               ' on setting up env vars.')
             return
 
-        if not self.optional_args():
+        if not self.image_id:
+            self._get_image_id()
+            self.logger.warning(f"AMI ID was not set."
+                                f"Using the default AMI ID {self.image_id} for the region {self.region}")
+            print(self.image_id)
+            return
+
+        if not self._optional_args():
             self.logger.warning('DOMAIN, SUBDOMAIN, EMAIL and ORG gives a customized access to the tunnel.')
 
         if instance_basic := self._create_ec2_instance():
@@ -494,7 +508,7 @@ class Tunnel:
             self.logger.info(f'Found certificate and key in {HOME_DIR}')
             secured = True
             copy_files.extend([f"{HOME_DIR}.ssh{SEP}cert.pem", f"{HOME_DIR}.ssh{SEP}key.pem",
-                              f"{CURRENT_DIR}options-ssl-nginx.conf"])
+                               f"{CURRENT_DIR}options-ssl-nginx.conf"])
             rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
         elif path.isfile(f'{CURRENT_DIR}cert.pem') and path.isfile(f'{CURRENT_DIR}key.pem'):
             self.logger.info(f'Found certificate and key in {path}')

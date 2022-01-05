@@ -11,11 +11,11 @@ Expose an app/api running on local host to public internet using AWS EC2
 If a `.env` file is present (with the required variables) in current working directory, there is no need for env vars,
 as [`expose`](https://github.com/thevickypedia/expose) loads `.env` files during start up.
 
-**Mandatory Args:**
+**Mandatory Arg:**
 - `PORT`: Port number on which a localhost `service/app/api` is running.
-- `AMI_ID`: ID of any public AMI with an Ubuntu OS. Defaults to `ami-06e20d17437157772` if the region is `us-west-2`
 
 **Optional Args:**
+- `AMI_ID`: ID of any public AMI with an Ubuntu OS. Defaults to a region specific image ID.
 - `ACCESS_KEY`: Access key to access AWS resources. Defaults to `~/.aws/config`
 - `SECRET_KEY`: Secret key to access AWS resources. Defaults to `~/.aws/config`
 - `REGION_NAME`: Region name where the instance should live. Defaults to `US-WEST-2`

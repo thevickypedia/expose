@@ -47,6 +47,13 @@ Expose - Certificates
    :members:
    :undoc-members:
 
+Expose - AWS Defaults
+=====================
+
+.. automodule:: helpers.defaults
+   :members:
+   :undoc-members:
+   :exclude-members: DEFAULT_AMI_NAME, IMAGE_MAP, REGIONS
 
 Indices and tables
 ==================

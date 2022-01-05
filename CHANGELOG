@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+0.3.2 (01/05/2022)
+------------------
+- Remove `AMI_ID` from mandatory args
+- Retrieve AMI_ID automatically
+- Setup AWS defaults
+
 0.3.1 (01/05/2022)
 ------------------
 - Check `env vars`/`args` before startup
