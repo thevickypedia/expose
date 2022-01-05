@@ -84,7 +84,10 @@ class Tunnel:
         self.ec2_resource = resource(service_name='ec2', region_name=aws_region_name,
                                      aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
 
-        # Others
+        # Tunnelling requirements setup
+        if not image_id and aws_region_name == 'us-west-2':
+            self.logger.warning(f'Since AMI_ID was `null` using the default image for {aws_region_name} region.')
+            image_id = 'ami-06e20d17437157772'
         self.image_id = image_id
         self.port = port
         self.domain_name = domain_name
@@ -239,10 +242,6 @@ class Tunnel:
             str or None:
             Instance ID.
         """
-        if not self.image_id:
-            self.logger.error('AMI is mandatory to spin up an EC2 instance. Received `null`')
-            return
-
         if not self._create_key_pair():
             return
 
@@ -377,6 +376,32 @@ class Tunnel:
                     instance_info = self.ec2_resource.Instance(instance_id)
                     return instance_info.public_dns_name, instance_info.public_ip_address
 
+    def mandatory_args(self) -> bool:
+        """Checks for the mandatory arguments/env vars.
+
+        Returns:
+            bool:
+            A boolean flag to indicate whether the necessary args are present before startup.
+        """
+        if self.image_id and self.port:
+            return True
+        if not self.image_id:
+            self.logger.error('AMI is mandatory to spin up an EC2 instance. Received `null`')
+        if not self.port:
+            self.logger.error('Port number is mandatory to initiate tunneling. Received `null`')
+        return False
+
+    def optional_args(self) -> bool:
+        """Checks for the optional arguments/env vars.
+
+        Returns:
+            bool:
+            A boolean flag to indicate whether the necessary args are present before startup.
+        """
+        if not any([self.domain_name, self.subdomain, self.email_address, self.organization]):
+            return False
+        return True
+
     def start(self) -> None:
         """Calls the class methods ``_create_ec2_instance`` and ``_instance_info`` to configure the ec2 instance."""
         if path.isfile(self.server_file) and path.isfile(f'{self.key_name}.pem'):
@@ -387,6 +412,14 @@ class Tunnel:
                 data = json.load(file)
             self._configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'))
             return
+
+        if not self.mandatory_args():
+            self.logger.error('Check https://github.com/thevickypedia/expose#environment-variables for more information'
+                              ' on setting up env vars.')
+            return
+
+        if not self.optional_args():
+            self.logger.warning('DOMAIN, SUBDOMAIN, EMAIL and ORG gives a customized access to the tunnel.')
 
         if instance_basic := self._create_ec2_instance():
             instance_id, security_group_id = instance_basic

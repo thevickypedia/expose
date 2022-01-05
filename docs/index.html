@@ -226,6 +226,34 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="tunnel.Tunnel.mandatory_args">
+<span class="sig-name descname"><span class="pre">mandatory_args</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#tunnel.Tunnel.mandatory_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks for the mandatory arguments/env vars.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A boolean flag to indicate whether the necessary args are present before startup.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tunnel.Tunnel.optional_args">
+<span class="sig-name descname"><span class="pre">optional_args</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#tunnel.Tunnel.optional_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks for the optional arguments/env vars.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A boolean flag to indicate whether the necessary args are present before startup.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="tunnel.Tunnel.start">
 <span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#tunnel.Tunnel.start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calls the class methods <code class="docutils literal notranslate"><span class="pre">_create_ec2_instance</span></code> and <code class="docutils literal notranslate"><span class="pre">_instance_info</span></code> to configure the ec2 instance.</p>

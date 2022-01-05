@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+0.3.1 (01/05/2022)
+------------------
+- Check `env vars`/`args` before startup
+- Add default image id if region is us-west-2
+
 0.3.0 (01/04/2022)
 ------------------
 - Take `ORG` and `EMAIL` as both args and env vars

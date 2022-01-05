@@ -56,24 +56,29 @@
 <h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
 <section id="environment-variables">
 <h3>Environment Variables:<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h3>
-<p>If a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file is present in current working directory, there is no need for env vars.</p>
+<p>If a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file is present (with the required variables) in current working directory, there is no need for env vars,
+as <a class="reference external" href="https://github.com/thevickypedia/expose"><code class="docutils literal notranslate"><span class="pre">expose</span></code></a> loads <code class="docutils literal notranslate"><span class="pre">.env</span></code> files during start up.</p>
+<p><strong>Mandatory Args:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">PORT</span></code>: Port number on which a localhost <code class="docutils literal notranslate"><span class="pre">service/app/api</span></code> is running.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">AMI_ID</span></code>: ID of any public AMI with an Ubuntu OS.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ACCESS_KEY</span></code>: <strong>[Optional]</strong> Access key to access AWS resources. Defaults to <code class="docutils literal notranslate"><span class="pre">~/.aws/credentials</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SECRET_KEY</span></code>: <strong>[Optional]</strong> Secret key to access AWS resources. Defaults to <code class="docutils literal notranslate"><span class="pre">~/.aws/credentials</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">REGION_NAME</span></code>: <strong>[Optional]</strong> Region name where the instance should live. Defaults to <code class="docutils literal notranslate"><span class="pre">US-WEST-2</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DOMAIN</span></code>: <strong>[Optional]</strong> Domain name on <code class="docutils literal notranslate"><span class="pre">route53</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SUBDOMAIN</span></code>: <strong>[Optional]</strong> Sub domain name to be mapped on <code class="docutils literal notranslate"><span class="pre">route53</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">EMAIL</span></code>: <strong>[Optional]</strong> Email address to create the self-signed SSL and private key.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ORG</span></code>: <strong>[Optional]</strong> Organization name for the certificate.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AMI_ID</span></code>: ID of any public AMI with an Ubuntu OS. Defaults to <code class="docutils literal notranslate"><span class="pre">ami-06e20d17437157772</span></code> if the region is <code class="docutils literal notranslate"><span class="pre">us-west-2</span></code></p></li>
+</ul>
+<p><strong>Optional Args:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ACCESS_KEY</span></code>: Access key to access AWS resources. Defaults to <code class="docutils literal notranslate"><span class="pre">~/.aws/config</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SECRET_KEY</span></code>: Secret key to access AWS resources. Defaults to <code class="docutils literal notranslate"><span class="pre">~/.aws/config</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">REGION_NAME</span></code>: Region name where the instance should live. Defaults to <code class="docutils literal notranslate"><span class="pre">US-WEST-2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DOMAIN</span></code>: If the domain name is registered using <code class="docutils literal notranslate"><span class="pre">route53</span></code>. <em>Example: <code class="docutils literal notranslate"><span class="pre">mywebsite.com</span></code></em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SUBDOMAIN</span></code>: Sub-domain that has to be added for the domain name. <em>Example: <code class="docutils literal notranslate"><span class="pre">tunnel.mywebsite.com</span></code></em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EMAIL</span></code>: Email address to create the self-signed SSL and private key. Defaults to <code class="docutils literal notranslate"><span class="pre">USER&#64;expose-localhost.com</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ORG</span></code>: Organization name for the certificate. Defaults to the AWS endpoint.</p></li>
 </ul>
 <details>
 <summary><strong>Setup a custom endpoint</strong></summary><p>The public DNS names for EC2 instances are long and messy. To avoid that, an <code class="docutils literal notranslate"><span class="pre">A</span></code> record can be added to the <code class="docutils literal notranslate"><span class="pre">route53</span></code> hosted zone.</p>
 <p>:warning:   Requires an active hosted zone on <code class="docutils literal notranslate"><span class="pre">route53</span></code>.</p>
 <ul class="simple">
-<li><p><strong>[Optional]</strong> <code class="docutils literal notranslate"><span class="pre">DOMAIN</span></code>: If the domain name is registered using <code class="docutils literal notranslate"><span class="pre">route53</span></code>. <em>Example: <code class="docutils literal notranslate"><span class="pre">mywebsite.com</span></code></em></p></li>
-<li><p><strong>[Optional]</strong> <code class="docutils literal notranslate"><span class="pre">SUBDOMAIN</span></code>: Sub-domain that has to be added for the domain name. <em>Example: <code class="docutils literal notranslate"><span class="pre">tunnel.mywebsite.com</span></code></em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DOMAIN</span></code>: If the domain name is registered using <code class="docutils literal notranslate"><span class="pre">route53</span></code>. <em>Example: <code class="docutils literal notranslate"><span class="pre">mywebsite.com</span></code></em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SUBDOMAIN</span></code>: Sub-domain that has to be added for the domain name. <em>Example: <code class="docutils literal notranslate"><span class="pre">tunnel.mywebsite.com</span></code></em></p></li>
 </ul>
 <p>        :bulb:   This will be the endpoint to access the localhost.</p>
 </details></section>
@@ -94,6 +99,10 @@ generate a self-signed certificate and a private key automatically.</p></li>
 </div></blockquote>
 <p>[OR]</p>
 <p>Simply let <code class="docutils literal notranslate"><span class="pre">expose</span></code> create a self-signed SSL certificate and a private key.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">EMAIL</span></code>: Email address to create the self-signed SSL and private key. Defaults to <code class="docutils literal notranslate"><span class="pre">USER&#64;expose-localhost.com</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ORG</span></code>: Organization name for the certificate. Defaults to the AWS endpoint.</p></li>
+</ul>
 </details></section>
 <section id="installation">
 <h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
@@ -116,9 +125,11 @@ generate a self-signed certificate and a private key automatically.</p></li>
 </section>
 <section id="class-instantiation">
 <h4>Class Instantiation<a class="headerlink" href="#class-instantiation" title="Permalink to this headline">¶</a></h4>
+<p>This is required <em>only</em> if a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file missing and the env vars are not configured, or if the user needs to bypass
+default values.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">expose.tunnel</span> <span class="kn">import</span> <span class="n">Tunnel</span>
 
-<span class="n">Tunnel</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">2021</span><span class="p">,</span> <span class="n">image_id</span><span class="o">=</span><span class="s1">&#39;ami-04406fdec0f245050&#39;</span><span class="p">,</span>
+<span class="n">Tunnel</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">2021</span><span class="p">,</span> <span class="n">image_id</span><span class="o">=</span><span class="s1">&#39;ami-06e20d17437157772&#39;</span><span class="p">,</span>
        <span class="n">domain_name</span><span class="o">=</span><span class="s1">&#39;example.com&#39;</span><span class="p">,</span> <span class="n">subdomain</span><span class="o">=</span><span class="s1">&#39;expose&#39;</span><span class="p">,</span>
        <span class="n">aws_access_key</span><span class="o">=</span><span class="s1">&#39;A1YSAIEPAJK1830AB1N&#39;</span><span class="p">,</span>
        <span class="n">aws_secret_key</span><span class="o">=</span><span class="s1">&#39;e38409/afjeafjllvi19io90eskqn&#39;</span><span class="p">,</span>
