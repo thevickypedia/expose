@@ -65,6 +65,8 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">REGION_NAME</span></code>: <strong>[Optional]</strong> Region name where the instance should live. Defaults to <code class="docutils literal notranslate"><span class="pre">US-WEST-2</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">DOMAIN</span></code>: <strong>[Optional]</strong> Domain name on <code class="docutils literal notranslate"><span class="pre">route53</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">SUBDOMAIN</span></code>: <strong>[Optional]</strong> Sub domain name to be mapped on <code class="docutils literal notranslate"><span class="pre">route53</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EMAIL</span></code>: <strong>[Optional]</strong> Email address to create the self-signed SSL and private key.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ORG</span></code>: <strong>[Optional]</strong> Organization name for the certificate.</p></li>
 </ul>
 <details>
 <summary><strong>Setup a custom endpoint</strong></summary><p>The public DNS names for EC2 instances are long and messy. To avoid that, an <code class="docutils literal notranslate"><span class="pre">A</span></code> record can be added to the <code class="docutils literal notranslate"><span class="pre">route53</span></code> hosted zone.</p>
@@ -86,10 +88,12 @@ generate a self-signed certificate and a private key automatically.</p></li>
 <details>
 <summary><strong>Generate private SSL certificate</strong></summary><p>Unfortunately not many SSL certificate providers give the liberty to download key files. But <code class="docutils literal notranslate"><span class="pre">expose</span></code>, can use private certificates.</p>
 <p>:warning:   Some web browsers might throw a warning and some might even block a self-signed certificate/private CA.</p>
-<p>To generate a self-signed cert:</p>
+<p>To manually generate a self-signed cert:</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">req</span> <span class="pre">-newkey</span> <span class="pre">rsa:2048</span> <span class="pre">-new</span> <span class="pre">-nodes</span> <span class="pre">-x509</span> <span class="pre">-days</span> <span class="pre">3650</span> <span class="pre">-keyout</span> <span class="pre">~/.ssh/key.pem</span> <span class="pre">-out</span> <span class="pre">~/.ssh/cert.pem</span></code></p>
 </div></blockquote>
+<p>[OR]</p>
+<p>Simply let <code class="docutils literal notranslate"><span class="pre">expose</span></code> create a self-signed SSL certificate and a private key.</p>
 </details></section>
 <section id="installation">
 <h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
@@ -118,7 +122,9 @@ generate a self-signed certificate and a private key automatically.</p></li>
        <span class="n">domain_name</span><span class="o">=</span><span class="s1">&#39;example.com&#39;</span><span class="p">,</span> <span class="n">subdomain</span><span class="o">=</span><span class="s1">&#39;expose&#39;</span><span class="p">,</span>
        <span class="n">aws_access_key</span><span class="o">=</span><span class="s1">&#39;A1YSAIEPAJK1830AB1N&#39;</span><span class="p">,</span>
        <span class="n">aws_secret_key</span><span class="o">=</span><span class="s1">&#39;e38409/afjeafjllvi19io90eskqn&#39;</span><span class="p">,</span>
-       <span class="n">aws_region_name</span><span class="o">=</span><span class="s1">&#39;us-east-2&#39;</span><span class="p">)</span>
+       <span class="n">aws_region_name</span><span class="o">=</span><span class="s1">&#39;us-east-2&#39;</span><span class="p">,</span>
+       <span class="n">email_address</span><span class="o">=</span><span class="s1">&#39;root@expose-localhost.com&#39;</span><span class="p">,</span>
+       <span class="n">organization</span><span class="o">=</span><span class="s1">&#39;Expose Localhost&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <details>

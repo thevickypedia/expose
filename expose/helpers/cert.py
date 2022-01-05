@@ -90,8 +90,6 @@ def generate_cert(common_name: str,
     See Also:
         Use ``openssl x509 -inform pem -in cert.crt -noout -text`` to look at the generated cert using openssl.
     """
-    organization_name = organization_name or common_name[0].upper() + common_name.partition('.')[0][1:]
-
     # Creates a key pair
     key = crypto.PKey()
     key.generate_key(crypto.TYPE_RSA, 4096)
@@ -101,7 +99,7 @@ def generate_cert(common_name: str,
     cert.get_subject().C = country_name
     cert.get_subject().ST = state_or_province_name
     cert.get_subject().L = locality_name
-    cert.get_subject().O = organization_name  # noqa: E741
+    cert.get_subject().O = organization_name or common_name[0].upper() + common_name.partition('.')[0][1:]  # noqa: E741
     cert.get_subject().OU = organization_unit_name
     cert.get_subject().CN = common_name
     cert.get_subject().emailAddress = email_address or f"{getuser()}@expose-localhost.com"

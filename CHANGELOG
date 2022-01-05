@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+0.3.0 (01/04/2022)
+------------------
+- Take `ORG` and `EMAIL` as both args and env vars
+
 0.2.9 (01/04/2022)
 ------------------
 - Update docs and make isort happy

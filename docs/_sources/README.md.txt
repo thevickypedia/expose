@@ -17,6 +17,8 @@ If a `.env` file is present in current working directory, there is no need for e
 - `REGION_NAME`: **[Optional]** Region name where the instance should live. Defaults to `US-WEST-2`
 - `DOMAIN`: **[Optional]** Domain name on `route53`
 - `SUBDOMAIN`: **[Optional]** Sub domain name to be mapped on `route53`
+- `EMAIL`: **[Optional]** Email address to create the self-signed SSL and private key.
+- `ORG`: **[Optional]** Organization name for the certificate.
 
 <details>
 <summary><strong>Setup a custom endpoint</strong></summary>
@@ -45,9 +47,13 @@ Unfortunately not many SSL certificate providers give the liberty to download ke
 
 :warning: &nbsp; Some web browsers might throw a warning and some might even block a self-signed certificate/private CA.
 
-To generate a self-signed cert:
+To manually generate a self-signed cert:
 
 > `openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout ~/.ssh/key.pem -out ~/.ssh/cert.pem`
+
+[OR]
+
+Simply let `expose` create a self-signed SSL certificate and a private key.
 
 </details>
 
@@ -76,7 +82,9 @@ Tunnel(port=2021, image_id='ami-04406fdec0f245050',
        domain_name='example.com', subdomain='expose',
        aws_access_key='A1YSAIEPAJK1830AB1N',
        aws_secret_key='e38409/afjeafjllvi19io90eskqn',
-       aws_region_name='us-east-2')
+       aws_region_name='us-east-2',
+       email_address='root@expose-localhost.com',
+       organization='Expose Localhost')
 ```
 
 <details>

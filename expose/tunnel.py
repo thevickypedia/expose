@@ -42,7 +42,9 @@ class Tunnel:
                  subdomain: str = environ.get('SUBDOMAIN'),
                  aws_access_key: str = environ.get('ACCESS_KEY'),
                  aws_secret_key: str = environ.get('SECRET_KEY'),
-                 aws_region_name: str = environ.get('REGION_NAME', 'us-west-2')):
+                 aws_region_name: str = environ.get('REGION_NAME', 'us-west-2'),
+                 email_address: str = environ.get('EMAIL'),
+                 organization: str = environ.get('ORG')):
         """Assigns a name to the PEM file, initiates the logger, client and resource for EC2 using ``boto3`` module.
 
         Args:
@@ -87,6 +89,8 @@ class Tunnel:
         self.port = port
         self.domain_name = domain_name
         self.subdomain = subdomain
+        self.email_address = email_address
+        self.organization = organization
 
     def __del__(self):
         """Destructor to print the run time at the end."""
@@ -465,7 +469,8 @@ class Tunnel:
             copy_files.extend([f"{CURRENT_DIR}cert.pem", f"{CURRENT_DIR}key.pem",
                                f"{CURRENT_DIR}options-ssl-nginx.conf"])
             rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
-        elif generate_cert(common_name=endpoint or public_dns, email_address=email):
+        elif generate_cert(common_name=endpoint or public_dns, email_address=self.email_address or email,
+                           organization_name=self.organization):
             self.logger.info('Generated self-signed SSL certificate and private key.')
             secured = True
             CONFIGURATION_FILES.extend([f'{CURRENT_DIR}cert.pem', f'{CURRENT_DIR}key.pem'])
