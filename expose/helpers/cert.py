@@ -1,31 +1,10 @@
 import binascii
-import json
 from getpass import getuser
 from os import rename, stat, urandom
-from urllib.request import urlopen
 
 from OpenSSL import crypto
 
-from expose.helpers.auxiliary import sleeper
-
-CERTIFICATE_INFO = {}
-
-
-def get_public_ip() -> str:
-    """Gets the public IP address from ``ipinfo.io`` or ``ip.jsontest.com``.
-
-    Returns:
-        str:
-        Returns the public IP address.
-    """
-    # noinspection HttpUrlsUsage
-    if data := (json.load(urlopen('http://ipinfo.io/json')) or json.load(urlopen('http://ip.jsontest.com'))):
-        CERTIFICATE_INFO.update({
-            "city": data.get('city'),
-            "country": data.get('country'),
-            "region": data.get('region')
-        })
-    return data.get('ip')
+from expose.helpers.auxiliary import IP_INFO, sleeper
 
 
 def _get_serial() -> bytes:
@@ -59,9 +38,9 @@ def _generate_serial_hash(byte_size: int = 18, int_size: int = 36) -> int:
 
 def generate_cert(common_name: str,
                   email_address: str = None,
-                  country_name: str = CERTIFICATE_INFO.get('country', 'US'),
-                  locality_name: str = CERTIFICATE_INFO.get('city', 'New York'),
-                  state_or_province_name: str = CERTIFICATE_INFO.get('region', 'New York'),
+                  country_name: str = IP_INFO.get('country', 'US'),
+                  locality_name: str = IP_INFO.get('city', 'New York'),
+                  state_or_province_name: str = IP_INFO.get('region', 'New York'),
                   organization_name: str = None,
                   organization_unit_name: str = "Information Technology",
                   validity_start_in_seconds: int = 0,

@@ -1,9 +1,12 @@
+import json
 import sys
 from datetime import datetime
 from inspect import currentframe, getframeinfo, getouterframes, stack
 from time import sleep
+from urllib.request import urlopen
 
 DATETIME_FORMAT = '%b-%d-%Y %I:%M:%S %p'
+IP_INFO = json.load(urlopen('http://ipinfo.io/json')) or json.load(urlopen('http://ip.jsontest.com'))
 
 
 def sleeper(sleep_time: int) -> None:

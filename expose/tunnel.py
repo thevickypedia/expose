@@ -11,8 +11,9 @@ from dotenv import load_dotenv
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
-from expose.helpers.auxiliary import DATETIME_FORMAT, sleeper, time_converter
-from expose.helpers.cert import generate_cert, get_public_ip
+from expose.helpers.auxiliary import (DATETIME_FORMAT, IP_INFO, sleeper,
+                                      time_converter)
+from expose.helpers.cert import generate_cert
 from expose.helpers.defaults import AWSDefaults
 from expose.helpers.nginx_server import ServerConfig
 from expose.helpers.route_53 import change_record_set
@@ -189,7 +190,7 @@ class Tunnel:
                      'FromPort': 22,
                      'ToPort': 22,
                      # 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},  # Makes instance accessible from anywhere but insecure
-                     'IpRanges': [{'CidrIp': f'{public_ip}/32'}, {'CidrIp': f'{get_public_ip()}/32'}]},
+                     'IpRanges': [{'CidrIp': f'{public_ip}/32'}, {'CidrIp': f"{IP_INFO.get('ip')}/32"}]},
                     {'IpProtocol': 'tcp',
                      'FromPort': 443,
                      'ToPort': 443,
@@ -546,7 +547,8 @@ class Tunnel:
                 "sudo mv /home/ubuntu/server.conf /etc/nginx/conf.d/server.conf": 1,
                 "sudo mv /home/ubuntu/nginx.conf /etc/nginx/nginx.conf": 1,
                 "sudo systemctl restart nginx": 2
-            })
+            }
+        )
         if not nginx_status:
             self.logger.error('Nginx server was not configured. Cleaning up AWS resources acquired.')
             self.stop()
