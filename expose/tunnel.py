@@ -429,8 +429,6 @@ class Tunnel:
             self._get_image_id()
             self.logger.warning(f"AMI ID was not set."
                                 f"Using the default AMI ID {self.image_id} for the region {self.region}")
-            print(self.image_id)
-            return
 
         if not self._optional_args():
             self.logger.warning('DOMAIN, SUBDOMAIN, EMAIL and ORG gives a customized access to the tunnel.')

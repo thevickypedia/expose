@@ -67,7 +67,8 @@ def generate_cert(common_name: str,
                   validity_start_in_seconds: int = 0,
                   validity_end_in_seconds: int = 10 * 365 * 24 * 60 * 60,
                   key_file: str = "key.key",
-                  cert_file: str = "cert.crt") -> bool:
+                  cert_file: str = "cert.crt",
+                  key_size: int = 4096) -> bool:
     """Creates a private/self-signed certificate.
 
     Args:
@@ -82,6 +83,7 @@ def generate_cert(common_name: str,
         validity_end_in_seconds: Expiration duration of the cert. Defaults to ``10 years``
         key_file: Name of the key file.
         cert_file: Name of the certificate.
+        key_size: Size of the public key. Defaults to 4096.
 
     Returns:
         bool:
@@ -90,9 +92,13 @@ def generate_cert(common_name: str,
     See Also:
         Use ``openssl x509 -inform pem -in cert.crt -noout -text`` to look at the generated cert using openssl.
     """
+    if key_size not in [2048, 4096]:
+        raise ValueError('Certificate key size should be either 2048 or 4096.')
+    signature_bytes = 256 if key_size == 2048 else 512  # Refer: https://crypto.stackexchange.com/a/3508
+
     # Creates a key pair
     key = crypto.PKey()
-    key.generate_key(crypto.TYPE_RSA, 4096)
+    key.generate_key(type=crypto.TYPE_RSA, bits=key_size)
 
     # Creates a self-signed cert
     cert = crypto.X509()
@@ -109,13 +115,13 @@ def generate_cert(common_name: str,
     cert.set_issuer(issuer=cert.get_subject())
     cert.set_pubkey(pkey=key)
     # noinspection PyTypeChecker
-    cert.sign(pkey=key, digest='sha512')
+    cert.sign(pkey=key, digest=f'sha{signature_bytes}')
 
     # Writes the cert file into specified names
     with open(cert_file, "w") as f:
-        f.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("utf-8"))
+        f.write(crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=cert).decode("utf-8"))
     with open(key_file, "w") as f:
-        f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, key).decode("utf-8"))
+        f.write(crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=key).decode("utf-8"))
 
     cert_file_new, key_file_new = f"{cert_file.replace('.crt', '.pem')}", f"{key_file.replace('.key', '.pem')}"
 

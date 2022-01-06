@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+0.3.3 (01/05/2022)
+------------------
+- Add an option for length of RSA signature
+- Remove incorrect return statement
+
 0.3.2 (01/05/2022)
 ------------------
 - Remove `AMI_ID` from mandatory args
