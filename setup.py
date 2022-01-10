@@ -5,9 +5,9 @@ from setuptools import setup
 from version import version_info
 
 classifiers = [
-    'Development Status :: 4 - Beta',
+    'Development Status :: 5 - Production/Stable',
     'Intended Audience :: Information Technology',
-    'Operating System :: MacOS :: MacOS X',
+    'Operating System :: OS Independent',
     'License :: OSI Approved :: MIT License',
     'Programming Language :: Python :: 3.9',
     'Topic :: System :: Networking :: Firewalls'

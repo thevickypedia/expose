@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+0.3.5 (01/09/2022)
+------------------
+- Update module as stable
+
 0.3.4 (01/06/2022)
 ------------------
 - Fix intermittent IP info missing issue
