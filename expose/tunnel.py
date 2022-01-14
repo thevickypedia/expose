@@ -1,7 +1,7 @@
 import json
 import logging
-from os import environ, getcwd, path, remove, rename, system
-from subprocess import check_output
+from os import chmod, environ, getcwd, path, remove, rename, system
+from subprocess import CalledProcessError, SubprocessError, check_output
 from time import perf_counter
 
 import requests
@@ -144,10 +144,9 @@ class Tunnel:
             return False
 
         if response.get('ResponseMetadata').get('HTTPStatusCode') == 200:
-            self.logger.info(f'Successfully created a key pair named: {self.key_name}')
-            with open(f'{self.key_name}.pem', 'w') as file:
+            with open(f'{CURRENT_DIR}{self.key_name}.pem', 'w') as file:
                 file.write(response.get('KeyMaterial'))
-            self.logger.info(f'Stored the certificate as {self.key_name}.pem')
+            self.logger.info(f'Stored KeyPair as {self.key_name}.pem')
             return True
         else:
             self.logger.error(f'Unable to create a key pair: {self.key_name}')
@@ -312,9 +311,9 @@ class Tunnel:
 
         if response.get('ResponseMetadata').get('HTTPStatusCode') == 200:
             self.logger.info(f'{self.key_name} has been deleted from KeyPairs.')
-            if path.exists(f'{self.key_name}.pem'):
-                system(f'chmod 700 {self.key_name}.pem')  # reset file permissions before deleting
-                remove(f'{self.key_name}.pem')
+            if path.exists(f'{CURRENT_DIR}{self.key_name}.pem'):
+                chmod(f'{CURRENT_DIR}{self.key_name}.pem', int('700', base=8) or 0o700)
+                remove(f'{CURRENT_DIR}{self.key_name}.pem')
             return True
         else:
             self.logger.error(f'Failed to delete the key: {self.key_name}')
@@ -428,7 +427,7 @@ class Tunnel:
 
         if not self.image_id:
             self._get_image_id()
-            self.logger.warning(f"AMI ID was not set."
+            self.logger.warning(f"AMI ID was not set. "
                                 f"Using the default AMI ID {self.image_id} for the region {self.region}")
 
         if not self._optional_args():
@@ -459,8 +458,7 @@ class Tunnel:
             'start_tunneling': f"ssh -i {self.key_name}.pem -R 8080:localhost:{self.port} ubuntu@{public_dns}"
         }
 
-        self.logger.info(f'Restricting wide open permissions to {self.key_name}.pem')
-        system(f'chmod 400 {self.key_name}.pem')
+        chmod(f'{CURRENT_DIR}{self.key_name}.pem', int('400', base=8) or 0o400)
 
         with open(self.server_file, 'w') as file:
             json.dump(instance_info, file, indent=2)
@@ -480,7 +478,7 @@ class Tunnel:
         self.logger.info('Gathering pieces for configuration.')
         custom_servers = f"{public_dns} {public_ip}"
 
-        endpoint, email = None, None
+        endpoint = None
         if self.domain_name and self.subdomain:
             if self.subdomain.endswith(self.domain_name):
                 endpoint = self.subdomain
@@ -488,8 +486,12 @@ class Tunnel:
             else:
                 endpoint = f'{self.subdomain}.{self.domain_name}'
                 custom_servers += f' {self.subdomain}.{self.domain_name}'
-            if git_email := check_output('git config user.email', shell=True):
-                email = git_email.decode('UTF-8').strip()
+
+        if not self.email_address:
+            try:
+                self.email_address = check_output('git config user.email', shell=True).decode('UTF-8').strip()
+            except (SubprocessError, CalledProcessError):
+                pass
 
         for conf_file in CONFIGURATION_FILES:
             download_file = conf_file.removeprefix(CURRENT_DIR)
@@ -505,27 +507,23 @@ class Tunnel:
                 path.isfile(f"{HOME_DIR}.ssh{SEP}key.pem") and \
                 path.isfile(f"{HOME_DIR}.ssh{SEP}cert.pem"):
             self.logger.info(f'Found certificate and key in {HOME_DIR}')
-            secured = True
             copy_files.extend([f"{HOME_DIR}.ssh{SEP}cert.pem", f"{HOME_DIR}.ssh{SEP}key.pem",
                                f"{CURRENT_DIR}options-ssl-nginx.conf"])
             rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
         elif path.isfile(f'{CURRENT_DIR}cert.pem') and path.isfile(f'{CURRENT_DIR}key.pem'):
             self.logger.info(f'Found certificate and key in {path}')
-            secured = True
             copy_files.extend([f"{CURRENT_DIR}cert.pem", f"{CURRENT_DIR}key.pem",
                                f"{CURRENT_DIR}options-ssl-nginx.conf"])
             rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
-        elif generate_cert(common_name=endpoint or public_dns, email_address=self.email_address or email,
+        elif generate_cert(common_name=endpoint or public_dns, email_address=self.email_address,
                            organization_name=self.organization):
             self.logger.info('Generated self-signed SSL certificate and private key.')
-            secured = True
             CONFIGURATION_FILES.extend([f'{CURRENT_DIR}cert.pem', f'{CURRENT_DIR}key.pem'])
             copy_files.extend([f"{CURRENT_DIR}cert.pem", f"{CURRENT_DIR}key.pem",
                                f"{CURRENT_DIR}options-ssl-nginx.conf"])
             rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
         else:
             self.logger.warning('Failed to generate self-signed SSL certificate and private key.')
-            secured = False
             rename(src=f"{CURRENT_DIR}nginx-non-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
 
         nginx_server = ServerConfig(hostname=public_dns, pem_file=f'{self.key_name}.pem')
@@ -555,7 +553,7 @@ class Tunnel:
             return
 
         self.logger.info('Nginx server was configured successfully.')
-        protocol = 'https' if secured else 'http'
+        protocol = 'https' if f"{CURRENT_DIR}options-ssl-nginx.conf" in copy_files else 'http'
         if endpoint:
             change_record_set(dns_name=self.domain_name, source=self.subdomain, destination=public_ip, record_type='A')
             self.logger.info(f'{protocol}://{endpoint} → http://localhost:{self.port}')
