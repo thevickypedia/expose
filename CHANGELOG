@@ -3,6 +3,10 @@ Change Log
 
 0.3.7 (01/15/2022)
 ------------------
+- Remove print statements and create a default log formatter
+
+0.3.7 (01/15/2022)
+------------------
 - Use sockets and channels for reverse ssh port forwarding
 - Check for files after running SCP
 - Convert port to integer using exception handler

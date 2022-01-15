@@ -8,7 +8,8 @@ from paramiko.channel import Channel
 from paramiko.transport import Transport
 from scp import SCPClient
 
-from expose.helpers.auxiliary import prefix, sleeper
+from expose.helpers.auxiliary import sleeper
+from expose.helpers.logger import LOGGER
 
 
 def join(value: Union[tuple, list, str], separator: str = ':') -> str:
@@ -62,15 +63,15 @@ class ServerConfig:
             Returns a boolean flag if all commands were successful.
         """
         for command in commands:
-            print(f"\033[32m{prefix(level='INFO')}Executing `{command}`\033[00m")
+            LOGGER.info(f"Executing {command}")
             stdin, stdout, stderr = self.ssh_client.exec_command(command)
             if output := stdout.read().decode('utf-8').strip():
-                print(f"\033[32m{prefix(level='INFO')}{output}\033[00m")
+                LOGGER.info(output)
             if error := stderr.read().decode("utf-8").strip():
                 if error.startswith('debconf:') or 'could not get lock' in error.lower():
-                    print(f"\033[2;33m{prefix(level='WARNING')}{error}\033[00m")
+                    LOGGER.warning(error)
                 else:
-                    print(f"\033[31m{prefix(level='ERROR')}{error}\033[00m")
+                    LOGGER.error(error)
                     self.ssh_client.close()
                     return False
             sleeper(sleep_time=commands[command])
@@ -95,13 +96,13 @@ class ServerConfig:
                 sftp.stat(file.split('/')[-1])
             except IOError:
                 if not retry:
-                    print(f"\033[2;33m{prefix(level='WARNING')}{file} was not copied successfully. Retrying..\033[00m")
+                    LOGGER.warning(f"{file} was not copied successfully. Retrying..")
                     self.server_copy(files=[file], retry=True)
-                print(f"\033[31m{prefix(level='ERROR')}{file} was not copied successfully.\033[00m")
+                LOGGER.error(f"{file} was not copied successfully.")
                 return False
         return True
 
-    def handler(self, channel: Channel, port: int) -> None:
+    def _handler(self, channel: Channel, port: int) -> None:
         """Creates a socket and handles TCP IO on the channel created.
 
         Args:
@@ -112,12 +113,11 @@ class ServerConfig:
         try:
             socket_.connect(('localhost', port))
         except Exception as error:
-            print(f"\033[31m{prefix(level='ERROR')}Forwarding request to localhost:{str(port)} failed: {error}\033[00m")
+            LOGGER.error(f"Forwarding request to localhost:{port} failed: {error}")
             self.ssh_client.close()
             return
 
-        print(f"\033[32m{prefix(level='INFO')}Connection open "
-              f"{join(channel.origin_addr)} → {join(channel.getpeername())} → localhost:{port}\033[00m")
+        LOGGER.info(f"Connection open {join(channel.origin_addr)} → {join(channel.getpeername())} → localhost:{port}")
         while True:
             read, write, execute = select([socket_, channel], [], [])
             if socket_ in read:
@@ -130,7 +130,7 @@ class ServerConfig:
                 socket_.send(data)
         channel.close()
         socket_.close()
-        print(f"\033[2;33m{prefix(level='INFO')}Connection closed from {join(channel.origin_addr)}\033[00m")
+        LOGGER.info(f"Connection closed from {join(channel.origin_addr)}")
 
     def initiate_tunnel(self, port: int) -> None:
         """Initiates port forwarding using ``Transport`` which creates a channel.
@@ -138,19 +138,17 @@ class ServerConfig:
         Args:
             port: Port number on which the channel has to be
         """
-        print(f"\033[32m{prefix(level='INFO')}Awaiting connection...\033[00m")
+        LOGGER.info("Awaiting connection...")
         transport: Transport = self.ssh_client.get_transport()
         transport.request_port_forward(address="localhost", port=8080)
         try:
             while True:
                 if not (channel := transport.accept(timeout=1000)):
                     continue
-                Thread(target=self.handler, args=[channel, port], daemon=True).start()
+                Thread(target=self._handler, args=[channel, port], daemon=True).start()
         except KeyboardInterrupt:
-            print(f"\033[2;33m{prefix(level='WARNING')}Tunneling interrupted\033[00m")
-        print(f"\033[2;33m{prefix(level='WARNING')}Stopping reverse tunneling on "
-              f"{join(transport.getpeername())}\033[00m")
+            LOGGER.info("Tunneling interrupted")
+        LOGGER.info(f"Stopping reverse tunneling on {join(transport.getpeername())}")
         transport.cancel_port_forward(address="localhost", port=8080)
-        print(f"\033[2;33m{prefix(level='WARNING')}Closing SSH connection to "
-              f"{self.ssh_client.get_host_keys().keys()[0]}\033[00m")
+        LOGGER.info(f"Closing SSH connection to {self.ssh_client.get_host_keys().keys()[0]}")
         self.ssh_client.close()

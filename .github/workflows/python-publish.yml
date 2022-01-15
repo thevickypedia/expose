@@ -15,7 +15,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest]
         python: [3.9]
 
     steps:

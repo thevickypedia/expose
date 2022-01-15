@@ -55,6 +55,13 @@ Expose - AWS Defaults
    :undoc-members:
    :exclude-members: DEFAULT_AMI_NAME, IMAGE_MAP, REGIONS
 
+Expose - LOGGER
+===============
+
+.. automodule:: helpers.logger
+   :members:
+   :undoc-members:
+
 Indices and tables
 ==================
 

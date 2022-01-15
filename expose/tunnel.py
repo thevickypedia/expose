@@ -1,5 +1,4 @@
 import json
-import logging
 from os import chmod, environ, getcwd, path, remove, rename
 from subprocess import CalledProcessError, SubprocessError, check_output
 from time import perf_counter
@@ -11,10 +10,10 @@ from dotenv import load_dotenv
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
-from expose.helpers.auxiliary import (DATETIME_FORMAT, IP_INFO, sleeper,
-                                      time_converter)
+from expose.helpers.auxiliary import IP_INFO, sleeper, time_converter
 from expose.helpers.cert import generate_cert
 from expose.helpers.defaults import AWSDefaults
+from expose.helpers.logger import LOGGER
 from expose.helpers.nginx_server import ServerConfig
 from expose.helpers.route_53 import change_record_set
 
@@ -67,18 +66,6 @@ class Tunnel:
         self.server_file = 'server_info.json'
         self.security_group_name = 'Expose Localhost'
 
-        # Logger setup
-        self.logger = logging.getLogger(__name__)
-        formatter = logging.Formatter(
-            fmt='%(asctime)s - %(levelname)s - [%(module)s:%(lineno)d] - %(funcName)s - %(message)s',
-            datefmt=DATETIME_FORMAT
-        )
-        handler = logging.StreamHandler()
-        handler.setFormatter(fmt=formatter)
-        handler.setLevel(level=logging.DEBUG)
-        self.logger.addHandler(hdlr=handler)
-        self.logger.setLevel(level=logging.DEBUG)
-
         # AWS client and resource setup
         self.region = aws_region_name.lower()
         if not AWSDefaults.REGIONS.get(aws_region_name):
@@ -98,7 +85,7 @@ class Tunnel:
 
     def __del__(self):
         """Destructor to print the run time at the end."""
-        self.logger.info(f'Total runtime: {time_converter(perf_counter())}')
+        LOGGER.info(f'Total runtime: {time_converter(perf_counter())}')
 
     def _get_image_id(self) -> None:
         """Fetches AMI ID from public images."""
@@ -114,7 +101,7 @@ class Tunnel:
                 },
             ])
         except ClientError as error:
-            self.logger.error(f'API call to retrieve AMI ID for {self.region} has failed.\n{error}')
+            LOGGER.error(f'API call to retrieve AMI ID for {self.region} has failed.\n{error}')
             raise
 
         if not (retrieved := images.get('Images', [{}])[0].get('ImageId')):
@@ -136,20 +123,20 @@ class Tunnel:
         except ClientError as error:
             error = str(error)
             if '(InvalidKeyPair.Duplicate)' in error and self.key_name in error:
-                self.logger.warning(f'Found an existing KeyPair named: {self.key_name}. Re-creating it.')
+                LOGGER.warning(f'Found an existing KeyPair named: {self.key_name}. Re-creating it.')
                 self._delete_key_pair()
                 self._create_key_pair()
                 return True
-            self.logger.error(f'API call to create key pair has failed.\n{error}')
+            LOGGER.error(f'API call to create key pair has failed.\n{error}')
             return False
 
         if response.get('ResponseMetadata').get('HTTPStatusCode') == 200:
             with open(f'{CURRENT_DIR}{self.key_name}.pem', 'w') as file:
                 file.write(response.get('KeyMaterial'))
-            self.logger.info(f'Stored KeyPair as {self.key_name}.pem')
+            LOGGER.info(f'Stored KeyPair as {self.key_name}.pem')
             return True
         else:
-            self.logger.error(f'Unable to create a key pair: {self.key_name}')
+            LOGGER.error(f'Unable to create a key pair: {self.key_name}')
 
     def _get_vpc_id(self) -> str or None:
         """Gets the default VPC id.
@@ -161,15 +148,15 @@ class Tunnel:
         try:
             response = self.ec2_client.describe_vpcs()
         except ClientError as error:
-            self.logger.error(f'API call to get VPC id has failed.\n{error}')
+            LOGGER.error(f'API call to get VPC id has failed.\n{error}')
             return
 
         if response.get('ResponseMetadata').get('HTTPStatusCode') == 200:
             vpc_id = response.get('Vpcs', [{}])[0].get('VpcId', '')
-            self.logger.info(f'Got the default VPC: {vpc_id}')
+            LOGGER.info(f'Got the default VPC: {vpc_id}')
             return vpc_id
         else:
-            self.logger.error('Unable to get VPC ID')
+            LOGGER.error('Unable to get VPC ID')
 
     def _authorize_security_group(self, security_group_id: str, public_ip: str) -> bool:
         """Authorizes the security group for certain ingress list.
@@ -202,22 +189,22 @@ class Tunnel:
         except ClientError as error:
             error = str(error)
             if '(InvalidPermission.Duplicate)' in error:
-                self.logger.warning(f'Identified same permissions in an existing SecurityGroup: {security_group_id}')
+                LOGGER.warning(f'Identified same permissions in an existing SecurityGroup: {security_group_id}')
                 return True
-            self.logger.error(f'API call to authorize the security group {security_group_id} has failed.\n{error}')
+            LOGGER.error(f'API call to authorize the security group {security_group_id} has failed.\n{error}')
             return False
         if response.get('ResponseMetadata').get('HTTPStatusCode') == 200:
-            self.logger.info(f'Ingress Successfully Set for SecurityGroup {security_group_id}')
+            LOGGER.info(f'Ingress Successfully Set for SecurityGroup {security_group_id}')
             for sg_rule in response['SecurityGroupRules']:
                 log = 'Allowed protocol: ' + sg_rule['IpProtocol'] + ' '
                 if sg_rule['FromPort'] == sg_rule['ToPort']:
                     log += 'on port: ' + str(sg_rule['ToPort']) + ' '
                 else:
                     log += 'from port:  ' f"{sg_rule['FromPort']} to port: {sg_rule['ToPort']}" + ' '
-                self.logger.info(log + 'with CIDR ' + sg_rule['CidrIpv4'])
+                LOGGER.info(log + 'with CIDR ' + sg_rule['CidrIpv4'])
             return True
         else:
-            self.logger.info(f'Failed to set Ingress: {response}')
+            LOGGER.info(f'Failed to set Ingress: {response}')
 
     def _create_security_group(self) -> str or None:
         """Calls the class method ``_get_vpc_id`` and uses the VPC ID to create a ``SecurityGroup`` for the instance.
@@ -238,7 +225,7 @@ class Tunnel:
         except ClientError as error:
             error = str(error)
             if '(InvalidGroup.Duplicate)' in error and self.security_group_name in error:
-                self.logger.warning(f'Found an existing SecurityGroup named: {self.security_group_name}. Reusing it.')
+                LOGGER.warning(f'Found an existing SecurityGroup named: {self.security_group_name}. Reusing it.')
                 response = self.ec2_client.describe_security_groups(
                     Filters=[
                         dict(Name='group-name', Values=[self.security_group_name])
@@ -246,15 +233,15 @@ class Tunnel:
                 )
                 group_id = response['SecurityGroups'][0]['GroupId']
                 return group_id
-            self.logger.error(f'API call to create security group has failed.\n{error}')
+            LOGGER.error(f'API call to create security group has failed.\n{error}')
             return
 
         if response.get('ResponseMetadata').get('HTTPStatusCode') == 200:
             security_group_id = response['GroupId']
-            self.logger.info(f'Security Group Created {security_group_id} in VPC {vpc_id}')
+            LOGGER.info(f'Security Group Created {security_group_id} in VPC {vpc_id}')
             return security_group_id
         else:
-            self.logger.error('Failed to created the SecurityGroup')
+            LOGGER.error('Failed to created the SecurityGroup')
 
     def _create_ec2_instance(self) -> str or None:
         """Creates an EC2 instance of type ``t2.nano`` with the pre-configured AMI id.
@@ -282,17 +269,17 @@ class Tunnel:
         except ClientError as error:
             self._delete_key_pair()
             self._delete_security_group(security_group_id=security_group_id)
-            self.logger.error(f'API call to create instance has failed.\n{error}')
+            LOGGER.error(f'API call to create instance has failed.\n{error}')
             return
 
         if response.get('ResponseMetadata').get('HTTPStatusCode') == 200:
             instance_id = response.get('Instances')[0].get('InstanceId')
-            self.logger.info(f'Created the EC2 instance: {instance_id}')
+            LOGGER.info(f'Created the EC2 instance: {instance_id}')
             return instance_id, security_group_id
         else:
             self._delete_key_pair()
             self._delete_security_group(security_group_id=security_group_id)
-            self.logger.error('Failed to create an EC2 instance.')
+            LOGGER.error('Failed to create an EC2 instance.')
 
     def _delete_key_pair(self) -> bool:
         """Deletes the ``KeyPair``.
@@ -306,17 +293,17 @@ class Tunnel:
                 KeyName=self.key_name
             )
         except ClientError as error:
-            self.logger.error(f'API call to delete the key {self.key_name} has failed.\n{error}')
+            LOGGER.error(f'API call to delete the key {self.key_name} has failed.\n{error}')
             return False
 
         if response.get('ResponseMetadata').get('HTTPStatusCode') == 200:
-            self.logger.info(f'{self.key_name} has been deleted from KeyPairs.')
+            LOGGER.info(f'{self.key_name} has been deleted from KeyPairs.')
             if path.exists(f'{CURRENT_DIR}{self.key_name}.pem'):
                 chmod(f'{CURRENT_DIR}{self.key_name}.pem', int('700', base=8) or 0o700)
                 remove(f'{CURRENT_DIR}{self.key_name}.pem')
             return True
         else:
-            self.logger.error(f'Failed to delete the key: {self.key_name}')
+            LOGGER.error(f'Failed to delete the key: {self.key_name}')
 
     def _delete_security_group(self, security_group_id: str) -> bool:
         """Deletes the security group.
@@ -333,16 +320,16 @@ class Tunnel:
                 GroupId=security_group_id
             )
         except ClientError as error:
-            self.logger.error(f'API call to delete the Security Group {security_group_id} has failed.\n{error}')
+            LOGGER.error(f'API call to delete the Security Group {security_group_id} has failed.\n{error}')
             if '(InvalidGroup.NotFound)' in str(error):
                 return True
             return False
 
         if response.get('ResponseMetadata').get('HTTPStatusCode') == 200:
-            self.logger.info(f'{security_group_id} has been deleted from Security Groups.')
+            LOGGER.info(f'{security_group_id} has been deleted from Security Groups.')
             return True
         else:
-            self.logger.error(f'Failed to delete the SecurityGroup: {security_group_id}')
+            LOGGER.error(f'Failed to delete the SecurityGroup: {security_group_id}')
 
     def _terminate_ec2_instance(self, instance_id: str) -> bool:
         """Terminates the requested instance.
@@ -359,14 +346,14 @@ class Tunnel:
                 InstanceIds=[instance_id]
             )
         except ClientError as error:
-            self.logger.error(f'API call to terminate the instance has failed.\n{error}')
+            LOGGER.error(f'API call to terminate the instance has failed.\n{error}')
             return False
 
         if response.get('ResponseMetadata').get('HTTPStatusCode') == 200:
-            self.logger.info(f'InstanceId {instance_id} has been set to terminate.')
+            LOGGER.info(f'InstanceId {instance_id} has been set to terminate.')
             return True
         else:
-            self.logger.error(f'Failed to terminate the InstanceId: {instance_id}')
+            LOGGER.error(f'Failed to terminate the InstanceId: {instance_id}')
 
     def _instance_info(self, instance_id: str) -> tuple or None:
         """Makes a ``describe_instance_status`` API call to get the status of the instance that was created.
@@ -378,7 +365,7 @@ class Tunnel:
             tuple or None:
             A tuple object of Public DNS Name and Public IP Address.
         """
-        self.logger.info('Waiting for the instance to go live.')
+        LOGGER.info('Waiting for the instance to go live.')
         sleeper(sleep_time=30)
         while True:
             sleeper(sleep_time=5)
@@ -387,7 +374,7 @@ class Tunnel:
                     InstanceIds=[instance_id]
                 )
             except ClientError as error:
-                self.logger.error(f'API call to describe instance has failed.{error}')
+                LOGGER.error(f'API call to describe instance has failed.{error}')
                 return
 
             if response.get('ResponseMetadata').get('HTTPStatusCode') != 200:
@@ -413,15 +400,15 @@ class Tunnel:
         try:
             self.port = int(self.port)
         except (TypeError, ValueError):
-            self.logger.error('Port number is mandatory and should be an integer to initiate tunneling. '
-                              f'Received {self.port}')
-            self.logger.error('Check https://github.com/thevickypedia/expose#environment-variables for more information'
-                              ' on setting up env vars.')
+            LOGGER.error('Port number is mandatory and should be an integer to initiate tunneling. '
+                         f'Received {self.port}')
+            LOGGER.error('Check https://github.com/thevickypedia/expose#environment-variables for more information'
+                         ' on setting up env vars.')
             return
 
         if path.isfile(self.server_file) and path.isfile(f'{self.key_name}.pem'):
-            self.logger.warning('Received request to start VM, but looks like a session is up and running already.')
-            self.logger.warning('Initiating re-configuration.')
+            LOGGER.warning('Received request to start VM, but looks like a session is up and running already.')
+            LOGGER.warning('Initiating re-configuration.')
             sleeper(sleep_time=5)
             with open(self.server_file, 'r') as file:
                 data = json.load(file)
@@ -430,11 +417,11 @@ class Tunnel:
 
         if not self.image_id:
             self._get_image_id()
-            self.logger.warning(f"AMI ID was not set. "
-                                f"Using the default AMI ID {self.image_id} for the region {self.region}")
+            LOGGER.warning(f"AMI ID was not set. "
+                           f"Using the default AMI ID {self.image_id} for the region {self.region}")
 
         if not self._optional_args():
-            self.logger.warning('DOMAIN, SUBDOMAIN, EMAIL and ORG gives a customized access to the tunnel.')
+            LOGGER.warning('DOMAIN, SUBDOMAIN, EMAIL and ORG gives a customized access to the tunnel.')
 
         if instance_basic := self._create_ec2_instance():
             instance_id, security_group_id = instance_basic
@@ -466,7 +453,7 @@ class Tunnel:
         with open(self.server_file, 'w') as file:
             json.dump(instance_info, file, indent=2)
 
-        self.logger.info('Waiting for SSH origin to be active.')
+        LOGGER.info('Waiting for SSH origin to be active.')
         sleeper(sleep_time=15)
 
         self._configure_vm(public_dns=public_dns, public_ip=public_ip)
@@ -478,7 +465,7 @@ class Tunnel:
             public_dns: Public DNS name of the EC2 that was created.
             public_ip: Public IP of the EC2 that was created.
         """
-        self.logger.info('Gathering pieces for configuration.')
+        LOGGER.info('Gathering pieces for configuration.')
         custom_servers = f"{public_dns} {public_ip}"
 
         endpoint = None
@@ -498,7 +485,7 @@ class Tunnel:
 
         for conf_file in CONFIGURATION_FILES:
             download_file = conf_file.removeprefix(CURRENT_DIR)
-            self.logger.info(f'Downloading the configuration file: {download_file}.')
+            LOGGER.info(f'Downloading the configuration file: {download_file}.')
             response = requests.get(url=f'{CONFIGURATION_LOCATION}{download_file}')
             if not response.ok:
                 raise ConnectionError(f'Failed to download the config file: {download_file}')
@@ -509,37 +496,37 @@ class Tunnel:
         if path.isdir(f"{HOME_DIR}.ssh") and \
                 path.isfile(f"{HOME_DIR}.ssh{SEP}key.pem") and \
                 path.isfile(f"{HOME_DIR}.ssh{SEP}cert.pem"):
-            self.logger.info(f'Found certificate and key in {HOME_DIR}')
+            LOGGER.info(f'Found certificate and key in {HOME_DIR}')
             copy_files.extend([f"{HOME_DIR}.ssh{SEP}cert.pem", f"{HOME_DIR}.ssh{SEP}key.pem",
                                f"{CURRENT_DIR}options-ssl-nginx.conf"])
             rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
         elif path.isfile(f'{CURRENT_DIR}cert.pem') and path.isfile(f'{CURRENT_DIR}key.pem'):
-            self.logger.info(f'Found certificate and key in {path}')
+            LOGGER.info(f'Found certificate and key in {path}')
             copy_files.extend([f"{CURRENT_DIR}cert.pem", f"{CURRENT_DIR}key.pem",
                                f"{CURRENT_DIR}options-ssl-nginx.conf"])
             rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
         elif generate_cert(common_name=endpoint or public_dns, email_address=self.email_address,
                            organization_name=self.organization):
-            self.logger.info('Generated self-signed SSL certificate and private key.')
+            LOGGER.info('Generated self-signed SSL certificate and private key.')
             CONFIGURATION_FILES.extend([f'{CURRENT_DIR}cert.pem', f'{CURRENT_DIR}key.pem'])
             copy_files.extend([f"{CURRENT_DIR}cert.pem", f"{CURRENT_DIR}key.pem",
                                f"{CURRENT_DIR}options-ssl-nginx.conf"])
             rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
         else:
-            self.logger.warning('Failed to generate self-signed SSL certificate and private key.')
+            LOGGER.warning('Failed to generate self-signed SSL certificate and private key.')
             rename(src=f"{CURRENT_DIR}nginx-non-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
 
         nginx_server = ServerConfig(hostname=public_dns, pem_file=f'{self.key_name}.pem')
         nginx_server.server_copy(files=copy_files)
-        self.logger.info(f'Copied required files to {public_dns}')
+        LOGGER.info(f'Copied required files to {public_dns}')
 
         CONFIGURATION_FILES.extend([f'{CURRENT_DIR}nginx.conf'])
         for file in CONFIGURATION_FILES:
             if path.isfile(file):
-                self.logger.info(f'Removing {file}')
+                LOGGER.info(f'Removing {file}')
                 remove(file)
 
-        self.logger.info('Configuring nginx server.')
+        LOGGER.info('Configuring nginx server.')
         nginx_status = nginx_server.run_interactive_ssh(
             commands={
                 "sudo apt-get update -y": 5,
@@ -551,26 +538,26 @@ class Tunnel:
             }
         )
         if not nginx_status:
-            self.logger.error('Nginx server was not configured. Cleaning up AWS resources acquired.')
+            LOGGER.error('Nginx server was not configured. Cleaning up AWS resources acquired.')
             self.stop()
             return
 
-        self.logger.info('Nginx server was configured successfully.')
+        LOGGER.info('Nginx server was configured successfully.')
         protocol = 'https' if f"{CURRENT_DIR}options-ssl-nginx.conf" in copy_files else 'http'
         if endpoint:
             change_record_set(dns_name=self.domain_name, source=self.subdomain, destination=public_ip, record_type='A')
-            self.logger.info(f'{protocol}://{endpoint} → http://localhost:{self.port}')
+            LOGGER.info(f'{protocol}://{endpoint} → http://localhost:{self.port}')
         else:
-            self.logger.info(f'{protocol}://{public_dns} → http://localhost:{self.port}')
+            LOGGER.info(f'{protocol}://{public_dns} → http://localhost:{self.port}')
 
-        self.logger.info('Initiating tunnel')
+        LOGGER.info('Initiating tunnel')
         sleeper(sleep_time=5)
         nginx_server.initiate_tunnel(port=self.port)
 
     def stop(self) -> None:
         """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created."""
         if not path.exists(self.server_file):
-            self.logger.info(f'Input file: {self.server_file} is missing. CANNOT proceed.')
+            LOGGER.info(f'Input file: {self.server_file} is missing. CANNOT proceed.')
             return
 
         with open(self.server_file, 'r') as file:
@@ -580,7 +567,7 @@ class Tunnel:
             if (domain_name := self.domain_name) and (subdomain := self.subdomain):
                 change_record_set(dns_name=domain_name, source=subdomain, destination=data.get('public_ip'),
                                   record_type='A', action='DELETE')
-            self.logger.info('Waiting for dependent objects to delete SecurityGroup.')
+            LOGGER.info('Waiting for dependent objects to delete SecurityGroup.')
             sleeper(sleep_time=90)
             while True:
                 if self._delete_security_group(security_group_id=data.get('security_group_id')):
