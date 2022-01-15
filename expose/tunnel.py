@@ -1,6 +1,6 @@
 import json
 import logging
-from os import chmod, environ, getcwd, path, remove, rename, system
+from os import chmod, environ, getcwd, path, remove, rename
 from subprocess import CalledProcessError, SubprocessError, check_output
 from time import perf_counter
 
@@ -379,7 +379,7 @@ class Tunnel:
             A tuple object of Public DNS Name and Public IP Address.
         """
         self.logger.info('Waiting for the instance to go live.')
-        sleeper(sleep_time=25)
+        sleeper(sleep_time=30)
         while True:
             sleeper(sleep_time=5)
             try:
@@ -410,19 +410,22 @@ class Tunnel:
 
     def start(self) -> None:
         """Calls the class methods ``_create_ec2_instance`` and ``_instance_info`` to configure the ec2 instance."""
+        try:
+            self.port = int(self.port)
+        except (TypeError, ValueError):
+            self.logger.error('Port number is mandatory and should be an integer to initiate tunneling. '
+                              f'Received {self.port}')
+            self.logger.error('Check https://github.com/thevickypedia/expose#environment-variables for more information'
+                              ' on setting up env vars.')
+            return
+
         if path.isfile(self.server_file) and path.isfile(f'{self.key_name}.pem'):
             self.logger.warning('Received request to start VM, but looks like a session is up and running already.')
             self.logger.warning('Initiating re-configuration.')
-            sleeper(sleep_time=10)
+            sleeper(sleep_time=5)
             with open(self.server_file, 'r') as file:
                 data = json.load(file)
             self._configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'))
-            return
-
-        if not self.port:
-            self.logger.error('Port number is mandatory to initiate tunneling. Received `null`')
-            self.logger.error('Check https://github.com/thevickypedia/expose#environment-variables for more information'
-                              ' on setting up env vars.')
             return
 
         if not self.image_id:
@@ -561,9 +564,8 @@ class Tunnel:
             self.logger.info(f'{protocol}://{public_dns} → http://localhost:{self.port}')
 
         self.logger.info('Initiating tunnel')
-        system(
-            f"ssh -o StrictHostKeyChecking=no -i {self.key_name}.pem -R 8080:localhost:{self.port} ubuntu@{public_dns}"
-        )
+        sleeper(sleep_time=5)
+        nginx_server.initiate_tunnel(port=self.port)
 
     def stop(self) -> None:
         """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created."""
