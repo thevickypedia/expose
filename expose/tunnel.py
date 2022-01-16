@@ -1,5 +1,5 @@
 import json
-from os import chmod, environ, getcwd, path, remove, rename
+from os import chmod, environ, getcwd, path, remove
 from subprocess import CalledProcessError, SubprocessError, check_output
 from time import perf_counter
 
@@ -14,19 +14,16 @@ from expose.helpers.auxiliary import IP_INFO, sleeper, time_converter
 from expose.helpers.cert import generate_cert
 from expose.helpers.defaults import AWSDefaults
 from expose.helpers.logger import LOGGER
-from expose.helpers.nginx_server import ServerConfig
 from expose.helpers.route_53 import change_record_set
+from expose.helpers.server import Server
 
 disable_warnings(InsecureRequestWarning)  # Disable warnings for self-signed certificates
 
 if path.isfile('.env'):
     load_dotenv(dotenv_path='.env', verbose=True, override=True)
 
-SEP = path.sep
-HOME_DIR = path.expanduser('~') + SEP
-CURRENT_DIR = getcwd() + SEP
-CONFIGURATION_FILES = [f'{CURRENT_DIR}server.conf', f'{CURRENT_DIR}nginx-ssl.conf',
-                       f'{CURRENT_DIR}nginx-non-ssl.conf', f'{CURRENT_DIR}options-ssl-nginx.conf']
+HOME_DIR = path.expanduser('~') + path.sep
+CURRENT_DIR = getcwd() + path.sep
 CONFIGURATION_LOCATION = 'https://raw.githubusercontent.com/thevickypedia/expose/main/configuration/'
 
 
@@ -384,17 +381,6 @@ class Tunnel:
                     instance_info = self.ec2_resource.Instance(instance_id)
                     return instance_info.public_dns_name, instance_info.public_ip_address
 
-    def _optional_args(self) -> bool:
-        """Checks for the optional arguments/env vars.
-
-        Returns:
-            bool:
-            A boolean flag to indicate whether the necessary args are present before startup.
-        """
-        if not any([self.domain_name, self.subdomain, self.email_address, self.organization]):
-            return False
-        return True
-
     def start(self) -> None:
         """Calls the class methods ``_create_ec2_instance`` and ``_instance_info`` to configure the ec2 instance."""
         try:
@@ -415,13 +401,13 @@ class Tunnel:
             self._configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'))
             return
 
+        if not any([self.domain_name, self.subdomain, self.email_address, self.organization]):
+            LOGGER.warning('DOMAIN, SUBDOMAIN, EMAIL and ORG gives a customized access to the tunnel.')
+
         if not self.image_id:
             self._get_image_id()
             LOGGER.warning(f"AMI ID was not set. "
                            f"Using the default AMI ID {self.image_id} for the region {self.region}")
-
-        if not self._optional_args():
-            LOGGER.warning('DOMAIN, SUBDOMAIN, EMAIL and ORG gives a customized access to the tunnel.')
 
         if instance_basic := self._create_ec2_instance():
             instance_id, security_group_id = instance_basic
@@ -483,48 +469,62 @@ class Tunnel:
             except (SubprocessError, CalledProcessError):
                 pass
 
-        for conf_file in CONFIGURATION_FILES:
-            download_file = conf_file.removeprefix(CURRENT_DIR)
-            LOGGER.info(f'Downloading the configuration file: {download_file}.')
-            response = requests.get(url=f'{CONFIGURATION_LOCATION}{download_file}')
-            if not response.ok:
-                raise ConnectionError(f'Failed to download the config file: {download_file}')
-            with open(conf_file, 'w') as file:
-                file.write(response.text.replace('SERVER_NAME_HERE', custom_servers))
+        nginx_server = Server(hostname=public_dns, pem_file=f'{self.key_name}.pem')
 
-        copy_files = [f"{CURRENT_DIR}server.conf", f"{CURRENT_DIR}nginx.conf"]
+        def _file_io_uploader(source_file: str, destination_file: str) -> None:
+            """Reads a file in localhost and writes it within SSH connection.
+
+            Args:
+                source_file: Name of the source file in localhost.
+                destination_file: Name of the destination file in the server.
+            """
+            with open(source_file) as f:
+                nginx_server.server_write(data={destination_file: f.read()})
+
+        def _download_config_file(filename: str):
+            """Downloads configuration files from GitHub.
+
+            Args:
+                filename: Name of the file that has to be downloaded.
+
+            Returns:
+                str:
+                Returns the data of the file as a string.
+            """
+            LOGGER.info(f'Downloading the configuration file: {filename}.')
+            response = requests.get(url=f'{CONFIGURATION_LOCATION}{filename}')
+            if not response.ok:
+                raise ConnectionError(f'Failed to download the config file: {filename}')
+            return response.text.replace('SERVER_NAME_HERE', custom_servers)
+
+        download_and_copy = {"server.conf": _download_config_file(filename="server.conf")}
         if path.isdir(f"{HOME_DIR}.ssh") and \
-                path.isfile(f"{HOME_DIR}.ssh{SEP}key.pem") and \
-                path.isfile(f"{HOME_DIR}.ssh{SEP}cert.pem"):
+                path.isfile(f"{HOME_DIR}.ssh{path.sep}key.pem") and \
+                path.isfile(f"{HOME_DIR}.ssh{path.sep}cert.pem"):
             LOGGER.info(f'Found certificate and key in {HOME_DIR}')
-            copy_files.extend([f"{HOME_DIR}.ssh{SEP}cert.pem", f"{HOME_DIR}.ssh{SEP}key.pem",
-                               f"{CURRENT_DIR}options-ssl-nginx.conf"])
-            rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
+            _file_io_uploader(source_file=f"{HOME_DIR}.ssh{path.sep}cert.pem", destination_file="cert.pem")
+            _file_io_uploader(source_file=f"{HOME_DIR}.ssh{path.sep}key.pem", destination_file="key.pem")
+            download_and_copy["options-ssl-nginx.conf"] = _download_config_file(filename="options-ssl-nginx.conf")
+            download_and_copy["nginx.conf"] = _download_config_file(filename="nginx-ssl.conf")
         elif path.isfile(f'{CURRENT_DIR}cert.pem') and path.isfile(f'{CURRENT_DIR}key.pem'):
-            LOGGER.info(f'Found certificate and key in {path}')
-            copy_files.extend([f"{CURRENT_DIR}cert.pem", f"{CURRENT_DIR}key.pem",
-                               f"{CURRENT_DIR}options-ssl-nginx.conf"])
-            rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
+            LOGGER.info(f'Found certificate and key in {CURRENT_DIR}')
+            _file_io_uploader(source_file=f"{CURRENT_DIR}cert.pem", destination_file="cert.pem")
+            _file_io_uploader(source_file=f"{CURRENT_DIR}key.pem", destination_file="key.pem")
+            download_and_copy["options-ssl-nginx.conf"] = _download_config_file(filename="options-ssl-nginx.conf")
+            download_and_copy["nginx.conf"] = _download_config_file(filename="nginx-ssl.conf")
         elif generate_cert(common_name=endpoint or public_dns, email_address=self.email_address,
                            organization_name=self.organization):
             LOGGER.info('Generated self-signed SSL certificate and private key.')
-            CONFIGURATION_FILES.extend([f'{CURRENT_DIR}cert.pem', f'{CURRENT_DIR}key.pem'])
-            copy_files.extend([f"{CURRENT_DIR}cert.pem", f"{CURRENT_DIR}key.pem",
-                               f"{CURRENT_DIR}options-ssl-nginx.conf"])
-            rename(src=f"{CURRENT_DIR}nginx-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
+            _file_io_uploader(source_file=f"{CURRENT_DIR}cert.pem", destination_file="cert.pem")
+            _file_io_uploader(source_file=f"{CURRENT_DIR}key.pem", destination_file="key.pem")
+            download_and_copy["options-ssl-nginx.conf"] = _download_config_file(filename="options-ssl-nginx.conf")
+            download_and_copy["nginx.conf"] = _download_config_file(filename="nginx-ssl.conf")
         else:
             LOGGER.warning('Failed to generate self-signed SSL certificate and private key.')
-            rename(src=f"{CURRENT_DIR}nginx-non-ssl.conf", dst=f"{CURRENT_DIR}nginx.conf")
+            download_and_copy["nginx.conf"] = _download_config_file(filename="nginx-non-ssl.conf")
 
-        nginx_server = ServerConfig(hostname=public_dns, pem_file=f'{self.key_name}.pem')
-        nginx_server.server_copy(files=copy_files)
-        LOGGER.info(f'Copied required files to {public_dns}')
-
-        CONFIGURATION_FILES.extend([f'{CURRENT_DIR}nginx.conf'])
-        for file in CONFIGURATION_FILES:
-            if path.isfile(file):
-                LOGGER.info(f'Removing {file}')
-                remove(file)
+        LOGGER.info(f'Copying configuration files to {public_dns}')
+        nginx_server.server_write(data=download_and_copy)
 
         LOGGER.info('Configuring nginx server.')
         nginx_status = nginx_server.run_interactive_ssh(
@@ -543,7 +543,7 @@ class Tunnel:
             return
 
         LOGGER.info('Nginx server was configured successfully.')
-        protocol = 'https' if f"{CURRENT_DIR}options-ssl-nginx.conf" in copy_files else 'http'
+        protocol = 'https' if download_and_copy.get("options-ssl-nginx.conf") else 'http'
         if endpoint:
             change_record_set(dns_name=self.domain_name, source=self.subdomain, destination=public_ip, record_type='A')
             LOGGER.info(f'{protocol}://{endpoint} → http://localhost:{self.port}')

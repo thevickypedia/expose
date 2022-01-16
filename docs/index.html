@@ -232,20 +232,6 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="tunnel.Tunnel._optional_args">
-<span class="sig-name descname"><span class="pre">_optional_args</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#tunnel.Tunnel._optional_args" title="Permalink to this definition">¶</a></dt>
-<dd><p>Checks for the optional arguments/env vars.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>A boolean flag to indicate whether the necessary args are present before startup.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="tunnel.Tunnel.start">
 <span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#tunnel.Tunnel.start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calls the class methods <code class="docutils literal notranslate"><span class="pre">_create_ec2_instance</span></code> and <code class="docutils literal notranslate"><span class="pre">_instance_info</span></code> to configure the ec2 instance.</p>
@@ -274,11 +260,11 @@
 </dd></dl>
 
 </section>
-<section id="module-helpers.nginx_server">
-<span id="expose-configuration"></span><h1>Expose - Configuration<a class="headerlink" href="#module-helpers.nginx_server" title="Permalink to this headline">¶</a></h1>
+<section id="module-helpers.server">
+<span id="expose-configuration"></span><h1>Expose - Configuration<a class="headerlink" href="#module-helpers.server" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="helpers.nginx_server.join">
-<span class="sig-prename descclassname"><span class="pre">helpers.nginx_server.</span></span><span class="sig-name descname"><span class="pre">join</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">separator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">':'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#helpers.nginx_server.join" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="helpers.server.join">
+<span class="sig-prename descclassname"><span class="pre">helpers.server.</span></span><span class="sig-name descname"><span class="pre">join</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">separator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">':'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#helpers.server.join" title="Permalink to this definition">¶</a></dt>
 <dd><p>Uses <code class="docutils literal notranslate"><span class="pre">.join</span></code> to squash a list or tuple using a separator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -297,10 +283,10 @@
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="helpers.nginx_server.ServerConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">helpers.nginx_server.</span></span><span class="sig-name descname"><span class="pre">ServerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pem_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ubuntu'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#helpers.nginx_server.ServerConfig" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initiates <code class="docutils literal notranslate"><span class="pre">ServerConfig</span></code> object to create an SSH session to configure the server and intiate the tunneling.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ServerConfig</span>
+<dt class="sig sig-object py" id="helpers.server.Server">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">helpers.server.</span></span><span class="sig-name descname"><span class="pre">Server</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pem_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ubuntu'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#helpers.server.Server" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initiates <code class="docutils literal notranslate"><span class="pre">Server</span></code> object to create an SSH session to configure the server and intiate the tunneling.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Server</span>
 </pre></div>
 </div>
 <p><strong>Reverse SSH Port Forwarding</strong></p>
@@ -318,8 +304,8 @@ forwarding makes sure that you can SSH back to the server machine.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="helpers.nginx_server.ServerConfig.run_interactive_ssh">
-<span class="sig-name descname"><span class="pre">run_interactive_ssh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">commands</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#helpers.nginx_server.ServerConfig.run_interactive_ssh" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="helpers.server.Server.run_interactive_ssh">
+<span class="sig-name descname"><span class="pre">run_interactive_ssh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">commands</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#helpers.server.Server.run_interactive_ssh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Authenticates remote server using a <code class="docutils literal notranslate"><span class="pre">*.pem</span></code> file and runs interactive ssh commands using <code class="docutils literal notranslate"><span class="pre">paramiko</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -335,28 +321,19 @@ forwarding makes sure that you can SSH back to the server machine.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="helpers.nginx_server.ServerConfig.server_copy">
-<span class="sig-name descname"><span class="pre">server_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#helpers.nginx_server.ServerConfig.server_copy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copy files from local to the connected server.</p>
+<dt class="sig sig-object py" id="helpers.server.Server.server_write">
+<span class="sig-name descname"><span class="pre">server_write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#helpers.server.Server.server_write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes data into files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>files</strong> – List of files that has to be copied.</p></li>
-<li><p><strong>retry</strong> – Retry to copy the file.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A boolean flag to indicate whether files were copied successfully.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>bool</p>
+<dd class="field-odd"><p><strong>data</strong> – Takes a dictionary of key-value pair filename and content.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="helpers.nginx_server.ServerConfig._handler">
-<span class="sig-name descname"><span class="pre">_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">paramiko.channel.Channel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#helpers.nginx_server.ServerConfig._handler" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="helpers.server.Server._handler">
+<span class="sig-name descname"><span class="pre">_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">paramiko.channel.Channel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#helpers.server.Server._handler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a socket and handles TCP IO on the channel created.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -369,8 +346,8 @@ forwarding makes sure that you can SSH back to the server machine.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="helpers.nginx_server.ServerConfig.initiate_tunnel">
-<span class="sig-name descname"><span class="pre">initiate_tunnel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#helpers.nginx_server.ServerConfig.initiate_tunnel" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="helpers.server.Server.initiate_tunnel">
+<span class="sig-name descname"><span class="pre">initiate_tunnel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#helpers.server.Server.initiate_tunnel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initiates port forwarding using <code class="docutils literal notranslate"><span class="pre">Transport</span></code> which creates a channel.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -587,7 +564,7 @@ forwarding makes sure that you can SSH back to the server machine.</p>
   <ul>
 <li><a class="reference internal" href="#">Welcome to Expose’s documentation!</a></li>
 <li><a class="reference internal" href="#module-tunnel">Expose - Main Module</a></li>
-<li><a class="reference internal" href="#module-helpers.nginx_server">Expose - Configuration</a></li>
+<li><a class="reference internal" href="#module-helpers.server">Expose - Configuration</a></li>
 <li><a class="reference internal" href="#module-helpers.route_53">Expose - Route53</a></li>
 <li><a class="reference internal" href="#module-helpers.auxiliary">Expose - Auxiliary</a></li>
 <li><a class="reference internal" href="#module-helpers.cert">Expose - Certificates</a></li>

@@ -22,7 +22,7 @@ Expose - Main Module
 Expose - Configuration
 ======================
 
-.. automodule:: helpers.nginx_server
+.. automodule:: helpers.server
    :members:
    :undoc-members:
 

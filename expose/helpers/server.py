@@ -6,7 +6,6 @@ from typing import Union
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from paramiko.channel import Channel
 from paramiko.transport import Transport
-from scp import SCPClient
 
 from expose.helpers.auxiliary import sleeper
 from expose.helpers.logger import LOGGER
@@ -26,10 +25,10 @@ def join(value: Union[tuple, list, str], separator: str = ':') -> str:
     return separator.join(map(str, value))
 
 
-class ServerConfig:
-    """Initiates ``ServerConfig`` object to create an SSH session to configure the server and intiate the tunneling.
+class Server:
+    """Initiates ``Server`` object to create an SSH session to configure the server and intiate the tunneling.
 
-    >>> ServerConfig
+    >>> Server
 
     **Reverse SSH Port Forwarding**
 
@@ -77,30 +76,20 @@ class ServerConfig:
             sleeper(sleep_time=commands[command])
         return True
 
-    def server_copy(self, files: list, retry: bool = False) -> bool:
-        """Copy files from local to the connected server.
+    def server_write(self, data: dict) -> None:
+        """Writes data into files.
 
         Args:
-            files: List of files that has to be copied.
-            retry: Retry to copy the file.
-
-        Returns:
-            bool:
-            A boolean flag to indicate whether files were copied successfully.
+            data: Takes a dictionary of key-value pair filename and content.
         """
-        with SCPClient(self.ssh_client.get_transport()) as scp:
-            scp.put(files=files)
-        sftp = self.ssh_client.open_sftp()
-        for file in files:
-            try:
-                sftp.stat(file.split('/')[-1])
-            except IOError:
-                if not retry:
-                    LOGGER.warning(f"{file} was not copied successfully. Retrying..")
-                    self.server_copy(files=[file], retry=True)
-                LOGGER.error(f"{file} was not copied successfully.")
-                return False
-        return True
+        ftp = self.ssh_client.open_sftp()
+        for filename, content in data.items():
+            if not filename.startswith("/"):
+                filename = f"/home/ubuntu/{filename}"
+            file = ftp.file(filename=filename, mode='w')
+            file.write(content)
+            file.flush()
+        ftp.close()
 
     def _handler(self, channel: Channel, port: int) -> None:
         """Creates a socket and handles TCP IO on the channel created.
@@ -117,7 +106,8 @@ class ServerConfig:
             self.ssh_client.close()
             return
 
-        LOGGER.info(f"Connection open {join(channel.origin_addr)} → {join(channel.getpeername())} → localhost:{port}")
+        LOGGER.info(f"Connection open "
+                    f"{join(channel.origin_addr)} → {join(channel.getpeername())} → {join(channel.origin_addr)}")
         while True:
             read, write, execute = select([socket_, channel], [], [])
             if socket_ in read:
@@ -149,6 +139,9 @@ class ServerConfig:
         except KeyboardInterrupt:
             LOGGER.info("Tunneling interrupted")
         LOGGER.info(f"Stopping reverse tunneling on {join(transport.getpeername())}")
+        if host_keys := self.ssh_client.get_host_keys().keys():
+            LOGGER.info(f"Closing SSH connection on {host_keys[0]}")
+        else:
+            LOGGER.info(f"Closing SSH connection on {join(transport.getpeername())}")
         transport.cancel_port_forward(address="localhost", port=8080)
-        LOGGER.info(f"Closing SSH connection to {self.ssh_client.get_host_keys().keys()[0]}")
         self.ssh_client.close()
