@@ -1,8 +1,11 @@
+import sys
 from select import select
 from socket import socket
 from threading import Thread
+from time import sleep
 from typing import Union
 
+import requests
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from paramiko.channel import Channel
 from paramiko.transport import Transport
@@ -23,6 +26,18 @@ def join(value: Union[tuple, list, str], separator: str = ':') -> str:
         A squashed string.
     """
     return separator.join(map(str, value))
+
+
+def print_warning(port: int) -> None:
+    """Prints a message on screen to run an app or api on the specific port.
+
+    Args:
+        port: Port number.
+    """
+    sys.stdout.write(f'\rRun an application on the port {port} to start tunneling.')
+    sleep(5)
+    sys.stdout.flush()
+    sys.stdout.write('\r')
 
 
 class Server:
@@ -128,6 +143,16 @@ class Server:
         Args:
             port: Port number on which the channel has to be
         """
+        while True:
+            try:
+                response = requests.get(f'http://localhost:{port}')
+                if response.ok:
+                    LOGGER.info(f'Application is running on port: {port}')
+                    break
+            except requests.exceptions.ConnectionError:
+                print_warning(port=port)
+            else:
+                print_warning(port=port)
         LOGGER.info("Awaiting connection...")
         transport: Transport = self.ssh_client.get_transport()
         transport.request_port_forward(address="localhost", port=8080)

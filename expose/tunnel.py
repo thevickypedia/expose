@@ -58,11 +58,6 @@ class Tunnel:
             - If no values (for aws authentication) are passed during object initialization, script checks for env vars.
             - If the environment variables are ``null``, gets the default credentials from ``~/.aws/credentials``.
         """
-        # Hard-coded certificate file name, server information file name, security group name
-        self.key_name = 'Tunnel'
-        self.server_file = 'server_info.json'
-        self.security_group_name = 'Expose Localhost'
-
         # AWS client and resource setup
         self.region = aws_region_name.lower()
         if not AWSDefaults.REGIONS.get(aws_region_name):
@@ -114,13 +109,13 @@ class Tunnel:
         """
         try:
             response = self.ec2_client.create_key_pair(
-                KeyName=self.key_name,
+                KeyName='Tunnel',
                 KeyType='rsa'
             )
         except ClientError as error:
             error = str(error)
-            if '(InvalidKeyPair.Duplicate)' in error and self.key_name in error:
-                LOGGER.warning(f'Found an existing KeyPair named: {self.key_name}. Re-creating it.')
+            if '(InvalidKeyPair.Duplicate)' in error and 'Tunnel' in error:
+                LOGGER.warning('Found an existing KeyPair named: Tunnel. Re-creating it.')
                 self._delete_key_pair()
                 self._create_key_pair()
                 return True
@@ -128,12 +123,12 @@ class Tunnel:
             return False
 
         if response.get('ResponseMetadata').get('HTTPStatusCode') == 200:
-            with open(f'{CURRENT_DIR}{self.key_name}.pem', 'w') as file:
+            with open(f'{CURRENT_DIR}Tunnel.pem', 'w') as file:
                 file.write(response.get('KeyMaterial'))
-            LOGGER.info(f'Stored KeyPair as {self.key_name}.pem')
+            LOGGER.info('Stored KeyPair as Tunnel.pem')
             return True
         else:
-            LOGGER.error(f'Unable to create a key pair: {self.key_name}')
+            LOGGER.error('Unable to create a key pair: Tunnel')
 
     def _get_vpc_id(self) -> str or None:
         """Gets the default VPC id.
@@ -215,17 +210,17 @@ class Tunnel:
 
         try:
             response = self.ec2_client.create_security_group(
-                GroupName=self.security_group_name,
+                GroupName='Expose Localhost',
                 Description='Security Group to allow certain port ranges for VM.',
                 VpcId=vpc_id
             )
         except ClientError as error:
             error = str(error)
-            if '(InvalidGroup.Duplicate)' in error and self.security_group_name in error:
-                LOGGER.warning(f'Found an existing SecurityGroup named: {self.security_group_name}. Reusing it.')
+            if '(InvalidGroup.Duplicate)' in error and 'Expose Localhost' in error:
+                LOGGER.warning('Found an existing SecurityGroup named: Expose Localhost. Reusing it.')
                 response = self.ec2_client.describe_security_groups(
                     Filters=[
-                        dict(Name='group-name', Values=[self.security_group_name])
+                        dict(Name='group-name', Values=['Expose Localhost'])
                     ]
                 )
                 group_id = response['SecurityGroups'][0]['GroupId']
@@ -260,7 +255,7 @@ class Tunnel:
                 MaxCount=1,
                 MinCount=1,
                 ImageId=self.image_id,
-                KeyName=self.key_name,
+                KeyName='Tunnel',
                 SecurityGroupIds=[security_group_id]
             )
         except ClientError as error:
@@ -287,20 +282,20 @@ class Tunnel:
         """
         try:
             response = self.ec2_client.delete_key_pair(
-                KeyName=self.key_name
+                KeyName='Tunnel'
             )
         except ClientError as error:
-            LOGGER.error(f'API call to delete the key {self.key_name} has failed.\n{error}')
+            LOGGER.error(f'API call to delete the key Tunnel has failed.\n{error}')
             return False
 
         if response.get('ResponseMetadata').get('HTTPStatusCode') == 200:
-            LOGGER.info(f'{self.key_name} has been deleted from KeyPairs.')
-            if path.exists(f'{CURRENT_DIR}{self.key_name}.pem'):
-                chmod(f'{CURRENT_DIR}{self.key_name}.pem', int('700', base=8) or 0o700)
-                remove(f'{CURRENT_DIR}{self.key_name}.pem')
+            LOGGER.info('Tunnel has been deleted from KeyPairs.')
+            if path.exists(f'{CURRENT_DIR}Tunnel.pem'):
+                chmod(f'{CURRENT_DIR}Tunnel.pem', int('700', base=8) or 0o700)
+                remove(f'{CURRENT_DIR}Tunnel.pem')
             return True
         else:
-            LOGGER.error(f'Failed to delete the key: {self.key_name}')
+            LOGGER.error('Failed to delete the key: Tunnel')
 
     def _delete_security_group(self, security_group_id: str) -> bool:
         """Deletes the security group.
@@ -392,11 +387,11 @@ class Tunnel:
                          ' on setting up env vars.')
             return
 
-        if path.isfile(self.server_file) and path.isfile(f'{self.key_name}.pem'):
+        if path.isfile(f'{CURRENT_DIR}server_info.json') and path.isfile(f'{CURRENT_DIR}Tunnel.pem'):
             LOGGER.warning('Received request to start VM, but looks like a session is up and running already.')
             LOGGER.warning('Initiating re-configuration.')
             sleeper(sleep_time=5)
-            with open(self.server_file, 'r') as file:
+            with open('server_info.json', 'r') as file:
                 data = json.load(file)
             self._configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'))
             return
@@ -430,13 +425,13 @@ class Tunnel:
             'public_dns': public_dns,
             'public_ip': public_ip,
             'security_group_id': security_group_id,
-            'ssh_endpoint': f'ssh -i {self.key_name}.pem ubuntu@{public_dns}',
-            'start_tunneling': f"ssh -i {self.key_name}.pem -R 8080:localhost:{self.port} ubuntu@{public_dns}"
+            'ssh_endpoint': f'ssh -i Tunnel.pem ubuntu@{public_dns}',
+            'start_tunneling': f"ssh -i Tunnel.pem -R 8080:localhost:{self.port} ubuntu@{public_dns}"
         }
 
-        chmod(f'{CURRENT_DIR}{self.key_name}.pem', int('400', base=8) or 0o400)
+        chmod(f'{CURRENT_DIR}Tunnel.pem', int('400', base=8) or 0o400)
 
-        with open(self.server_file, 'w') as file:
+        with open(f'{CURRENT_DIR}server_info.json', 'w') as file:
             json.dump(instance_info, file, indent=2)
 
         LOGGER.info('Waiting for SSH origin to be active.')
@@ -469,7 +464,7 @@ class Tunnel:
             except (SubprocessError, CalledProcessError):
                 pass
 
-        nginx_server = Server(hostname=public_dns, pem_file=f'{self.key_name}.pem')
+        nginx_server = Server(hostname=public_dns, pem_file=f'{CURRENT_DIR}Tunnel.pem')
 
         def _file_io_uploader(source_file: str, destination_file: str) -> None:
             """Reads a file in localhost and writes it within SSH connection.
@@ -551,27 +546,35 @@ class Tunnel:
             LOGGER.info(f'{protocol}://{public_dns} → http://localhost:{self.port}')
 
         LOGGER.info('Initiating tunnel')
-        sleeper(sleep_time=5)
         nginx_server.initiate_tunnel(port=self.port)
 
-    def stop(self) -> None:
-        """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created."""
-        if not path.exists(self.server_file):
-            LOGGER.info(f'Input file: {self.server_file} is missing. CANNOT proceed.')
+    def stop(self, partial: bool = False, instance_id: str = None, security_group_id: str = None) -> None:
+        """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created.
+
+        Args:
+            partial: Flag to indicate whether the ``SecurityGroup`` has to be removed.
+            instance_id: Instance that has to be terminated.
+            security_group_id: Security group that has to be removed.
+        """
+        if not path.exists(f'{CURRENT_DIR}server_info.json') and not instance_id and not security_group_id:
+            LOGGER.info('Input file: server_info.json is missing. CANNOT proceed.')
             return
 
-        with open(self.server_file, 'r') as file:
+        with open(f'{CURRENT_DIR}server_info.json', 'r') as file:
             data = json.load(file)
 
-        if self._delete_key_pair() and self._terminate_ec2_instance(instance_id=data.get('instance_id')):
+        if self._delete_key_pair() and self._terminate_ec2_instance(instance_id=instance_id or data.get('instance_id')):
             if (domain_name := self.domain_name) and (subdomain := self.subdomain):
                 change_record_set(dns_name=domain_name, source=subdomain, destination=data.get('public_ip'),
                                   record_type='A', action='DELETE')
+            if partial:
+                remove(f'{CURRENT_DIR}vpn_info.json')
+                return
             LOGGER.info('Waiting for dependent objects to delete SecurityGroup.')
             sleeper(sleep_time=90)
             while True:
-                if self._delete_security_group(security_group_id=data.get('security_group_id')):
+                if self._delete_security_group(security_group_id=security_group_id or data.get('security_group_id')):
                     break
                 else:
                     sleeper(sleep_time=20)
-            remove(self.server_file)
+            remove(f'{CURRENT_DIR}server_info.json') if path.isfile(f'{CURRENT_DIR}server_info.json') else None

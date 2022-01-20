@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+0.4.1 (01/19/2022)
+------------------
+- Check for app running on port before initiating tunneling
+- Flush screen output before carriage return
+- Take optional args to terminate instance and delete security group
+- Remove unnecessary args
+
 0.4.0 (01/15/2022)
 ------------------
 - Update python-publish.yml

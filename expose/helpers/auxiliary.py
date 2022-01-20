@@ -19,6 +19,7 @@ def sleeper(sleep_time: int) -> None:
     for i in range(sleep_time):
         sys.stdout.write(f'\rRemaining: {sleep_time - i:0{len(str(sleep_time))}}s')
         sleep(1)
+    sys.stdout.flush()
     sys.stdout.write('\r')
 
 
