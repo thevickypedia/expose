@@ -1,10 +1,10 @@
 import json
-from os import chmod, environ, getcwd, path, remove
-from subprocess import CalledProcessError, SubprocessError, check_output
-from time import perf_counter
+import os
+import subprocess
+import time
 
+import boto3
 import requests
-from boto3 import client, resource
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 from urllib3 import disable_warnings
@@ -19,11 +19,11 @@ from expose.helpers.server import Server
 
 disable_warnings(InsecureRequestWarning)  # Disable warnings for self-signed certificates
 
-if path.isfile('.env'):
+if os.path.isfile('.env'):
     load_dotenv(dotenv_path='.env', verbose=True, override=True)
 
-HOME_DIR = path.expanduser('~') + path.sep
-CURRENT_DIR = getcwd() + path.sep
+HOME_DIR = os.path.expanduser('~') + os.path.sep
+CURRENT_DIR = os.getcwd() + os.path.sep
 CONFIGURATION_LOCATION = 'https://raw.githubusercontent.com/thevickypedia/expose/main/configuration/'
 
 
@@ -34,15 +34,15 @@ class Tunnel:
 
     """
 
-    def __init__(self, port: int = environ.get('PORT'),
-                 image_id: str = environ.get('AMI_ID'),
-                 domain_name: str = environ.get('DOMAIN'),
-                 subdomain: str = environ.get('SUBDOMAIN'),
-                 aws_access_key: str = environ.get('ACCESS_KEY'),
-                 aws_secret_key: str = environ.get('SECRET_KEY'),
-                 aws_region_name: str = environ.get('REGION_NAME', 'us-west-2'),
-                 email_address: str = environ.get('EMAIL'),
-                 organization: str = environ.get('ORG')):
+    def __init__(self, port: int = os.environ.get('PORT'),
+                 image_id: str = os.environ.get('AMI_ID'),
+                 domain_name: str = os.environ.get('DOMAIN'),
+                 subdomain: str = os.environ.get('SUBDOMAIN'),
+                 aws_access_key: str = os.environ.get('ACCESS_KEY'),
+                 aws_secret_key: str = os.environ.get('SECRET_KEY'),
+                 aws_region_name: str = os.environ.get('REGION_NAME', 'us-west-2'),
+                 email_address: str = os.environ.get('EMAIL'),
+                 organization: str = os.environ.get('ORG')):
         """Assigns a name to the PEM file, initiates the logger, client and resource for EC2 using ``boto3`` module.
 
         Args:
@@ -61,11 +61,13 @@ class Tunnel:
         # AWS client and resource setup
         self.region = aws_region_name.lower()
         if not AWSDefaults.REGIONS.get(aws_region_name):
-            raise ValueError(f'Incorrect region name. {aws_region_name} does not exist.')
-        self.ec2_client = client(service_name='ec2', region_name=aws_region_name,
-                                 aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
-        self.ec2_resource = resource(service_name='ec2', region_name=aws_region_name,
-                                     aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+            raise ValueError(
+                f'Incorrect region name. {aws_region_name} does not exist.'
+            )
+        self.ec2_client = boto3.client(service_name='ec2', region_name=aws_region_name,
+                                       aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+        self.ec2_resource = boto3.resource(service_name='ec2', region_name=aws_region_name,
+                                           aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
 
         # Tunnelling requirements setup
         self.image_id = image_id
@@ -77,7 +79,7 @@ class Tunnel:
 
     def __del__(self):
         """Destructor to print the run time at the end."""
-        LOGGER.info(f'Total runtime: {time_converter(perf_counter())}')
+        LOGGER.info(f'Total runtime: {time_converter(time.perf_counter())}')
 
     def _get_image_id(self) -> None:
         """Fetches AMI ID from public images."""
@@ -290,9 +292,9 @@ class Tunnel:
 
         if response.get('ResponseMetadata').get('HTTPStatusCode') == 200:
             LOGGER.info('Tunnel has been deleted from KeyPairs.')
-            if path.exists(f'{CURRENT_DIR}Tunnel.pem'):
-                chmod(f'{CURRENT_DIR}Tunnel.pem', int('700', base=8) or 0o700)
-                remove(f'{CURRENT_DIR}Tunnel.pem')
+            if os.path.exists(f'{CURRENT_DIR}Tunnel.pem'):
+                os.chmod(f'{CURRENT_DIR}Tunnel.pem', int('700', base=8) or 0o700)
+                os.remove(f'{CURRENT_DIR}Tunnel.pem')
             return True
         else:
             LOGGER.error('Failed to delete the key: Tunnel')
@@ -387,11 +389,11 @@ class Tunnel:
                          ' on setting up env vars.')
             return
 
-        if path.isfile(f'{CURRENT_DIR}server_info.json') and path.isfile(f'{CURRENT_DIR}Tunnel.pem'):
+        if os.path.isfile(f'{CURRENT_DIR}server_info.json') and os.path.isfile(f'{CURRENT_DIR}Tunnel.pem'):
             LOGGER.warning('Received request to start VM, but looks like a session is up and running already.')
             LOGGER.warning('Initiating re-configuration.')
             sleeper(sleep_time=5)
-            with open('server_info.json', 'r') as file:
+            with open('server_info.json') as file:
                 data = json.load(file)
             self._configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'))
             return
@@ -429,7 +431,7 @@ class Tunnel:
             'start_tunneling': f"ssh -i Tunnel.pem -R 8080:localhost:{self.port} ubuntu@{public_dns}"
         }
 
-        chmod(f'{CURRENT_DIR}Tunnel.pem', int('400', base=8) or 0o400)
+        os.chmod(f'{CURRENT_DIR}Tunnel.pem', int('400', base=8) or 0o400)
 
         with open(f'{CURRENT_DIR}server_info.json', 'w') as file:
             json.dump(instance_info, file, indent=2)
@@ -460,8 +462,9 @@ class Tunnel:
 
         if not self.email_address:
             try:
-                self.email_address = check_output('git config user.email', shell=True).decode('UTF-8').strip()
-            except (SubprocessError, CalledProcessError):
+                self.email_address = subprocess.check_output('git config user.email',
+                                                             shell=True).decode(encoding='UTF-8').strip()
+            except (subprocess.SubprocessError, subprocess.CalledProcessError):
                 pass
 
         nginx_server = Server(hostname=public_dns, pem_file=f'{CURRENT_DIR}Tunnel.pem')
@@ -493,15 +496,15 @@ class Tunnel:
             return response.text.replace('SERVER_NAME_HERE', custom_servers)
 
         download_and_copy = {"server.conf": _download_config_file(filename="server.conf")}
-        if path.isdir(f"{HOME_DIR}.ssh") and \
-                path.isfile(f"{HOME_DIR}.ssh{path.sep}key.pem") and \
-                path.isfile(f"{HOME_DIR}.ssh{path.sep}cert.pem"):
+        if os.path.isdir(f"{HOME_DIR}.ssh") and \
+                os.path.isfile(f"{HOME_DIR}.ssh{os.path.sep}key.pem") and \
+                os.path.isfile(f"{HOME_DIR}.ssh{os.path.sep}cert.pem"):
             LOGGER.info(f'Found certificate and key in {HOME_DIR}')
-            _file_io_uploader(source_file=f"{HOME_DIR}.ssh{path.sep}cert.pem", destination_file="cert.pem")
-            _file_io_uploader(source_file=f"{HOME_DIR}.ssh{path.sep}key.pem", destination_file="key.pem")
+            _file_io_uploader(source_file=f"{HOME_DIR}.ssh{os.path.sep}cert.pem", destination_file="cert.pem")
+            _file_io_uploader(source_file=f"{HOME_DIR}.ssh{os.path.sep}key.pem", destination_file="key.pem")
             download_and_copy["options-ssl-nginx.conf"] = _download_config_file(filename="options-ssl-nginx.conf")
             download_and_copy["nginx.conf"] = _download_config_file(filename="nginx-ssl.conf")
-        elif path.isfile(f'{CURRENT_DIR}cert.pem') and path.isfile(f'{CURRENT_DIR}key.pem'):
+        elif os.path.isfile(f'{CURRENT_DIR}cert.pem') and os.path.isfile(f'{CURRENT_DIR}key.pem'):
             LOGGER.info(f'Found certificate and key in {CURRENT_DIR}')
             _file_io_uploader(source_file=f"{CURRENT_DIR}cert.pem", destination_file="cert.pem")
             _file_io_uploader(source_file=f"{CURRENT_DIR}key.pem", destination_file="key.pem")
@@ -556,11 +559,11 @@ class Tunnel:
             instance_id: Instance that has to be terminated.
             security_group_id: Security group that has to be removed.
         """
-        if not path.exists(f'{CURRENT_DIR}server_info.json') and not instance_id and not security_group_id:
+        if not os.path.exists(f'{CURRENT_DIR}server_info.json') and not instance_id and not security_group_id:
             LOGGER.info('Input file: server_info.json is missing. CANNOT proceed.')
             return
 
-        with open(f'{CURRENT_DIR}server_info.json', 'r') as file:
+        with open(f'{CURRENT_DIR}server_info.json') as file:
             data = json.load(file)
 
         if self._delete_key_pair() and self._terminate_ec2_instance(instance_id=instance_id or data.get('instance_id')):
@@ -568,7 +571,7 @@ class Tunnel:
                 change_record_set(dns_name=domain_name, source=subdomain, destination=data.get('public_ip'),
                                   record_type='A', action='DELETE')
             if partial:
-                remove(f'{CURRENT_DIR}vpn_info.json')
+                os.remove(f'{CURRENT_DIR}vpn_info.json')
                 return
             LOGGER.info('Waiting for dependent objects to delete SecurityGroup.')
             sleeper(sleep_time=90)
@@ -577,4 +580,4 @@ class Tunnel:
                     break
                 else:
                     sleeper(sleep_time=20)
-            remove(f'{CURRENT_DIR}server_info.json') if path.isfile(f'{CURRENT_DIR}server_info.json') else None
+            os.remove(f'{CURRENT_DIR}server_info.json') if os.path.isfile(f'{CURRENT_DIR}server_info.json') else None

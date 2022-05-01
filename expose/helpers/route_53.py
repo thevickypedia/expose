@@ -1,15 +1,7 @@
-import logging
-
 import boto3
 from botocore.exceptions import ClientError
 
-LOGGER = logging.getLogger(__name__)
-handler = logging.StreamHandler()
-formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - [%(module)s:%(lineno)d] - %(funcName)s - %(message)s',
-                              datefmt='%b-%d-%Y %I:%M:%S %p')
-handler.setFormatter(fmt=formatter)
-LOGGER.addHandler(hdlr=handler)
-LOGGER.setLevel(level=logging.DEBUG)
+from expose.helpers.logger import LOGGER
 
 client = boto3.client('route53')
 

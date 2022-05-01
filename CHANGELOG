@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+0.4.2 (05/01/2022)
+------------------
+- Fix imports and remove redundancy
+- Remove unused functions
+
 0.4.1 (01/19/2022)
 ------------------
 - Check for app running on port before initiating tunneling

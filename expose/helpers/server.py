@@ -128,7 +128,7 @@ class Server:
             if socket_ in read:
                 if not (data := socket_.recv(1024)):
                     break
-                channel.send(data)
+                channel.send(data.decode(encoding='UTF-8'))
             if channel in read:
                 if not (data := channel.recv(1024)):
                     break
@@ -163,7 +163,6 @@ class Server:
                 Thread(target=self._handler, args=[channel, port], daemon=True).start()
         except KeyboardInterrupt:
             LOGGER.info("Tunneling interrupted")
-        LOGGER.info(f"Stopping reverse tunneling on {join(transport.getpeername())}")
         if host_keys := self.ssh_client.get_host_keys().keys():
             LOGGER.info(f"Closing SSH connection on {host_keys[0]}")
         else:
