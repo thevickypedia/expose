@@ -8,8 +8,8 @@ Expose an app/api running on local host to public internet using AWS EC2
 
 ### Setup
 #### Environment Variables:
-If a `.env` file is present (with the required variables) in current working directory, there is no need for env vars,
-as [`expose`](https://github.com/thevickypedia/expose) loads `.env` files during start up.
+Environment variables can optionally be placed in a `.env` file as [`expose`](https://github.com/thevickypedia/expose)
+loads `.env` files during start up.
 
 **Mandatory Arg:**
 - `PORT`: Port number on which a localhost `service/app/api` is running.

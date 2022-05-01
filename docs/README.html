@@ -56,8 +56,8 @@
 <h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
 <section id="environment-variables">
 <h3>Environment Variables:<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h3>
-<p>If a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file is present (with the required variables) in current working directory, there is no need for env vars,
-as <a class="reference external" href="https://github.com/thevickypedia/expose"><code class="docutils literal notranslate"><span class="pre">expose</span></code></a> loads <code class="docutils literal notranslate"><span class="pre">.env</span></code> files during start up.</p>
+<p>Environment variables can optionally be placed in a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file as <a class="reference external" href="https://github.com/thevickypedia/expose"><code class="docutils literal notranslate"><span class="pre">expose</span></code></a>
+loads <code class="docutils literal notranslate"><span class="pre">.env</span></code> files during start up.</p>
 <p><strong>Mandatory Arg:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">PORT</span></code>: Port number on which a localhost <code class="docutils literal notranslate"><span class="pre">service/app/api</span></code> is running.</p></li>
@@ -182,8 +182,9 @@ This occurs when <code class="docutils literal notranslate"><span class="pre">ap
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
 <li><a class="reference internal" href="#">Expose localhost using EC2</a><ul>
 <li><a class="reference internal" href="#requirements">Requirements</a></li>
 <li><a class="reference internal" href="#setup">Setup</a><ul>
@@ -207,9 +208,12 @@ This occurs when <code class="docutils literal notranslate"><span class="pre">ap
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter">Welcome to Expose’s documentation!</a></p>
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">Welcome to Expose’s documentation!</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -249,7 +253,7 @@ This occurs when <code class="docutils literal notranslate"><span class="pre">ap
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021, Vignesh Sivanandha Rao.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
     </div>
   </body>
 </html>

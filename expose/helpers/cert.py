@@ -1,6 +1,6 @@
 import binascii
-from getpass import getuser
-from os import rename, stat, urandom
+import getpass
+import os
 
 from OpenSSL import crypto
 
@@ -18,7 +18,7 @@ def _get_serial() -> bytes:
         bytes:
         Encoded serial number for the certificate.
     """
-    serial_hex = binascii.hexlify(urandom(18)).decode().upper()
+    serial_hex = binascii.hexlify(os.urandom(18)).decode().upper()
     return " ".join(serial_hex[i:i + 2] for i in range(0, len(serial_hex), 2)).encode('UTF-8')
 
 
@@ -33,7 +33,7 @@ def _generate_serial_hash(byte_size: int = 18, int_size: int = 36) -> int:
         int:
         Returns the hashed serial.
     """
-    return int(binascii.hexlify(urandom(byte_size)).decode().upper(), int_size)
+    return int(binascii.hexlify(os.urandom(byte_size)).decode().upper(), int_size)
 
 
 def generate_cert(common_name: str,
@@ -87,7 +87,7 @@ def generate_cert(common_name: str,
     cert.get_subject().O = organization_name or common_name[0].upper() + common_name.partition('.')[0][1:]  # noqa: E741
     cert.get_subject().OU = organization_unit_name
     cert.get_subject().CN = common_name
-    cert.get_subject().emailAddress = email_address or f"{getuser()}@expose-localhost.com"
+    cert.get_subject().emailAddress = email_address or f"{getpass.getuser()}@expose-localhost.com"
     cert.set_serial_number(serial=cert.get_serial_number() or _generate_serial_hash())
     cert.gmtime_adj_notBefore(amount=validity_start_in_seconds)
     cert.gmtime_adj_notAfter(amount=validity_end_in_seconds)
@@ -104,9 +104,9 @@ def generate_cert(common_name: str,
 
     cert_file_new, key_file_new = f"{cert_file.replace('.crt', '.pem')}", f"{key_file.replace('.key', '.pem')}"
 
-    rename(src=cert_file, dst=cert_file_new)
-    rename(src=key_file, dst=key_file_new)
+    os.rename(src=cert_file, dst=cert_file_new)
+    os.rename(src=key_file, dst=key_file_new)
 
-    if stat(cert_file_new).st_size != 0 and stat(key_file_new).st_size != 0:
+    if os.stat(cert_file_new).st_size != 0 and os.stat(key_file_new).st_size != 0:
         sleeper(sleep_time=1)
         return True
