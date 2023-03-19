@@ -1,17 +1,16 @@
+import logging
 import sys
+import time
 from select import select
 from socket import socket
 from threading import Thread
 from time import sleep
-from typing import Union
+from typing import List, Union
 
 import requests
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from paramiko.channel import Channel
 from paramiko.transport import Transport
-
-from expose.helpers.auxiliary import sleeper
-from expose.helpers.logger import LOGGER
 
 
 def join(value: Union[tuple, list, str], separator: str = ':') -> str:
@@ -52,7 +51,7 @@ class Server:
     forwarding makes sure that you can SSH back to the server machine.
     """
 
-    def __init__(self, hostname: str, pem_file: str, username: str = "ubuntu"):
+    def __init__(self, hostname: str, pem_file: str, logger: logging.Logger, username: str = "ubuntu"):
         """Instantiates the session using RSAKey generated from a ``***.pem`` file.
 
         Args:
@@ -65,30 +64,31 @@ class Server:
         self.ssh_client.load_system_host_keys()
         self.ssh_client.set_missing_host_key_policy(AutoAddPolicy())
         self.ssh_client.connect(hostname=hostname, username=username, pkey=pem_key)
+        self.logger = logger
 
-    def run_interactive_ssh(self, commands: dict) -> bool:
+    def run_interactive_ssh(self, commands: List[str]) -> bool:
         """Authenticates remote server using a ``*.pem`` file and runs interactive ssh commands using ``paramiko``.
 
         Args:
-            commands: Takes a dictionary of commands as keys and the post command idle time as the values.
+            commands: List of commands to be executed.
 
         Returns:
             bool:
             Returns a boolean flag if all commands were successful.
         """
         for command in commands:
-            LOGGER.info(f"Executing {command}")
+            self.logger.info("Executing '%s'", command)
             stdin, stdout, stderr = self.ssh_client.exec_command(command)
             if output := stdout.read().decode('utf-8').strip():
-                LOGGER.info(output)
+                self.logger.info(output)
             if error := stderr.read().decode("utf-8").strip():
                 if error.startswith('debconf:') or 'could not get lock' in error.lower():
-                    LOGGER.warning(error)
+                    self.logger.warning(error)
                 else:
-                    LOGGER.error(error)
+                    self.logger.error(error)
                     self.ssh_client.close()
                     return False
-            sleeper(sleep_time=commands[command])
+            time.sleep(2)
         return True
 
     def server_write(self, data: dict) -> None:
@@ -117,12 +117,12 @@ class Server:
         try:
             socket_.connect(('localhost', port))
         except Exception as error:
-            LOGGER.error(f"Forwarding request to localhost:{port} failed: {error}")
+            self.logger.error("Forwarding request to localhost:%d failed: %s", port, error)
             self.ssh_client.close()
             return
 
-        LOGGER.info(f"Connection open "
-                    f"{join(channel.origin_addr)} → {join(channel.getpeername())} → {join(channel.origin_addr)}")
+        self.logger.info("Connection open %s -> %s -> %s",
+                         join(channel.origin_addr), join(channel.getpeername()), join(channel.origin_addr))
         while True:
             read, write, execute = select([socket_, channel], [], [])
             if socket_ in read:
@@ -135,7 +135,7 @@ class Server:
                 socket_.send(data)
         channel.close()
         socket_.close()
-        LOGGER.info(f"Connection closed from {join(channel.origin_addr)}")
+        self.logger.info("Connection closed from %s", join(channel.origin_addr))
 
     def initiate_tunnel(self, port: int) -> None:
         """Initiates port forwarding using ``Transport`` which creates a channel.
@@ -145,15 +145,12 @@ class Server:
         """
         while True:
             try:
-                response = requests.get(f'http://localhost:{port}')
-                if response.ok:
-                    LOGGER.info(f'Application is running on port: {port}')
-                    break
-            except requests.exceptions.ConnectionError:
+                requests.get(f'http://localhost:{port}')
+                self.logger.info('Application is running on port: %d', port)
+                break
+            except requests.exceptions.RequestException:
                 print_warning(port=port)
-            else:
-                print_warning(port=port)
-        LOGGER.info("Awaiting connection...")
+        self.logger.info("Awaiting connection...")
         transport: Transport = self.ssh_client.get_transport()
         transport.request_port_forward(address="localhost", port=8080)
         try:
@@ -162,10 +159,10 @@ class Server:
                     continue
                 Thread(target=self._handler, args=[channel, port], daemon=True).start()
         except KeyboardInterrupt:
-            LOGGER.info("Tunneling interrupted")
+            self.logger.info("Tunneling interrupted")
         if host_keys := self.ssh_client.get_host_keys().keys():
-            LOGGER.info(f"Closing SSH connection on {host_keys[0]}")
+            self.logger.info("Closing SSH connection on %s", host_keys[0])
         else:
-            LOGGER.info(f"Closing SSH connection on {join(transport.getpeername())}")
+            self.logger.info("Closing SSH connection on %s", join(transport.getpeername()))
         transport.cancel_port_forward(address="localhost", port=8080)
         self.ssh_client.close()

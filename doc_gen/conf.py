@@ -13,7 +13,6 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(f'..{os.path.sep}expose'))
 sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------

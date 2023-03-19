@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Expose localhost using EC2 &#8212; Expose  documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -13,6 +13,7 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
@@ -42,10 +43,10 @@
           <div class="body" role="main">
             
   <section id="expose-localhost-using-ec2">
-<h1>Expose localhost using EC2<a class="headerlink" href="#expose-localhost-using-ec2" title="Permalink to this headline">¶</a></h1>
+<h1>Expose localhost using EC2<a class="headerlink" href="#expose-localhost-using-ec2" title="Permalink to this heading">¶</a></h1>
 <p>Expose an app/api running on local host to public internet using AWS EC2</p>
 <section id="requirements">
-<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Access to an AWS account.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">service/app/api</span></code> running on a specific port that has to be exposed to public internet.</p></li>
@@ -53,14 +54,13 @@
 </ul>
 </section>
 <section id="setup">
-<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this heading">¶</a></h2>
 <section id="environment-variables">
-<h3>Environment Variables:<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h3>
-<p>Environment variables can optionally be placed in a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file as <a class="reference external" href="https://github.com/thevickypedia/expose"><code class="docutils literal notranslate"><span class="pre">expose</span></code></a>
-loads <code class="docutils literal notranslate"><span class="pre">.env</span></code> files during start up.</p>
+<h3>Environment Variables:<a class="headerlink" href="#environment-variables" title="Permalink to this heading">¶</a></h3>
+<p>Environment variables can be loaded from a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p>
 <p><strong>Mandatory Arg:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">PORT</span></code>: Port number on which a localhost <code class="docutils literal notranslate"><span class="pre">service/app/api</span></code> is running.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PORT</span></code>: Port number that has to be exposed (on which a localhost <code class="docutils literal notranslate"><span class="pre">service/app/api</span></code> is running)</p></li>
 </ul>
 <p><strong>Optional Args:</strong></p>
 <ul class="simple">
@@ -83,7 +83,7 @@ loads <code class="docutils literal notranslate"><span class="pre">.env</span></
 <p>        :bulb:   This will be the endpoint to access the localhost.</p>
 </details></section>
 <section id="certificate">
-<h3>Certificate:<a class="headerlink" href="#certificate" title="Permalink to this headline">¶</a></h3>
+<h3>Certificate:<a class="headerlink" href="#certificate" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Securing the tunnel requires the certificate chain and the key file.</p></li>
 <li><p>These two files should be saved as <code class="docutils literal notranslate"><span class="pre">cert.pem</span></code> and <code class="docutils literal notranslate"><span class="pre">key.pem</span></code> in either <code class="docutils literal notranslate"><span class="pre">~.ssh/*.pem</span></code> or within <code class="docutils literal notranslate"><span class="pre">expose</span></code> repository.</p></li>
@@ -104,72 +104,81 @@ generate a self-signed certificate and a private key automatically.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ORG</span></code>: Organization name for the certificate. Defaults to the AWS endpoint.</p></li>
 </ul>
 </details></section>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">¶</a></h2>
 <section id="installation">
-<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference external" href="https://pypi.org/project/expose-localhost/"><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--upgrade</span> <span class="pre">expose-localhost</span></code></a></p>
+<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>expose-localhost
+</pre></div>
+</div>
+</section>
 <section id="start-tunneling">
-<h4>Start tunneling:<a class="headerlink" href="#start-tunneling" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">expose.tunnel</span> <span class="kn">import</span> <span class="n">Tunnel</span>
+<h3>Start tunneling:<a class="headerlink" href="#start-tunneling" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">expose</span>
 
-<span class="n">Tunnel</span><span class="p">()</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="n">tunnel</span> <span class="o">=</span> <span class="n">expose</span><span class="o">.</span><span class="n">Tunnel</span><span class="p">()</span>
+<span class="n">tunnel</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
 <section id="stop-tunneling">
-<h4>Stop tunneling:<a class="headerlink" href="#stop-tunneling" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">expose.tunnel</span> <span class="kn">import</span> <span class="n">Tunnel</span>
+<h3>Stop tunneling:<a class="headerlink" href="#stop-tunneling" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">expose</span>
 
-<span class="n">Tunnel</span><span class="p">()</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
-</pre></div>
-</div>
-</section>
-<section id="class-instantiation">
-<h4>Class Instantiation<a class="headerlink" href="#class-instantiation" title="Permalink to this headline">¶</a></h4>
-<p>This is required <em>only</em> if a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file missing and the env vars are not configured, or if the user needs to bypass
-default values.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">expose.tunnel</span> <span class="kn">import</span> <span class="n">Tunnel</span>
-
-<span class="n">Tunnel</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">2021</span><span class="p">,</span> <span class="n">image_id</span><span class="o">=</span><span class="s1">&#39;ami-06e20d17437157772&#39;</span><span class="p">,</span>
-       <span class="n">domain_name</span><span class="o">=</span><span class="s1">&#39;example.com&#39;</span><span class="p">,</span> <span class="n">subdomain</span><span class="o">=</span><span class="s1">&#39;expose&#39;</span><span class="p">,</span>
-       <span class="n">aws_access_key</span><span class="o">=</span><span class="s1">&#39;A1YSAIEPAJK1830AB1N&#39;</span><span class="p">,</span>
-       <span class="n">aws_secret_key</span><span class="o">=</span><span class="s1">&#39;e38409/afjeafjllvi19io90eskqn&#39;</span><span class="p">,</span>
-       <span class="n">aws_region_name</span><span class="o">=</span><span class="s1">&#39;us-east-2&#39;</span><span class="p">,</span>
-       <span class="n">email_address</span><span class="o">=</span><span class="s1">&#39;root@expose-localhost.com&#39;</span><span class="p">,</span>
-       <span class="n">organization</span><span class="o">=</span><span class="s1">&#39;Expose Localhost&#39;</span><span class="p">)</span>
+<span class="n">tunnel</span> <span class="o">=</span> <span class="n">expose</span><span class="o">.</span><span class="n">Tunnel</span><span class="p">()</span>
+<span class="n">tunnel</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
 </pre></div>
 </div>
 <details>
 <summary><strong>Troubleshooting</strong></summary><blockquote>
 <div><p>If <code class="docutils literal notranslate"><span class="pre">E:</span> <span class="pre">Could</span> <span class="pre">not</span> <span class="pre">get</span> <span class="pre">lock</span> <span class="pre">/var/lib/dpkg/lock-frontend</span></code> occurs during startup, simply rerun the script with start command.
-This occurs when <code class="docutils literal notranslate"><span class="pre">apt</span></code> hasn’t released the resources yet. Re-running the script with the arg <code class="docutils literal notranslate"><span class="pre">start</span></code> will simply re-configure the instance.</p>
+This occurs when <code class="docutils literal notranslate"><span class="pre">apt</span></code> hasn’t released the resources yet. Re-running <code class="docutils literal notranslate"><span class="pre">tunnel.start()</span></code> will simply re-configure the instance.</p>
 </div></blockquote>
 </details></section>
 </section>
+<section id="coding-standards">
+<h2>Coding Standards<a class="headerlink" href="#coding-standards" title="Permalink to this heading">¶</a></h2>
+<p>Docstring format: <a class="reference external" href="https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings"><code class="docutils literal notranslate"><span class="pre">Google</span></code></a> <br>
+Styling conventions: <a class="reference external" href="https://www.python.org/dev/peps/pep-0008/"><code class="docutils literal notranslate"><span class="pre">PEP</span> <span class="pre">8</span></code></a> <br>
+Clean code with pre-commit hooks: <a class="reference external" href="https://flake8.pycqa.org/en/latest/"><code class="docutils literal notranslate"><span class="pre">flake8</span></code></a> and
+<a class="reference external" href="https://pycqa.github.io/isort/"><code class="docutils literal notranslate"><span class="pre">isort</span></code></a></p>
+</section>
+<section id="release-notes">
+<h2><a class="reference external" href="https://github.com/thevickypedia/expose/blob/main/release_notes.rst">Release Notes</a><a class="headerlink" href="#release-notes" title="Permalink to this heading">¶</a></h2>
+<p><strong>Requirement</strong></p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>changelog-generator
+</pre></div>
+</div>
+<p><strong>Usage</strong></p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>changelog<span class="w"> </span>reverse<span class="w"> </span>-f<span class="w"> </span>release_notes.rst<span class="w"> </span>-t<span class="w"> </span><span class="s1">&#39;Release Notes&#39;</span>
+</pre></div>
+</div>
+</section>
 <section id="linting">
-<h3>Linting<a class="headerlink" href="#linting" title="Permalink to this headline">¶</a></h3>
+<h2>Linting<a class="headerlink" href="#linting" title="Permalink to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">PreCommit</span></code> will ensure linting, and the doc creation are run on every commit.</p>
-</section>
-<section id="requirement">
-<h3>Requirement<a class="headerlink" href="#requirement" title="Permalink to this headline">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--no-cache</span> <span class="pre">--upgrade</span> <span class="pre">sphinx</span> <span class="pre">pre-commit</span> <span class="pre">recommonmark</span></code></p>
-</section>
-<section id="usage">
-<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">run</span> <span class="pre">--all-files</span></code></p>
-</section>
-</section>
+<p><strong>Requirement</strong></p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">sphinx</span><span class="o">==</span><span class="m">5</span>.1.1<span class="w"> </span>pre-commit<span class="w"> </span>recommonmark
+</pre></div>
+</div>
+<p><strong>Usage</strong></p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files
+</pre></div>
+</div>
 <section id="pypi-package">
-<h2>Pypi Package<a class="headerlink" href="#pypi-package" title="Permalink to this headline">¶</a></h2>
+<h3>Pypi Package<a class="headerlink" href="#pypi-package" title="Permalink to this heading">¶</a></h3>
 <p><a class="reference external" href="https://packaging.python.org/tutorials/packaging-projects/"><img alt="pypi-module" src="https://img.shields.io/badge/Software%20Repository-pypi-1f425f.svg" /></a></p>
 <p><a class="reference external" href="https://pypi.org/project/expose-localhost/">https://pypi.org/project/expose-localhost/</a></p>
 </section>
 <section id="runbook">
-<h2>Runbook<a class="headerlink" href="#runbook" title="Permalink to this headline">¶</a></h2>
+<h3>Runbook<a class="headerlink" href="#runbook" title="Permalink to this heading">¶</a></h3>
 <p><a class="reference external" href="https://www.sphinx-doc.org/en/master/man/sphinx-autogen.html"><img alt="made-with-sphinx-doc" src="https://img.shields.io/badge/Code%20Docs-Sphinx-1f425f.svg" /></a></p>
 <p><a class="reference external" href="https://thevickypedia.github.io/expose/">https://thevickypedia.github.io/expose/</a></p>
 </section>
+</section>
 <section id="license-copyright">
-<h2>License &amp; copyright<a class="headerlink" href="#license-copyright" title="Permalink to this headline">¶</a></h2>
+<h2>License &amp; copyright<a class="headerlink" href="#license-copyright" title="Permalink to this heading">¶</a></h2>
 <p>© Vignesh Sivanandha Rao</p>
 <p>Licensed under the <a class="reference external" href="https://github.com/thevickypedia/expose/blob/main/LICENSE">MIT License</a></p>
 </section>
@@ -190,19 +199,21 @@ This occurs when <code class="docutils literal notranslate"><span class="pre">ap
 <li><a class="reference internal" href="#setup">Setup</a><ul>
 <li><a class="reference internal" href="#environment-variables">Environment Variables:</a></li>
 <li><a class="reference internal" href="#certificate">Certificate:</a></li>
-<li><a class="reference internal" href="#installation">Installation</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#usage">Usage</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#start-tunneling">Start tunneling:</a></li>
 <li><a class="reference internal" href="#stop-tunneling">Stop tunneling:</a></li>
-<li><a class="reference internal" href="#class-instantiation">Class Instantiation</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#linting">Linting</a></li>
-<li><a class="reference internal" href="#requirement">Requirement</a></li>
-<li><a class="reference internal" href="#usage">Usage</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#coding-standards">Coding Standards</a></li>
+<li><a class="reference internal" href="#release-notes">Release Notes</a></li>
+<li><a class="reference internal" href="#linting">Linting</a><ul>
 <li><a class="reference internal" href="#pypi-package">Pypi Package</a></li>
 <li><a class="reference internal" href="#runbook">Runbook</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#license-copyright">License &amp; copyright</a></li>
 </ul>
 </li>
@@ -230,7 +241,7 @@ This occurs when <code class="docutils literal notranslate"><span class="pre">ap
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -253,7 +264,7 @@ This occurs when <code class="docutils literal notranslate"><span class="pre">ap
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021, Vignesh Sivanandha Rao.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
     </div>
   </body>
 </html>

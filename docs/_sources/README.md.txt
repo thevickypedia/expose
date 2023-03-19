@@ -8,11 +8,10 @@ Expose an app/api running on local host to public internet using AWS EC2
 
 ### Setup
 #### Environment Variables:
-Environment variables can optionally be placed in a `.env` file as [`expose`](https://github.com/thevickypedia/expose)
-loads `.env` files during start up.
+Environment variables can be loaded from a `.env` file.
 
 **Mandatory Arg:**
-- `PORT`: Port number on which a localhost `service/app/api` is running.
+- `PORT`: Port number that has to be exposed (on which a localhost `service/app/api` is running)
 
 **Optional Args:**
 - `AMI_ID`: ID of any public AMI with an Ubuntu OS. Defaults to a region specific image ID.
@@ -64,56 +63,65 @@ Simply let `expose` create a self-signed SSL certificate and a private key.
 
 </details>
 
-#### Installation
-[`python3 -m pip install --upgrade expose-localhost`](https://pypi.org/project/expose-localhost/)
+### Usage
+###### Installation
+```shell
+python3 -m pip install expose-localhost
+```
 
 ###### Start tunneling:
 ```python
-from expose.tunnel import Tunnel
+import expose
 
-Tunnel().start()
+tunnel = expose.Tunnel()
+tunnel.start()
 ```
 
 ###### Stop tunneling:
 ```python
-from expose.tunnel import Tunnel
+import expose
 
-Tunnel().stop()
-```
-
-###### Class Instantiation
-
-This is required _only_ if a `.env` file missing and the env vars are not configured, or if the user needs to bypass
-default values.
-
-```python
-from expose.tunnel import Tunnel
-
-Tunnel(port=2021, image_id='ami-06e20d17437157772',
-       domain_name='example.com', subdomain='expose',
-       aws_access_key='A1YSAIEPAJK1830AB1N',
-       aws_secret_key='e38409/afjeafjllvi19io90eskqn',
-       aws_region_name='us-east-2',
-       email_address='root@expose-localhost.com',
-       organization='Expose Localhost')
+tunnel = expose.Tunnel()
+tunnel.stop()
 ```
 
 <details>
 <summary><strong>Troubleshooting</strong></summary>
 
 > If `E: Could not get lock /var/lib/dpkg/lock-frontend` occurs during startup, simply rerun the script with start command.
-> This occurs when `apt` hasn't released the resources yet. Re-running the script with the arg `start` will simply re-configure the instance.
+> This occurs when `apt` hasn't released the resources yet. Re-running `tunnel.start()` will simply re-configure the instance.
 
 </details>
 
-#### Linting
+## Coding Standards
+Docstring format: [`Google`](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) <br>
+Styling conventions: [`PEP 8`](https://www.python.org/dev/peps/pep-0008/) <br>
+Clean code with pre-commit hooks: [`flake8`](https://flake8.pycqa.org/en/latest/) and 
+[`isort`](https://pycqa.github.io/isort/)
+
+## [Release Notes](https://github.com/thevickypedia/expose/blob/main/release_notes.rst)
+**Requirement**
+```shell
+python -m pip install changelog-generator
+```
+
+**Usage**
+```shell
+changelog reverse -f release_notes.rst -t 'Release Notes'
+```
+
+## Linting
 `PreCommit` will ensure linting, and the doc creation are run on every commit.
 
-#### Requirement
-`pip install --no-cache --upgrade sphinx pre-commit recommonmark`
+**Requirement**
+```shell
+pip install sphinx==5.1.1 pre-commit recommonmark
+```
 
-#### Usage
-`pre-commit run --all-files`
+**Usage**
+```shell
+pre-commit run --all-files
+```
 
 ### Pypi Package
 [![pypi-module](https://img.shields.io/badge/Software%20Repository-pypi-1f425f.svg)](https://packaging.python.org/tutorials/packaging-projects/)

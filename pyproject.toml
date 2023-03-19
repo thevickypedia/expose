@@ -1,0 +1,42 @@
+[project]
+name = "expose-localhost"
+dynamic = ["version", "dependencies"]
+description = "Expose an app/api running on local host to public internet using AWS EC2"
+readme = "README.md"
+authors = [{ name = "Vignesh Sivanandha Rao", email = "svignesh1793@gmail.com" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Information Technology",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: System :: Networking :: Firewalls"
+]
+keywords = ["route53", "certificate", "ec2", "ngrok-alternative", "tunnel"]
+requires-python = ">=3"
+
+[tool.setuptools]
+packages = ["expose", "expose.helpers"]
+
+[tool.setuptools.dynamic]
+version = {attr = "expose.version"}
+dependencies = {file = ["expose/requirements.txt"]}
+
+[build-system]
+requires      = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+dev = ["pre-commit"]
+
+[project.urls]
+Homepage = "https://github.com/thevickypedia/expose"
+Docs = "https://thevickypedia.github.io/expose/"
+Source = "https://github.com/thevickypedia/expose"
+"Bug Tracker" = "https://github.com/thevickypedia/expose/issues"
+"Release Notes" = "https://github.com/thevickypedia/expose/blob/main/release_notes.rst"

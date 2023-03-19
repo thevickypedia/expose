@@ -1,10 +1,24 @@
-Change Log
-==========
+Release Notes
+=============
 
-0.4.2 (05/01/2022)
+0.4.4 (03/19/2023)
+------------------
+- Minor improvements in functionality
+- Create wrappers for env vars and fileio objects
+- Remove f strings from logger
+- Onboard to pypi with pyproject.toml
+- Switch python-publish.yml to support pyproject.toml
+
+0.4.3 (05/01/2022)
 ------------------
 - Fix imports and remove redundancy
 - Remove unused functions
+
+0.4.2 (05/01/2022)
+------------------
+- Remove unnecessary args
+- Fix imports and README.md
+- Update docs version
 
 0.4.1 (01/19/2022)
 ------------------

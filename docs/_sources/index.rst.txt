@@ -15,50 +15,50 @@ Welcome to Expose's documentation!
 Expose - Main Module
 ====================
 
-.. automodule:: tunnel
+.. automodule:: expose.tunnel
    :members:
    :undoc-members:
 
 Expose - Configuration
 ======================
 
-.. automodule:: helpers.server
+.. automodule:: expose.helpers.server
    :members:
    :undoc-members:
 
 Expose - Route53
 ================
 
-.. automodule:: helpers.route_53
+.. automodule:: expose.helpers.route_53
    :members:
    :undoc-members:
 
 Expose - Auxiliary
 ==================
 
-.. automodule:: helpers.auxiliary
+.. automodule:: expose.helpers.auxiliary
    :members:
    :undoc-members:
 
 Expose - Certificates
 =====================
 
-.. automodule:: helpers.cert
+.. automodule:: expose.helpers.cert
    :members:
    :undoc-members:
 
 Expose - AWS Defaults
 =====================
 
-.. automodule:: helpers.defaults
+.. automodule:: expose.helpers.defaults
    :members:
    :undoc-members:
-   :exclude-members: DEFAULT_AMI_NAME, IMAGE_MAP, REGIONS
+   :exclude-members: DEFAULT_AMI_NAME, IMAGE_MAP
 
 Expose - LOGGER
 ===============
 
-.. automodule:: helpers.logger
+.. automodule:: expose.helpers.logger
    :members:
    :undoc-members:
 

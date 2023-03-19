@@ -1,10 +1,11 @@
 import binascii
 import getpass
 import os
+import time
 
 from OpenSSL import crypto
 
-from expose.helpers.auxiliary import IP_INFO, sleeper
+from expose.helpers.auxiliary import IP_INFO
 
 
 def _get_serial() -> bytes:
@@ -108,5 +109,5 @@ def generate_cert(common_name: str,
     os.rename(src=key_file, dst=key_file_new)
 
     if os.stat(cert_file_new).st_size != 0 and os.stat(key_file_new).st_size != 0:
-        sleeper(sleep_time=1)
+        time.sleep(2)
         return True
