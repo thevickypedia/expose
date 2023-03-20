@@ -1,15 +1,16 @@
 import logging
+from typing import Dict, Union
 
 import boto3
 from botocore.exceptions import ClientError
 
-client = boto3.client('route53')
 
-
-def _get_zone_id(logger: logging.Logger, dns: str = None) -> str or None:
+def _get_zone_id(client: boto3.client, logger: logging.Logger, dns: str = None) -> str or None:
     """Gets the zone ID of a DNS name registered in route53.
 
     Args:
+        client: Pre instantiated boto3 client.
+        logger: Custom logger.
         dns: Takes the hosted zone name.
 
     Returns:
@@ -29,11 +30,12 @@ def _get_zone_id(logger: logging.Logger, dns: str = None) -> str or None:
         logger.error(f'No HostedZones found for the DNSName: {dns}\n{response}')
 
 
-def change_record_set(dns_name: str, source: str, destination: str, record_type: str, logger: logging.Logger,
-                      action: str = 'UPSERT') -> dict or None:
+def change_record_set(client: boto3.client, dns_name: str, source: str, destination: str,
+                      record_type: str, logger: logging.Logger, action: str = 'UPSERT') -> Union[Dict, None]:
     """Adds a record set under an existing hosted zone.
 
     Args:
+        client: Pre instantiated boto3 client.
         dns_name: Zone name.
         source: Source DNS name. Can be either ``subdomain.domain.com`` or just the ``subdomain``.
         destination: Destination hostnames or IP addresses.
@@ -63,7 +65,7 @@ def change_record_set(dns_name: str, source: str, destination: str, record_type:
     logger.info("%s `%s` record::%s -> %s", action, record_type, source, destination)
     try:
         response = client.change_resource_record_sets(
-            HostedZoneId=_get_zone_id(logger=logger, dns=dns_name),
+            HostedZoneId=_get_zone_id(logger=logger, dns=dns_name, client=client),
             ChangeBatch={
                 'Comment': f'{record_type}: {source} -> {destination}',
                 'Changes': [

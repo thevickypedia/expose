@@ -126,9 +126,10 @@ class Server:
         while True:
             read, write, execute = select([socket_, channel], [], [])
             if socket_ in read:
-                if not (data := socket_.recv(1024)):
+                if data := socket_.recv(1024):
+                    channel.send(data)
+                else:
                     break
-                channel.send(data.decode(encoding='UTF-8'))
             if channel in read:
                 if not (data := channel.recv(1024)):
                     break

@@ -15,7 +15,7 @@ Welcome to Expose's documentation!
 Expose - Main Module
 ====================
 
-.. automodule:: expose.tunnel
+.. automodule:: expose.main
    :members:
    :undoc-members:
 

@@ -60,11 +60,11 @@
 </ul>
 </div>
 </section>
-<section id="module-expose.tunnel">
-<span id="expose-main-module"></span><h1>Expose - Main Module<a class="headerlink" href="#module-expose.tunnel" title="Permalink to this heading">¶</a></h1>
+<section id="module-expose.main">
+<span id="expose-main-module"></span><h1>Expose - Main Module<a class="headerlink" href="#module-expose.main" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">expose.tunnel.</span></span><span class="sig-name descname"><span class="pre">Tunnel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port:</span> <span class="pre">~typing.Optional[int]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_id:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_name:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdomain:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_access_key:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_secret_key:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_region_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'us-west-2'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">email_address:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">organization:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger:</span> <span class="pre">~logging.Logger</span> <span class="pre">=</span> <span class="pre">&lt;Logger</span> <span class="pre">expose.helpers.logger</span> <span class="pre">(DEBUG)&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#expose.tunnel.Tunnel" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">expose.main.</span></span><span class="sig-name descname"><span class="pre">Tunnel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port:</span> <span class="pre">~typing.Optional[int]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_id:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_name:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdomain:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_access_key:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_secret_key:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_region_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'us-west-2'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">email_address:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">organization:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger:</span> <span class="pre">~logging.Logger</span> <span class="pre">=</span> <span class="pre">&lt;Logger</span> <span class="pre">expose.helpers.logger</span> <span class="pre">(DEBUG)&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#expose.main.Tunnel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initiates <code class="docutils literal notranslate"><span class="pre">Tunnel</span></code> object to spin up an EC2 instance with a pre-configured AMI which acts as a tunnel.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Tunnel</span>
 </pre></div>
@@ -91,14 +91,14 @@
 </ul>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel._get_image_id">
-<span class="sig-name descname"><span class="pre">_get_image_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#expose.tunnel.Tunnel._get_image_id" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel._get_image_id">
+<span class="sig-name descname"><span class="pre">_get_image_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#expose.main.Tunnel._get_image_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetches AMI ID from public images.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel._create_key_pair">
-<span class="sig-name descname"><span class="pre">_create_key_pair</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.tunnel.Tunnel._create_key_pair" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel._create_key_pair">
+<span class="sig-name descname"><span class="pre">_create_key_pair</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.main.Tunnel._create_key_pair" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a <code class="docutils literal notranslate"><span class="pre">KeyPair</span></code> of type <code class="docutils literal notranslate"><span class="pre">RSA</span></code> stored as a <code class="docutils literal notranslate"><span class="pre">PEM</span></code> file to use with <code class="docutils literal notranslate"><span class="pre">OpenSSH</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -111,8 +111,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel._get_vpc_id">
-<span class="sig-name descname"><span class="pre">_get_vpc_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.tunnel.Tunnel._get_vpc_id" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel._get_vpc_id">
+<span class="sig-name descname"><span class="pre">_get_vpc_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.main.Tunnel._get_vpc_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets the default VPC id.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -125,8 +125,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel._authorize_security_group">
-<span class="sig-name descname"><span class="pre">_authorize_security_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">security_group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_ip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.tunnel.Tunnel._authorize_security_group" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel._authorize_security_group">
+<span class="sig-name descname"><span class="pre">_authorize_security_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">security_group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_ip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.main.Tunnel._authorize_security_group" title="Permalink to this definition">¶</a></dt>
 <dd><p>Authorizes the security group for certain ingress list.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -142,8 +142,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel._create_security_group">
-<span class="sig-name descname"><span class="pre">_create_security_group</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.tunnel.Tunnel._create_security_group" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel._create_security_group">
+<span class="sig-name descname"><span class="pre">_create_security_group</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.main.Tunnel._create_security_group" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calls the class method <code class="docutils literal notranslate"><span class="pre">_get_vpc_id</span></code> and uses the VPC ID to create a <code class="docutils literal notranslate"><span class="pre">SecurityGroup</span></code> for the instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -156,8 +156,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel._create_ec2_instance">
-<span class="sig-name descname"><span class="pre">_create_ec2_instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.tunnel.Tunnel._create_ec2_instance" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel._create_ec2_instance">
+<span class="sig-name descname"><span class="pre">_create_ec2_instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.main.Tunnel._create_ec2_instance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates an EC2 instance of type <code class="docutils literal notranslate"><span class="pre">t2.nano</span></code> with the pre-configured AMI id.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -170,8 +170,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel._delete_key_pair">
-<span class="sig-name descname"><span class="pre">_delete_key_pair</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.tunnel.Tunnel._delete_key_pair" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel._delete_key_pair">
+<span class="sig-name descname"><span class="pre">_delete_key_pair</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.main.Tunnel._delete_key_pair" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deletes the <code class="docutils literal notranslate"><span class="pre">KeyPair</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -184,8 +184,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel._delete_security_group">
-<span class="sig-name descname"><span class="pre">_delete_security_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">security_group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.tunnel.Tunnel._delete_security_group" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel._delete_security_group">
+<span class="sig-name descname"><span class="pre">_delete_security_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">security_group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.main.Tunnel._delete_security_group" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deletes the security group.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -201,8 +201,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel._terminate_ec2_instance">
-<span class="sig-name descname"><span class="pre">_terminate_ec2_instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.tunnel.Tunnel._terminate_ec2_instance" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel._terminate_ec2_instance">
+<span class="sig-name descname"><span class="pre">_terminate_ec2_instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.main.Tunnel._terminate_ec2_instance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Terminates the requested instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -218,8 +218,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel._instance_info">
-<span class="sig-name descname"><span class="pre">_instance_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#expose.tunnel.Tunnel._instance_info" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel._instance_info">
+<span class="sig-name descname"><span class="pre">_instance_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#expose.main.Tunnel._instance_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Makes a <code class="docutils literal notranslate"><span class="pre">describe_instance_status</span></code> API call to get the status of the instance that was created.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -235,14 +235,14 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel.start">
-<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#expose.tunnel.Tunnel.start" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#expose.main.Tunnel.start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calls the class methods <code class="docutils literal notranslate"><span class="pre">_create_ec2_instance</span></code> and <code class="docutils literal notranslate"><span class="pre">_instance_info</span></code> to configure the ec2 instance.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel._configure_vm">
-<span class="sig-name descname"><span class="pre">_configure_vm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">public_dns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_ip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#expose.tunnel.Tunnel._configure_vm" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel._configure_vm">
+<span class="sig-name descname"><span class="pre">_configure_vm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">public_dns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_ip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#expose.main.Tunnel._configure_vm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configures the ec2 instance to take traffic from localhost.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -255,8 +255,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.tunnel.Tunnel.stop">
-<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">partial</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">security_group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#expose.tunnel.Tunnel.stop" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.main.Tunnel.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">partial</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">security_group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#expose.main.Tunnel.stop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Disables tunnelling by terminating the <code class="docutils literal notranslate"><span class="pre">EC2</span></code> instance, <code class="docutils literal notranslate"><span class="pre">KeyPair</span></code>, and the <code class="docutils literal notranslate"><span class="pre">SecurityGroup</span></code> created.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -386,11 +386,15 @@ forwarding makes sure that you can SSH back to the server machine.</p>
 <span id="expose-route53"></span><h1>Expose - Route53<a class="headerlink" href="#module-expose.helpers.route_53" title="Permalink to this heading">¶</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="expose.helpers.route_53._get_zone_id">
-<span class="sig-prename descclassname"><span class="pre">expose.helpers.route_53.</span></span><span class="sig-name descname"><span class="pre">_get_zone_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.helpers.route_53._get_zone_id" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">expose.helpers.route_53.</span></span><span class="sig-name descname"><span class="pre">_get_zone_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.helpers.route_53._get_zone_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets the zone ID of a DNS name registered in route53.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dns</strong> – Takes the hosted zone name.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client</strong> – Pre instantiated boto3 client.</p></li>
+<li><p><strong>logger</strong> – Custom logger.</p></li>
+<li><p><strong>dns</strong> – Takes the hosted zone name.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Returns the zone ID.</p>
@@ -403,11 +407,12 @@ forwarding makes sure that you can SSH back to the server machine.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="expose.helpers.route_53.change_record_set">
-<span class="sig-prename descclassname"><span class="pre">expose.helpers.route_53.</span></span><span class="sig-name descname"><span class="pre">change_record_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dns_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'UPSERT'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#expose.helpers.route_53.change_record_set" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">expose.helpers.route_53.</span></span><span class="sig-name descname"><span class="pre">change_record_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dns_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'UPSERT'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#expose.helpers.route_53.change_record_set" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a record set under an existing hosted zone.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>client</strong> – Pre instantiated boto3 client.</p></li>
 <li><p><strong>dns_name</strong> – Zone name.</p></li>
 <li><p><strong>source</strong> – Source DNS name. Can be either <code class="docutils literal notranslate"><span class="pre">subdomain.domain.com</span></code> or just the <code class="docutils literal notranslate"><span class="pre">subdomain</span></code>.</p></li>
 <li><p><strong>destination</strong> – Destination hostnames or IP addresses.</p></li>
@@ -560,7 +565,7 @@ forwarding makes sure that you can SSH back to the server machine.</p>
     <h3><a href="#">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Welcome to Expose’s documentation!</a></li>
-<li><a class="reference internal" href="#module-expose.tunnel">Expose - Main Module</a></li>
+<li><a class="reference internal" href="#module-expose.main">Expose - Main Module</a></li>
 <li><a class="reference internal" href="#module-expose.helpers.server">Expose - Configuration</a></li>
 <li><a class="reference internal" href="#module-expose.helpers.route_53">Expose - Route53</a></li>
 <li><a class="reference internal" href="#module-expose.helpers.auxiliary">Expose - Auxiliary</a></li>

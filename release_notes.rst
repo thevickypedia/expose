@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+0.4.5 (03/19/2023)
+------------------
+- Retain boto3 session throughout the process
+- Remove hard coding
+
 0.4.4 (03/19/2023)
 ------------------
 - Minor improvements in functionality

@@ -49,11 +49,13 @@ class Tunnel:
             - If the environment variables are ``null``, gets the default credentials from ``~/.aws/credentials``.
         """
         # AWS client and resource setup
+        session = boto3.Session(region_name=aws_region_name,
+                                aws_access_key_id=aws_access_key,
+                                aws_secret_access_key=aws_secret_key)
         self.region = aws_region_name.lower()
-        self.ec2_client = boto3.client(service_name='ec2', region_name=aws_region_name,
-                                       aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
-        self.ec2_resource = boto3.resource(service_name='ec2', region_name=aws_region_name,
-                                           aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+        self.ec2_client = session.client(service_name='ec2')
+        self.ec2_resource = session.resource(service_name='ec2')
+        self.route53_client = session.client(service_name='route53')
 
         # Tunnelling requirements setup
         self.image_id = image_id
@@ -420,8 +422,8 @@ class Tunnel:
             'public_dns': public_dns,
             'public_ip': public_ip,
             'security_group_id': security_group_id,
-            'ssh_endpoint': f'ssh -i Tunnel.pem ubuntu@{public_dns}',
-            'start_tunneling': f"ssh -i Tunnel.pem -R 8080:localhost:{self.port} ubuntu@{public_dns}"
+            'ssh_endpoint': f'ssh -i {fileio.tunnel} ubuntu@{public_dns}',
+            'start_tunneling': f"ssh -i {fileio.tunnel} -R 8080:localhost:{self.port} ubuntu@{public_dns}"
         }
 
         os.chmod(fileio.tunnel, int('400', base=8) or 0o400)
@@ -531,7 +533,7 @@ class Tunnel:
         protocol = 'https' if download_and_copy.get("options-ssl-nginx.conf") else 'http'
         if endpoint:
             change_record_set(dns_name=self.domain_name, source=self.subdomain, destination=public_ip, record_type='A',
-                              logger=self.logger)
+                              logger=self.logger, client=self.route53_client)
             self.logger.info('%s://%s -> http://localhost:%d', protocol, endpoint, self.port)
         else:
             self.logger.info('%s://%s -> http://localhost:%d', protocol, public_dns, self.port)
@@ -560,7 +562,7 @@ class Tunnel:
             wait_for_sg = False
         if self.domain_name and self.subdomain:
             change_record_set(dns_name=self.domain_name, source=self.subdomain, destination=data.get('public_ip'),
-                              record_type='A', action='DELETE', logger=self.logger)
+                              record_type='A', action='DELETE', logger=self.logger, client=self.route53_client)
         if partial:
             return
         if wait_for_sg:
