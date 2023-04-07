@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+0.4.6 (04/07/2023)
+------------------
+- Load/scan any `.env` file during startup
+- Log daemon services launched in the background
+- Change list to tuple wherever possible
+- Unhook version number dependency on release notes
+
 0.4.5 (03/19/2023)
 ------------------
 - Retain boto3 session throughout the process

@@ -48,7 +48,7 @@
 <section id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Access to an AWS account.</p></li>
+<li><p>Access to an AWS account and <a class="reference external" href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html#getting-started-install-instructions">AWS CLI</a> configured.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">service/app/api</span></code> running on a specific port that has to be exposed to public internet.</p></li>
 <li><p><strong>[Optional]</strong> A domain <code class="docutils literal notranslate"><span class="pre">example.com</span></code> hosted on <code class="docutils literal notranslate"><span class="pre">route53</span></code>.</p></li>
 </ul>
@@ -64,15 +64,17 @@
 </ul>
 <p><strong>Optional Args:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">AMI_ID</span></code>: ID of any public AMI with an Ubuntu OS. Defaults to a region specific image ID.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ACCESS_KEY</span></code>: Access key to access AWS resources. Defaults to <code class="docutils literal notranslate"><span class="pre">~/.aws/config</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SECRET_KEY</span></code>: Secret key to access AWS resources. Defaults to <code class="docutils literal notranslate"><span class="pre">~/.aws/config</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">REGION_NAME</span></code>: Region name where the instance should live. Defaults to <code class="docutils literal notranslate"><span class="pre">US-WEST-2</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DOMAIN</span></code>: If the domain name is registered using <code class="docutils literal notranslate"><span class="pre">route53</span></code>. <em>Example: <code class="docutils literal notranslate"><span class="pre">mywebsite.com</span></code></em></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SUBDOMAIN</span></code>: Sub-domain that has to be added for the domain name. <em>Example: <code class="docutils literal notranslate"><span class="pre">tunnel.mywebsite.com</span></code></em></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">EMAIL</span></code>: Email address to create the self-signed SSL and private key. Defaults to <code class="docutils literal notranslate"><span class="pre">USER&#64;expose-localhost.com</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ORG</span></code>: Organization name for the certificate. Defaults to the AWS endpoint.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IMAGE_ID</span></code>: ID of any public AMI with an Ubuntu OS. Defaults to a region specific image ID.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AWS_ACCESS_KEY</span></code>: Access key to access AWS resources. Defaults to <code class="docutils literal notranslate"><span class="pre">~/.aws/config</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AWS_SECRET_KEY</span></code>: Secret key to access AWS resources. Defaults to <code class="docutils literal notranslate"><span class="pre">~/.aws/config</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AWS_REGION_NAME</span></code>: Region name where the instance should live. Defaults to <code class="docutils literal notranslate"><span class="pre">US-WEST-2</span></code></p></li>
 </ul>
+<p><em>Optionally <code class="docutils literal notranslate"><span class="pre">.env</span></code> files can also be scanned for:</em></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">expose</span>
+
+<span class="n">expose</span><span class="o">.</span><span class="n">load_env</span><span class="p">(</span><span class="n">scan</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
 <details>
 <summary><strong>Setup a custom endpoint</strong></summary><p>The public DNS names for EC2 instances are long and messy. To avoid that, an <code class="docutils literal notranslate"><span class="pre">A</span></code> record can be added to the <code class="docutils literal notranslate"><span class="pre">route53</span></code> hosted zone.</p>
 <p>:warning:   Requires an active hosted zone on <code class="docutils literal notranslate"><span class="pre">route53</span></code>.</p>
@@ -100,8 +102,8 @@ generate a self-signed certificate and a private key automatically.</p></li>
 <p>[OR]</p>
 <p>Simply let <code class="docutils literal notranslate"><span class="pre">expose</span></code> create a self-signed SSL certificate and a private key.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">EMAIL</span></code>: Email address to create the self-signed SSL and private key. Defaults to <code class="docutils literal notranslate"><span class="pre">USER&#64;expose-localhost.com</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ORG</span></code>: Organization name for the certificate. Defaults to the AWS endpoint.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EMAIL_ADDRESS</span></code>: Email address to create the self-signed SSL and private key. Defaults to <code class="docutils literal notranslate"><span class="pre">USER&#64;expose-localhost.com</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ORGANIZATION</span></code>: Organization name for the certificate. Defaults to the AWS endpoint.</p></li>
 </ul>
 </details></section>
 </section>

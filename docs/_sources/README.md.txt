@@ -2,7 +2,7 @@
 Expose an app/api running on local host to public internet using AWS EC2
 
 ### Requirements
-- Access to an AWS account.
+- Access to an AWS account and [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html#getting-started-install-instructions) configured.
 - A `service/app/api` running on a specific port that has to be exposed to public internet.
 - **[Optional]** A domain `example.com` hosted on `route53`.
 
@@ -14,14 +14,17 @@ Environment variables can be loaded from a `.env` file.
 - `PORT`: Port number that has to be exposed (on which a localhost `service/app/api` is running)
 
 **Optional Args:**
-- `AMI_ID`: ID of any public AMI with an Ubuntu OS. Defaults to a region specific image ID.
-- `ACCESS_KEY`: Access key to access AWS resources. Defaults to `~/.aws/config`
-- `SECRET_KEY`: Secret key to access AWS resources. Defaults to `~/.aws/config`
-- `REGION_NAME`: Region name where the instance should live. Defaults to `US-WEST-2`
-- `DOMAIN`: If the domain name is registered using `route53`. *Example: `mywebsite.com`*
-- `SUBDOMAIN`: Sub-domain that has to be added for the domain name. *Example: `tunnel.mywebsite.com`*
-- `EMAIL`: Email address to create the self-signed SSL and private key. Defaults to `USER@expose-localhost.com`
-- `ORG`: Organization name for the certificate. Defaults to the AWS endpoint.
+- `IMAGE_ID`: ID of any public AMI with an Ubuntu OS. Defaults to a region specific image ID.
+- `AWS_ACCESS_KEY`: Access key to access AWS resources. Defaults to `~/.aws/config`
+- `AWS_SECRET_KEY`: Secret key to access AWS resources. Defaults to `~/.aws/config`
+- `AWS_REGION_NAME`: Region name where the instance should live. Defaults to `US-WEST-2`
+
+*Optionally `.env` files can also be scanned for:*
+```python
+import expose
+
+expose.load_env(scan=True)
+```
 
 <details>
 <summary><strong>Setup a custom endpoint</strong></summary>
@@ -58,8 +61,8 @@ To manually generate a self-signed cert:
 
 Simply let `expose` create a self-signed SSL certificate and a private key.
 
-- `EMAIL`: Email address to create the self-signed SSL and private key. Defaults to `USER@expose-localhost.com`
-- `ORG`: Organization name for the certificate. Defaults to the AWS endpoint.
+- `EMAIL_ADDRESS`: Email address to create the self-signed SSL and private key. Defaults to `USER@expose-localhost.com`
+- `ORGANIZATION`: Organization name for the certificate. Defaults to the AWS endpoint.
 
 </details>
 

@@ -5,7 +5,7 @@ from select import select
 from socket import socket
 from threading import Thread
 from time import sleep
-from typing import List, Union
+from typing import List, Tuple, Union
 
 import requests
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
@@ -66,7 +66,7 @@ class Server:
         self.ssh_client.connect(hostname=hostname, username=username, pkey=pem_key)
         self.logger = logger
 
-    def run_interactive_ssh(self, commands: List[str]) -> bool:
+    def run_interactive_ssh(self, commands: Tuple[str, str, str, str, str]) -> bool:
         """Authenticates remote server using a ``*.pem`` file and runs interactive ssh commands using ``paramiko``.
 
         Args:
@@ -154,11 +154,16 @@ class Server:
         self.logger.info("Awaiting connection...")
         transport: Transport = self.ssh_client.get_transport()
         transport.request_port_forward(address="localhost", port=8080)
+        threads: List[Thread] = []
         try:
             while True:
                 if not (channel := transport.accept(timeout=1000)):
                     continue
-                Thread(target=self._handler, args=[channel, port], daemon=True).start()
+                thread = Thread(target=self._handler, args=(channel, port))
+                thread.daemon = True
+                thread.start()
+                self.logger.debug("Launching daemon service: %s", thread.ident or thread.native_id)
+                threads.append(thread)
         except KeyboardInterrupt:
             self.logger.info("Tunneling interrupted")
         if host_keys := self.ssh_client.get_host_keys().keys():
@@ -167,3 +172,7 @@ class Server:
             self.logger.info("Closing SSH connection on %s", join(transport.getpeername()))
         transport.cancel_port_forward(address="localhost", port=8080)
         self.ssh_client.close()
+        self.logger.info("Daemons launched: %d", len(threads))
+        for thread in threads:
+            self.logger.debug("Awaiting daemon service: %s", thread.ident or thread.native_id)
+            thread.join(timeout=0.5)

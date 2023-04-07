@@ -3,7 +3,7 @@ venv
 .idea
 
 # Env vars stored in a .env file
-.env
+*.env
 
 # File generated when an EC2 instance in spunup
 *.json

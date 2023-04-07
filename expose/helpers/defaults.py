@@ -13,3 +13,5 @@ class AWSDefaults:
         "us-west-1": "ami-0005fe7be6ce06e3c",
         "us-west-2": "ami-06e20d17437157772"
     }
+    SUPPORTED_RECORDS = ('SOA', 'A', 'TXT', 'NS', 'CNAME', 'MX', 'NAPTR', 'PTR', 'SRV', 'SPF', 'AAAA', 'CAA', 'DS')
+    SUPPORTED_ACTIONS = ('CREATE', 'DELETE', 'UPSERT')

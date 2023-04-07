@@ -4,6 +4,8 @@ from typing import Dict, Union
 import boto3
 from botocore.exceptions import ClientError
 
+from expose.helpers.defaults import AWSDefaults
+
 
 def _get_zone_id(client: boto3.client, logger: logging.Logger, dns: str = None) -> str or None:
     """Gets the zone ID of a DNS name registered in route53.
@@ -47,17 +49,15 @@ def change_record_set(client: boto3.client, dns_name: str, source: str, destinat
         dict or None:
         ChangeSet response from AWS.
     """
-    supported_records = ['SOA', 'A', 'TXT', 'NS', 'CNAME', 'MX', 'NAPTR', 'PTR', 'SRV', 'SPF', 'AAAA', 'CAA', 'DS']
-    if record_type not in supported_records:
+    if record_type not in AWSDefaults.SUPPORTED_RECORDS:
         logger.error('Unsupported record type passed.')
-        logger.warning(f"Should be one of {', '.join(sorted(supported_records))}")
+        logger.warning(f"Should be one of {', '.join(sorted(AWSDefaults.SUPPORTED_RECORDS))}")
         return
 
     action = action.upper()
-    supported_actions = ['CREATE', 'DELETE', 'UPSERT']
-    if action not in supported_actions:
+    if action not in AWSDefaults.SUPPORTED_ACTIONS:
         logger.error('Unsupported action type passed.')
-        logger.warning(f"Should be one of {', '.join(sorted(supported_actions))}")
+        logger.warning(f"Should be one of {', '.join(sorted(AWSDefaults.SUPPORTED_ACTIONS))}")
         return
 
     if not source.endswith(dns_name):

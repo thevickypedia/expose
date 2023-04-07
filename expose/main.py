@@ -8,13 +8,13 @@ import requests
 import urllib3.exceptions
 from botocore.exceptions import ClientError
 
-from expose.helpers.auxiliary import IP_INFO
-from expose.helpers.cert import generate_cert
-from expose.helpers.config import env, fileio, wait
-from expose.helpers.defaults import AWSDefaults
-from expose.helpers.logger import LOGGER
-from expose.helpers.route_53 import change_record_set
-from expose.helpers.server import Server
+from .helpers.auxiliary import IP_INFO
+from .helpers.cert import generate_cert
+from .helpers.config import EnvConfig, fileio, wait
+from .helpers.defaults import AWSDefaults
+from .helpers.logger import LOGGER
+from .helpers.route_53 import change_record_set
+from .helpers.server import Server
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # Disable warnings for self-signed certificates
 
@@ -28,17 +28,16 @@ class Tunnel:
 
     """
 
-    def __init__(self, port: int = env.port, image_id: str = env.image_id, domain_name: str = env.domain_name,
-                 subdomain: str = env.subdomain, aws_access_key: str = env.aws_access_key,
-                 aws_secret_key: str = env.aws_secret_key, aws_region_name: str = env.aws_region_name,
-                 email_address: str = env.email_address, organization: str = env.organization,
-                 logger: logging.Logger = LOGGER):
+    def __init__(self, port: int = None, image_id: str = None, domain: str = None,
+                 subdomain: str = None, aws_access_key: str = None, aws_secret_key: str = None,
+                 aws_region_name: str = None, email_address: str = None, organization: str = None,
+                 logger: logging.Logger = None):
         """Assigns a name to the PEM file, initiates the logger, client and resource for EC2 using ``boto3`` module.
 
         Args:
             port: Port number where the application/API is running in localhost.
             image_id: Takes image ID as an argument. Defaults to ``ami_id`` in environment variable.
-            domain_name: Name of the hosted zone in which an ``A`` record has to be added. [``example.com``]
+            domain: Name of the hosted zone in which an ``A`` record has to be added. [``example.com``]
             subdomain: Subdomain using which the localhost has to be accessed. [``tunnel`` or ``tunnel.example.com``]
             aws_access_key: Access token for AWS account.
             aws_secret_key: Secret ID for AWS account.
@@ -48,24 +47,26 @@ class Tunnel:
             - If no values (for aws authentication) are passed during object initialization, script checks for env vars.
             - If the environment variables are ``null``, gets the default credentials from ``~/.aws/credentials``.
         """
+        env = EnvConfig()
+
         # AWS client and resource setup
-        session = boto3.Session(region_name=aws_region_name,
-                                aws_access_key_id=aws_access_key,
-                                aws_secret_access_key=aws_secret_key)
-        self.region = aws_region_name.lower()
+        self.region = (aws_region_name or env.aws_region_name).lower()
+        session = boto3.Session(region_name=aws_region_name or env.aws_region_name,
+                                aws_access_key_id=aws_access_key or aws_access_key,
+                                aws_secret_access_key=aws_secret_key or aws_secret_key)
         self.ec2_client = session.client(service_name='ec2')
         self.ec2_resource = session.resource(service_name='ec2')
         self.route53_client = session.client(service_name='route53')
 
         # Tunnelling requirements setup
-        self.image_id = image_id
-        self.port = port
-        self.domain_name = domain_name
-        self.subdomain = subdomain
-        self.email_address = email_address
-        self.organization = organization
+        self.image_id = image_id or env.image_id
+        self.port = port or env.port
+        self.domain_name = domain or env.domain
+        self.subdomain = subdomain or env.subdomain
+        self.email_address = email_address or env.email_address
+        self.organization = organization or env.organization
 
-        self.logger = logger
+        self.logger = logger or LOGGER
 
     def _get_image_id(self) -> None:
         """Fetches AMI ID from public images."""
@@ -391,9 +392,9 @@ class Tunnel:
             self._configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'))
             return
 
-        if not all([self.domain_name, self.subdomain]):
+        if not all((self.domain_name, self.subdomain)):
             self.logger.warning("DOMAIN and SUBDOMAIN gives a customized access to the tunnel.")
-        if not all([self.email_address, self.organization]):
+        if not all((self.email_address, self.organization)):
             self.logger.warning("EMAIL_ADDRESS and ORGANIZATION can be used to create a customized certificate.")
 
         if not self.image_id:
@@ -515,14 +516,13 @@ class Tunnel:
 
         self.logger.info('Configuring nginx server.')
         nginx_status = nginx_server.run_interactive_ssh(
-            commands=[
+            commands=(
                 "sudo apt-get update -y",
-                "sudo apt-get upgrade -y",
                 "echo Y | sudo -S apt-get install nginx -y",
                 "sudo mv /home/ubuntu/server.conf /etc/nginx/conf.d/server.conf",
                 "sudo mv /home/ubuntu/nginx.conf /etc/nginx/nginx.conf",
                 "sudo systemctl restart nginx"
-            ]
+            )
         )
         if not nginx_status:
             self.logger.error('Nginx server was not configured. Cleaning up AWS resources acquired.')
