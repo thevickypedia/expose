@@ -44,11 +44,9 @@ def generate_cert(common_name: str,
                   state_or_province_name: str = IP_INFO.get('region', 'New York'),
                   organization_name: str = None,
                   organization_unit_name: str = "Information Technology",
-                  validity_start_in_seconds: int = 0,
-                  validity_end_in_seconds: int = 10 * 365 * 24 * 60 * 60,
-                  key_file: str = "key.key",
-                  cert_file: str = "cert.crt",
-                  key_size: int = 4096) -> bool:
+                  key_file: str = "private.key",
+                  cert_file: str = "public.crt",
+                  key_size: int = 2048) -> bool:
     """Creates a private/self-signed certificate.
 
     Args:
@@ -59,8 +57,6 @@ def generate_cert(common_name: str,
         state_or_province_name: Name of the state/province. Defaults to ``New York``
         organization_name: Name of the organization. Defaults to ``common_name``
         organization_unit_name: Name of the organization unit. Defaults to ``Information Technology``
-        validity_start_in_seconds: From when the cert validity begins. Defaults to ``0``.
-        validity_end_in_seconds: Expiration duration of the cert. Defaults to ``10 years``
         key_file: Name of the key file.
         cert_file: Name of the certificate.
         key_size: Size of the public key. Defaults to 4096.
@@ -72,7 +68,7 @@ def generate_cert(common_name: str,
     See Also:
         Use ``openssl x509 -inform pem -in cert.crt -noout -text`` to look at the generated cert using openssl.
     """
-    if key_size not in [2048, 4096]:
+    if key_size not in (2048, 4096):
         raise ValueError('Certificate key size should be either 2048 or 4096.')
     signature_bytes = 256 if key_size == 2048 else 512  # Refer: https://crypto.stackexchange.com/a/3508
 
@@ -90,8 +86,8 @@ def generate_cert(common_name: str,
     cert.get_subject().CN = common_name
     cert.get_subject().emailAddress = email_address or f"{getpass.getuser()}@expose-localhost.com"
     cert.set_serial_number(serial=cert.get_serial_number() or _generate_serial_hash())
-    cert.gmtime_adj_notBefore(amount=validity_start_in_seconds)
-    cert.gmtime_adj_notAfter(amount=validity_end_in_seconds)
+    cert.gmtime_adj_notBefore(amount=0)
+    cert.gmtime_adj_notAfter(amount=365 * 24 * 60 * 60)
     cert.set_issuer(issuer=cert.get_subject())
     cert.set_pubkey(pkey=key)
     # noinspection PyTypeChecker
@@ -100,14 +96,10 @@ def generate_cert(common_name: str,
     # Writes the cert file into specified names
     with open(cert_file, "w") as f:
         f.write(crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=cert).decode("utf-8"))
+        f.flush()
     with open(key_file, "w") as f:
         f.write(crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=key).decode("utf-8"))
+        f.flush()
 
-    cert_file_new, key_file_new = f"{cert_file.replace('.crt', '.pem')}", f"{key_file.replace('.key', '.pem')}"
-
-    os.rename(src=cert_file, dst=cert_file_new)
-    os.rename(src=key_file, dst=key_file_new)
-
-    if os.stat(cert_file_new).st_size != 0 and os.stat(key_file_new).st_size != 0:
-        time.sleep(2)
+    if os.path.isfile(key_file) and os.path.isfile(cert_file):
         return True

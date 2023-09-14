@@ -4,7 +4,6 @@ import time
 from select import select
 from socket import socket
 from threading import Thread
-from time import sleep
 from typing import List, Tuple, Union
 
 import requests
@@ -34,7 +33,7 @@ def print_warning(port: int) -> None:
         port: Port number.
     """
     sys.stdout.write(f'\rRun an application on the port {port} to start tunneling.')
-    sleep(5)
+    time.sleep(5)
     sys.stdout.flush()
     sys.stdout.write('\r')
 

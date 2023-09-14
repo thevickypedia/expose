@@ -4,7 +4,6 @@ import os
 import time
 
 import boto3
-import requests
 import urllib3.exceptions
 from botocore.exceptions import ClientError
 
@@ -17,8 +16,6 @@ from .helpers.route_53 import change_record_set
 from .helpers.server import Server
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # Disable warnings for self-signed certificates
-
-CONFIGURATION_LOCATION = 'https://raw.githubusercontent.com/thevickypedia/expose/main/configuration/'
 
 
 class Tunnel:
@@ -67,6 +64,7 @@ class Tunnel:
         self.organization = organization or env.organization
 
         self.logger = logger or LOGGER
+        self.nginx_server = None
 
     def _get_image_id(self) -> None:
         """Fetches AMI ID from public images."""
@@ -164,6 +162,10 @@ class Tunnel:
                     {'IpProtocol': 'tcp',
                      'FromPort': 443,
                      'ToPort': 443,
+                     'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},
+                    {'IpProtocol': 'tcp',
+                     'FromPort': self.port,
+                     'ToPort': self.port,
                      'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},
                     {'IpProtocol': 'tcp',
                      'FromPort': 80,
@@ -375,8 +377,15 @@ class Tunnel:
                     instance_info = self.ec2_resource.Instance(instance_id)
                     return instance_info.public_dns_name, instance_info.public_ip_address
 
-    def start(self) -> None:
-        """Calls the class methods ``_create_ec2_instance`` and ``_instance_info`` to configure the ec2 instance."""
+    def start(self, purge: bool = False) -> None:
+        """Calls the class methods ``_create_ec2_instance`` and ``_instance_info`` to configure the ec2 instance.
+
+        Args:
+            purge: Boolean flag to delete all AWS resource if initial configuration fails.
+
+        See Also:
+            Automatic purge works only during initial setup, and not during re-configuration.
+        """
         try:
             self.port = int(self.port)
         except (TypeError, ValueError):
@@ -387,9 +396,9 @@ class Tunnel:
         if os.path.isfile(fileio.server_info) and os.path.isfile(fileio.tunnel):
             self.logger.warning('Received request to start VM, but looks like a session is up and running already.')
             self.logger.warning('Initiating re-configuration.')
-            with open('server_info.json') as file:
+            with open(fileio.server_info) as file:
                 data = json.load(file)
-            self._configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'))
+            self.configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'))
             return
 
         if not all((self.domain_name, self.subdomain)):
@@ -419,6 +428,7 @@ class Tunnel:
             return
 
         instance_info = {
+            'port': self.port,
             'instance_id': instance_id,
             'public_dns': public_dns,
             'public_ip': public_ip,
@@ -435,16 +445,47 @@ class Tunnel:
         self.logger.info('Waiting for SSH origin to be active. Est time remaining: %d seconds.', wait.ssh_warmup)
         time.sleep(wait.ssh_warmup)
 
-        self._configure_vm(public_dns=public_dns, public_ip=public_ip)
+        self.configure_vm(public_dns=public_dns, public_ip=public_ip, disposal=purge)
 
-    def _configure_vm(self, public_dns: str, public_ip: str):
+    def server_copy(self, source: str, destination: str) -> None:
+        """Reads a file in localhost and writes it within SSH connection.
+
+        Args:
+            source: Name of the source file in localhost.
+            destination: Name of the destination file in the server.
+        """
+        self.logger.info("Copying '%s' to SSH server as '%s'", source, destination)
+        with open(source) as f:
+            self.nginx_server.server_write(data={destination: f.read()})
+
+    def get_config(self, filename: str, server: str):
+        """Downloads configuration files from GitHub.
+
+        Args:
+            filename: Name of the file that has to be downloaded.
+            server: Custom server names to be added in configuration files.
+
+        Returns:
+            str:
+            Returns the data of the file as a string.
+        """
+        self.logger.info('Loading the configuration file: %s.', filename)
+        with open(os.path.join(fileio.configuration, filename)) as file:
+            return file.read().\
+                replace('SERVER_NAME_HERE', server).\
+                replace('SSH_PATH_HERE', fileio.ssh_home).\
+                replace('CERTIFICATE_HERE', f'{fileio.ssh_home}/{fileio.cert_file}').\
+                replace('PRIVATE_KEY_HERE', f'{fileio.ssh_home}/{fileio.key_file}')
+
+    def configure_vm(self, public_dns: str, public_ip: str, disposal: bool = False):
         """Configures the ec2 instance to take traffic from localhost.
 
         Args:
             public_dns: Public DNS name of the EC2 that was created.
             public_ip: Public IP of the EC2 that was created.
+            disposal: Boolean flag to delete all AWS resources on failed configuration.
         """
-        self.logger.info('Gathering pieces for configuration.')
+        self.logger.info('Gathering configuration requirements.')
         custom_servers = f"{public_dns} {public_ip}"
 
         endpoint = None
@@ -456,81 +497,52 @@ class Tunnel:
                 endpoint = f'{self.subdomain}.{self.domain_name}'
                 custom_servers += f' {self.subdomain}.{self.domain_name}'
 
-        nginx_server = Server(hostname=public_dns, pem_file=fileio.tunnel, logger=self.logger)
+        self.nginx_server = Server(hostname=public_dns, pem_file=fileio.tunnel, logger=self.logger)
 
-        def _file_io_uploader(source_file: str, destination_file: str) -> None:
-            """Reads a file in localhost and writes it within SSH connection.
-
-            Args:
-                source_file: Name of the source file in localhost.
-                destination_file: Name of the destination file in the server.
-            """
-            with open(source_file) as f:
-                nginx_server.server_write(data={destination_file: f.read()})
-
-        def _download_config_file(filename: str):
-            """Downloads configuration files from GitHub.
-
-            Args:
-                filename: Name of the file that has to be downloaded.
-
-            Returns:
-                str:
-                Returns the data of the file as a string.
-            """
-            self.logger.info('Downloading the configuration file: %s.', filename)
-            response = requests.get(url=f'{CONFIGURATION_LOCATION}{filename}')
-            if not response.ok:
-                raise ConnectionError(f'Failed to download the config file: {filename}')
-            return response.text.replace('SERVER_NAME_HERE', custom_servers)
-
-        download_and_copy = {"server.conf": _download_config_file(filename="server.conf")}
-        if os.path.isdir(fileio.ssh_home) and \
-                os.path.isfile(os.path.join(fileio.ssh_home, "key.pem")) and \
-                os.path.isfile(os.path.join(fileio.ssh_home, "cert.pem")):
-            self.logger.info('Found certificate and key in %s', fileio.ssh_home)
-            _file_io_uploader(source_file=os.path.join(fileio.ssh_home, "key.pem"), destination_file="key.pem")
-            _file_io_uploader(source_file=os.path.join(fileio.ssh_home, "cert.pem"), destination_file="cert.pem")
-            download_and_copy["options-ssl-nginx.conf"] = _download_config_file(filename="options-ssl-nginx.conf")
-            download_and_copy["nginx.conf"] = _download_config_file(filename="nginx-ssl.conf")
-        elif os.path.isfile(os.path.join(fileio.current_dir, "cert.pem")) and \
-                os.path.isfile(os.path.join(fileio.current_dir, "key.pem")):
+        load_and_copy = {"server.conf": self.get_config(filename="server.conf", server=custom_servers)}
+        if os.path.isfile(os.path.join(fileio.current_dir, fileio.cert_file)) and \
+                os.path.isfile(os.path.join(fileio.current_dir, fileio.key_file)):
             self.logger.info('Found certificate and key in %s', fileio.current_dir)
-            _file_io_uploader(source_file=os.path.join(fileio.current_dir, "cert.pem"), destination_file="cert.pem")
-            _file_io_uploader(source_file=os.path.join(fileio.current_dir, "key.pem"), destination_file="key.pem")
-            download_and_copy["options-ssl-nginx.conf"] = _download_config_file(filename="options-ssl-nginx.conf")
-            download_and_copy["nginx.conf"] = _download_config_file(filename="nginx-ssl.conf")
+            self.server_copy(source=os.path.join(fileio.current_dir, fileio.cert_file), destination=fileio.cert_file)
+            self.server_copy(source=os.path.join(fileio.current_dir, fileio.key_file), destination=fileio.key_file)
+            load_and_copy["options-ssl-nginx.conf"] = self.get_config(filename="options-ssl-nginx.conf",
+                                                                      server=custom_servers)
+            load_and_copy["nginx.conf"] = self.get_config(filename="nginx-ssl.conf", server=custom_servers)
         elif generate_cert(common_name=endpoint or public_dns, email_address=self.email_address,
-                           organization_name=self.organization):
+                           organization_name=self.organization, cert_file=fileio.cert_file, key_file=fileio.key_file):
             self.logger.info('Generated self-signed SSL certificate and private key.')
-            _file_io_uploader(source_file=os.path.join(fileio.current_dir, "cert.pem"), destination_file="cert.pem")
-            _file_io_uploader(source_file=os.path.join(fileio.current_dir, "key.pem"), destination_file="key.pem")
-            download_and_copy["options-ssl-nginx.conf"] = _download_config_file(filename="options-ssl-nginx.conf")
-            download_and_copy["nginx.conf"] = _download_config_file(filename="nginx-ssl.conf")
+            self.server_copy(source=os.path.join(fileio.current_dir, fileio.cert_file), destination=fileio.cert_file)
+            self.server_copy(source=os.path.join(fileio.current_dir, fileio.key_file), destination=fileio.key_file)
+            load_and_copy["options-ssl-nginx.conf"] = self.get_config(filename="options-ssl-nginx.conf",
+                                                                      server=custom_servers)
+            load_and_copy["nginx.conf"] = self.get_config(filename="nginx-ssl.conf", server=custom_servers)
         else:
             self.logger.warning('Failed to generate self-signed SSL certificate and private key.')
-            download_and_copy["nginx.conf"] = _download_config_file(filename="nginx-non-ssl.conf")
+            load_and_copy["nginx.conf"] = self.get_config(filename="nginx-non-ssl.conf", server=custom_servers)
 
         self.logger.info('Copying configuration files to %s', public_dns)
-        nginx_server.server_write(data=download_and_copy)
+        self.nginx_server.server_write(data=load_and_copy)
 
         self.logger.info('Configuring nginx server.')
-        nginx_status = nginx_server.run_interactive_ssh(
+        nginx_status = self.nginx_server.run_interactive_ssh(
             commands=(
                 "sudo apt-get update -y",
                 "echo Y | sudo -S apt-get install nginx -y",
-                "sudo mv /home/ubuntu/server.conf /etc/nginx/conf.d/server.conf",
                 "sudo mv /home/ubuntu/nginx.conf /etc/nginx/nginx.conf",
+                "sudo mv /home/ubuntu/server.conf /etc/nginx/conf.d/server.conf",
                 "sudo systemctl restart nginx"
             )
         )
-        if not nginx_status:
-            self.logger.error('Nginx server was not configured. Cleaning up AWS resources acquired.')
-            self.stop()
+        if nginx_status:
+            self.logger.info('Nginx server was configured successfully.')
+        else:
+            self.logger.error('Nginx server was not configured.')
+            if disposal:
+                self.logger.info('Cleaning up AWS resources acquired.')
+                self.stop()
             return
 
-        self.logger.info('Nginx server was configured successfully.')
-        protocol = 'https' if download_and_copy.get("options-ssl-nginx.conf") else 'http'
+        protocol = 'https' if load_and_copy.get("options-ssl-nginx.conf") else 'http'
         if endpoint:
             change_record_set(dns_name=self.domain_name, source=self.subdomain, destination=public_ip, record_type='A',
                               logger=self.logger, client=self.route53_client)
@@ -539,7 +551,7 @@ class Tunnel:
             self.logger.info('%s://%s -> http://localhost:%d', protocol, public_dns, self.port)
 
         self.logger.info('Initiating tunnel')
-        nginx_server.initiate_tunnel(port=self.port)
+        self.nginx_server.initiate_tunnel(port=self.port)
 
     def stop(self, partial: bool = False, instance_id: str = None, security_group_id: str = None) -> None:
         """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created.

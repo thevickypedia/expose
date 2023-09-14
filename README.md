@@ -55,7 +55,7 @@ Unfortunately not many SSL certificate providers give the liberty to download ke
 
 To manually generate a self-signed cert:
 
-> `openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout ~/.ssh/key.pem -out ~/.ssh/cert.pem`
+> `openssl req -newkey rsa:2048 -sha256 -nodes -keyout YOURPRIVATE.key -x509 -days 365 -out YOURPUBLIC.pem -subj "/C=US/ST=New York/L=Brooklyn/O=Example Brooklyn Company/CN=YOURDOMAIN.EXAMPLE"`
 
 [OR]
 
@@ -72,19 +72,15 @@ Simply let `expose` create a self-signed SSL certificate and a private key.
 python3 -m pip install expose-localhost
 ```
 
-###### Start tunneling:
+###### Tunneling:
 ```python
 import expose
 
 tunnel = expose.Tunnel()
+# set 'purge' flag to 'True' to delete AWS resources if configuration fails
 tunnel.start()
-```
-
-###### Stop tunneling:
-```python
-import expose
-
-tunnel = expose.Tunnel()
+# sleep or do something else
+# set 'partial' flag to 'True' to skip SG deletion
 tunnel.stop()
 ```
 

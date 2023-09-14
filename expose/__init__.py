@@ -6,7 +6,7 @@ import dotenv
 from .helpers import config  # noqa: F401
 from .main import Tunnel  # noqa: F401
 
-version = "0.5"
+version = "0.6a"
 
 
 def load_env(filename: Union[str, os.PathLike] = ".env", scan: bool = False) -> NoReturn:
