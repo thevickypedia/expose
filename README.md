@@ -114,7 +114,7 @@ changelog reverse -f release_notes.rst -t 'Release Notes'
 
 **Requirement**
 ```shell
-pip install sphinx==5.1.1 pre-commit recommonmark
+pip install sphinx==5.1.1 pre-commit recommonmark gitverse
 ```
 
 **Usage**

@@ -1,5 +1,10 @@
 import json
+import os
+import sys
+from typing import Any
 from urllib.request import urlopen
+
+from expose.helpers.config import settings
 
 DATETIME_FORMAT = '%b-%d-%Y %I:%M:%S %p'
 
@@ -7,6 +12,10 @@ try:
     IP_INFO = json.load(urlopen('http://ipinfo.io/json')) or json.load(urlopen('http://ip.jsontest.com'))
 except Exception:  # noqa
     IP_INFO = {}
+
+
+class NotImplementedWarning(Warning):
+    """Custom implementation warning."""
 
 
 def time_converter(seconds: float) -> str:
@@ -33,3 +42,24 @@ def time_converter(seconds: float) -> str:
         return f'{minutes} minutes, and {seconds} seconds'
     elif seconds:
         return f'{seconds} seconds'
+
+
+def write_screen(text: Any) -> None:
+    """Write text on screen that can be cleared later.
+
+    Args:
+        text: Text to be written.
+    """
+    sys.stdout.write(f"\r{text}")
+
+
+def flush_screen() -> None:
+    """Flushes the screen output.
+
+    See Also:
+        Writes new set of empty strings for the size of the terminal if ran using one.
+    """
+    if settings.interactive:
+        sys.stdout.write(f"\r{' '.join(['' for _ in range(os.get_terminal_size().columns)])}")
+    else:
+        sys.stdout.write("\r")

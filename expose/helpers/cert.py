@@ -1,7 +1,6 @@
 import binascii
 import getpass
 import os
-import time
 
 from OpenSSL import crypto
 

@@ -88,4 +88,4 @@ def change_record_set(client: boto3.client, dns_name: str, source: str, destinat
         logger.error(response)
         return
     logger.info(response.get('ChangeInfo', {}).get('Comment'))
-    logger.info(response.get('ChangeInfo'))
+    logger.debug(response.get('ChangeInfo'))

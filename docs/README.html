@@ -97,7 +97,7 @@ generate a self-signed certificate and a private key automatically.</p></li>
 <p>:warning:   Some web browsers might throw a warning and some might even block a self-signed certificate/private CA.</p>
 <p>To manually generate a self-signed cert:</p>
 <blockquote>
-<div><p><code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">req</span> <span class="pre">-newkey</span> <span class="pre">rsa:2048</span> <span class="pre">-new</span> <span class="pre">-nodes</span> <span class="pre">-x509</span> <span class="pre">-days</span> <span class="pre">3650</span> <span class="pre">-keyout</span> <span class="pre">~/.ssh/key.pem</span> <span class="pre">-out</span> <span class="pre">~/.ssh/cert.pem</span></code></p>
+<div><p><code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">req</span> <span class="pre">-newkey</span> <span class="pre">rsa:2048</span> <span class="pre">-sha256</span> <span class="pre">-nodes</span> <span class="pre">-keyout</span> <span class="pre">YOURPRIVATE.key</span> <span class="pre">-x509</span> <span class="pre">-days</span> <span class="pre">365</span> <span class="pre">-out</span> <span class="pre">YOURPUBLIC.pem</span> <span class="pre">-subj</span> <span class="pre">&quot;/C=US/ST=New</span> <span class="pre">York/L=Brooklyn/O=Example</span> <span class="pre">Brooklyn</span> <span class="pre">Company/CN=YOURDOMAIN.EXAMPLE&quot;</span></code></p>
 </div></blockquote>
 <p>[OR]</p>
 <p>Simply let <code class="docutils literal notranslate"><span class="pre">expose</span></code> create a self-signed SSL certificate and a private key.</p>
@@ -115,20 +115,15 @@ generate a self-signed certificate and a private key automatically.</p></li>
 </pre></div>
 </div>
 </section>
-<section id="start-tunneling">
-<h3>Start tunneling:<a class="headerlink" href="#start-tunneling" title="Permalink to this heading">¶</a></h3>
+<section id="tunneling">
+<h3>Tunneling:<a class="headerlink" href="#tunneling" title="Permalink to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">expose</span>
 
 <span class="n">tunnel</span> <span class="o">=</span> <span class="n">expose</span><span class="o">.</span><span class="n">Tunnel</span><span class="p">()</span>
+<span class="c1"># set &#39;purge&#39; flag to &#39;True&#39; to delete AWS resources if configuration fails</span>
 <span class="n">tunnel</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-</pre></div>
-</div>
-</section>
-<section id="stop-tunneling">
-<h3>Stop tunneling:<a class="headerlink" href="#stop-tunneling" title="Permalink to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">expose</span>
-
-<span class="n">tunnel</span> <span class="o">=</span> <span class="n">expose</span><span class="o">.</span><span class="n">Tunnel</span><span class="p">()</span>
+<span class="c1"># sleep or do something else</span>
+<span class="c1"># set &#39;partial&#39; flag to &#39;True&#39; to skip SG deletion</span>
 <span class="n">tunnel</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -161,7 +156,7 @@ Clean code with pre-commit hooks: <a class="reference external" href="https://fl
 <h2>Linting<a class="headerlink" href="#linting" title="Permalink to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">PreCommit</span></code> will ensure linting, and the doc creation are run on every commit.</p>
 <p><strong>Requirement</strong></p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">sphinx</span><span class="o">==</span><span class="m">5</span>.1.1<span class="w"> </span>pre-commit<span class="w"> </span>recommonmark
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">sphinx</span><span class="o">==</span><span class="m">5</span>.1.1<span class="w"> </span>pre-commit<span class="w"> </span>recommonmark<span class="w"> </span>gitverse
 </pre></div>
 </div>
 <p><strong>Usage</strong></p>
@@ -205,8 +200,7 @@ Clean code with pre-commit hooks: <a class="reference external" href="https://fl
 </li>
 <li><a class="reference internal" href="#usage">Usage</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a></li>
-<li><a class="reference internal" href="#start-tunneling">Start tunneling:</a></li>
-<li><a class="reference internal" href="#stop-tunneling">Stop tunneling:</a></li>
+<li><a class="reference internal" href="#tunneling">Tunneling:</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#coding-standards">Coding Standards</a></li>

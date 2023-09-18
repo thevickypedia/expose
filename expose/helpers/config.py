@@ -1,5 +1,6 @@
 import os
 import pathlib
+import sys
 
 
 class EnvConfig:
@@ -18,40 +19,27 @@ class EnvConfig:
         self.subdomain: str = os.environ.get('SUBDOMAIN', os.environ.get('subdomain'))
         self.aws_access_key: str = os.environ.get('AWS_ACCESS_KEY', os.environ.get('aws_access_key'))
         self.aws_secret_key: str = os.environ.get('AWS_SECRET_KEY', os.environ.get('aws_secret_key'))
-        self.aws_region_name: str = os.environ.get('AWS_REGION_NAME', os.environ.get('aws_region_name', 'us-west-2'))
+        self.aws_region_name: str = os.environ.get('AWS_REGION_NAME', os.environ.get('aws_region_name', 'us-east-2'))
         self.email_address: str = os.environ.get('EMAIL_ADDRESS', os.environ.get('email_address'))
         self.organization: str = os.environ.get('ORGANIZATION', os.environ.get('organization'))
 
 
-class WaitTimes:
-    """Wrapper for different wait times.
+class Settings:
+    """Wrapper for AWS settings.
 
-    >>> WaitTimes
-
-    """
-
-    # todo: Use built-in ec2 waiters instead of hard coded sleep
-    instance_warmup: int = 30
-    instance_warmup_refresh: int = 5
-    ssh_warmup: int = 15
-    unhook_sg: int = 90
-    unhook_sg_refresh: int = 20
-
-
-wait = WaitTimes()
-
-
-class FileIO:
-    """Wrapper for file objects.
-
-    >>> FileIO
+    >>> Settings
 
     """
 
+    if sys.stdin.isatty():
+        interactive: bool = True
+    else:
+        interactive: bool = False
     ssh_home: str = "/home/ubuntu"
     current_dir: os.PathLike = os.getcwd()
-    tunnel_raw: str = "expose_localhost"
-    tunnel: os.PathLike = os.path.join(current_dir, f"{tunnel_raw}.pem")
+    key_pair_name: str = "expose_localhost"
+    security_group_name: str = "Expose Localhost"
+    key_pair_file: os.PathLike = os.path.join(current_dir, f"{key_pair_name}.pem")
     server_info: os.PathLike = os.path.join(current_dir, "server_info.json")
     configuration: os.PathLike = os.path.join(pathlib.Path(__file__).parent.parent, 'configuration')
 
@@ -60,4 +48,4 @@ class FileIO:
     key_file: os.PathLike = "private.pem"
 
 
-fileio = FileIO()
+settings = Settings()

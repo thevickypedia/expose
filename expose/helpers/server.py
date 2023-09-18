@@ -1,5 +1,4 @@
 import logging
-import sys
 import time
 from select import select
 from socket import socket
@@ -10,6 +9,8 @@ import requests
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from paramiko.channel import Channel
 from paramiko.transport import Transport
+
+from expose.helpers.auxiliary import flush_screen, write_screen
 
 
 def join(value: Union[tuple, list, str], separator: str = ':') -> str:
@@ -32,10 +33,9 @@ def print_warning(port: int) -> None:
     Args:
         port: Port number.
     """
-    sys.stdout.write(f'\rRun an application on the port {port} to start tunneling.')
+    write_screen(f'Run an application on the port {port} to start tunneling.')
     time.sleep(5)
-    sys.stdout.flush()
-    sys.stdout.write('\r')
+    flush_screen()
 
 
 class Server:
@@ -50,19 +50,25 @@ class Server:
     forwarding makes sure that you can SSH back to the server machine.
     """
 
-    def __init__(self, hostname: str, pem_file: str, logger: logging.Logger, username: str = "ubuntu"):
+    def __init__(self,
+                 hostname: str,
+                 pem_file: str,
+                 logger: logging.Logger,
+                 username: str = "ubuntu",
+                 timeout: int = 5):
         """Instantiates the session using RSAKey generated from a ``***.pem`` file.
 
         Args:
             hostname: Hostname of the server to connect to.
             pem_file: Takes the .pem filename to authenticate.
             username: Takes the username of the server to authenticate.
+            timeout: Connection timeout for SSH server.
         """
         pem_key = RSAKey.from_private_key_file(filename=pem_file)
         self.ssh_client = SSHClient()
         self.ssh_client.load_system_host_keys()
         self.ssh_client.set_missing_host_key_policy(AutoAddPolicy())
-        self.ssh_client.connect(hostname=hostname, username=username, pkey=pem_key)
+        self.ssh_client.connect(hostname=hostname, username=username, pkey=pem_key, timeout=timeout)
         self.logger = logger
 
     def run_interactive_ssh(self, commands: Tuple[str, str, str, str, str]) -> bool:
@@ -147,9 +153,10 @@ class Server:
             try:
                 requests.get(f'http://localhost:{port}')
                 self.logger.info('Application is running on port: %d', port)
+                flush_screen()
                 break
             except requests.exceptions.RequestException:
-                print_warning(port=port)
+                print_warning(port)
         self.logger.info("Awaiting connection...")
         transport: Transport = self.ssh_client.get_transport()
         transport.request_port_forward(address="localhost", port=8080)
@@ -158,8 +165,7 @@ class Server:
             while True:
                 if not (channel := transport.accept(timeout=1000)):
                     continue
-                thread = Thread(target=self._handler, args=(channel, port))
-                thread.daemon = True
+                thread = Thread(target=self._handler, args=(channel, port), daemon=True)
                 thread.start()
                 self.logger.debug("Launching daemon service: %s", thread.ident or thread.native_id)
                 threads.append(thread)
