@@ -21,7 +21,7 @@ keywords = ["route53", "certificate", "ec2", "ngrok-alternative", "tunnel"]
 requires-python = ">=3"
 
 [tool.setuptools]
-packages = ["expose", "expose.helpers"]
+packages = ["expose"]
 
 [tool.setuptools.dynamic]
 version = {attr = "expose.version"}

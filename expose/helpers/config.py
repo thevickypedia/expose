@@ -1,30 +1,66 @@
+import getpass
 import os
 import pathlib
+import re
 import sys
+from typing import Union
+
+from pydantic import (BaseModel, DirectoryPath, EmailStr, Field, FilePath,
+                      field_validator)
+from pydantic_settings import BaseSettings
 
 
-class EnvConfig:
-    """Wrapper to load env variables.
+class EnvConfig(BaseSettings):
+    """Env configuration.
 
     >>> EnvConfig
 
+    References:
+        https://docs.pydantic.dev/2.3/migration/#required-optional-and-nullable-fields
     """
 
-    def __init__(self):
-        """Load all env vars."""
-        # todo: Use pydantic to load env vars
-        self.port: str = os.environ.get('PORT', os.environ.get('port'))
-        self.image_id: str = os.environ.get('IMAGE_ID', os.environ.get('image_id'))
-        self.domain: str = os.environ.get('DOMAIN', os.environ.get('domain'))
-        self.subdomain: str = os.environ.get('SUBDOMAIN', os.environ.get('subdomain'))
-        self.aws_access_key: str = os.environ.get('AWS_ACCESS_KEY', os.environ.get('aws_access_key'))
-        self.aws_secret_key: str = os.environ.get('AWS_SECRET_KEY', os.environ.get('aws_secret_key'))
-        self.aws_region_name: str = os.environ.get('AWS_REGION_NAME', os.environ.get('aws_region_name', 'us-east-2'))
-        self.email_address: str = os.environ.get('EMAIL_ADDRESS', os.environ.get('email_address'))
-        self.organization: str = os.environ.get('ORGANIZATION', os.environ.get('organization'))
+    port: int
+
+    aws_region_name: str = "us-east-2"
+
+    key_pair: str = "expose_localhost"
+    security_group: str = "Expose Localhost"
+
+    key_file: str = Field("private.pem", pattern=r".+\.pem$")
+    cert_file: str = Field("public.pem", pattern=r".+\.pem$")
+    server_info: str = Field("server_info.json", pattern=r".+\.json$")
+
+    image_id: Union[str, None] = None
+    domain: Union[str, None] = None
+    subdomain: Union[str, None] = None
+    aws_access_key: Union[str, None] = None
+    aws_secret_key: Union[str, None] = None
+    email_address: EmailStr = f"{getpass.getuser()}@expose-localhost.com"
+    organization: Union[str, None] = None
+
+    # noinspection PyMethodParameters
+    @field_validator('domain')
+    def domain_validator(cls, v: str) -> Union[str, None]:
+        """Custom validation for 'domain' field."""
+        if not v:
+            return None
+        if re.match(pattern=r"(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)", string=v):
+            if len(v.split('.')) == 2:
+                return v
+            raise ValueError("Field 'domain' should ONLY be a FQDN, 'subdomain' should be set separately")
+        raise ValueError("Field 'domain' should be a fully qualified domain name")
+
+    class Config:
+        """Extra config for .env file and extra."""
+
+        extra = "allow"
+        env_file = os.environ.get('env_file', os.environ.get('ENV_FILE', '.env'))
 
 
-class Settings:
+env = EnvConfig()
+
+
+class Settings(BaseModel):
     """Wrapper for AWS settings.
 
     >>> Settings
@@ -35,17 +71,10 @@ class Settings:
         interactive: bool = True
     else:
         interactive: bool = False
+    current_dir: DirectoryPath = os.getcwd()
     ssh_home: str = "/home/ubuntu"
-    current_dir: os.PathLike = os.getcwd()
-    key_pair_name: str = "expose_localhost"
-    security_group_name: str = "Expose Localhost"
-    key_pair_file: os.PathLike = os.path.join(current_dir, f"{key_pair_name}.pem")
-    server_info: os.PathLike = os.path.join(current_dir, "server_info.json")
-    configuration: os.PathLike = os.path.join(pathlib.Path(__file__).parent.parent, 'configuration')
-
-    # Don't add path names because the same class variable will be used to perform server copy inside SSH
-    cert_file: os.PathLike = "public.pem"
-    key_file: os.PathLike = "private.pem"
+    key_pair_file: FilePath = f"{env.key_pair}.pem"
+    configuration: DirectoryPath = os.path.join(pathlib.Path(__file__).parent.parent, 'configuration')
 
 
 settings = Settings()

@@ -60,41 +60,37 @@
 <p>Environment variables can be loaded from a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p>
 <p><strong>Mandatory Arg:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">PORT</span></code>: Port number that has to be exposed (on which a localhost <code class="docutils literal notranslate"><span class="pre">service/app/api</span></code> is running)</p></li>
+<li><p><strong>PORT</strong>: Port number that has to be exposed (on which a localhost <code class="docutils literal notranslate"><span class="pre">service/app/api</span></code> is running)</p></li>
 </ul>
 <p><strong>Optional Args:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">IMAGE_ID</span></code>: ID of any public AMI with an Ubuntu OS. Defaults to a region specific image ID.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">AWS_ACCESS_KEY</span></code>: Access key to access AWS resources. Defaults to <code class="docutils literal notranslate"><span class="pre">~/.aws/config</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">AWS_SECRET_KEY</span></code>: Secret key to access AWS resources. Defaults to <code class="docutils literal notranslate"><span class="pre">~/.aws/config</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">AWS_REGION_NAME</span></code>: Region name where the instance should live. Defaults to <code class="docutils literal notranslate"><span class="pre">US-WEST-2</span></code></p></li>
+<li><p><strong>IMAGE_ID</strong>: ID of any public AMI with an Ubuntu OS. Defaults to a region specific image ID.</p></li>
+<li><p><strong>AWS_ACCESS_KEY</strong>: Access key to access AWS resources. Defaults to <code class="docutils literal notranslate"><span class="pre">~/.aws/config</span></code></p></li>
+<li><p><strong>AWS_SECRET_KEY</strong>: Secret key to access AWS resources. Defaults to <code class="docutils literal notranslate"><span class="pre">~/.aws/config</span></code></p></li>
+<li><p><strong>AWS_REGION_NAME</strong>: Region name where the instance should live. Defaults to <code class="docutils literal notranslate"><span class="pre">US-WEST-2</span></code></p></li>
+<li><p><strong>KEY_PAIR</strong>: Name for the ec2 key pair file. Defaults to <code class="docutils literal notranslate"><span class="pre">expose_localhost</span></code></p></li>
+<li><p><strong>SECURITY_GROUP</strong>: Name for the security group to allow port access. Defaults to <code class="docutils literal notranslate"><span class="pre">Expose</span> <span class="pre">Localhost</span></code></p></li>
+<li><p><strong>SERVER_INFO</strong>: Name for the JSON file to store the configuration info. Defaults to <code class="docutils literal notranslate"><span class="pre">server_info.json</span></code></p></li>
 </ul>
-<p><em>Optionally <code class="docutils literal notranslate"><span class="pre">.env</span></code> files can also be scanned for:</em></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">expose</span>
-
-<span class="n">expose</span><span class="o">.</span><span class="n">load_env</span><span class="p">(</span><span class="n">scan</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
 <details>
 <summary><strong>Setup a custom endpoint</strong></summary><p>The public DNS names for EC2 instances are long and messy. To avoid that, an <code class="docutils literal notranslate"><span class="pre">A</span></code> record can be added to the <code class="docutils literal notranslate"><span class="pre">route53</span></code> hosted zone.</p>
 <p>:warning:   Requires an active hosted zone on <code class="docutils literal notranslate"><span class="pre">route53</span></code>.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">DOMAIN</span></code>: If the domain name is registered using <code class="docutils literal notranslate"><span class="pre">route53</span></code>. <em>Example: <code class="docutils literal notranslate"><span class="pre">mywebsite.com</span></code></em></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SUBDOMAIN</span></code>: Sub-domain that has to be added for the domain name. <em>Example: <code class="docutils literal notranslate"><span class="pre">tunnel.mywebsite.com</span></code></em></p></li>
+<li><p><strong>DOMAIN</strong>: Domain name registered using <code class="docutils literal notranslate"><span class="pre">route53</span></code>. <em>Example: <code class="docutils literal notranslate"><span class="pre">mywebsite.com</span></code></em></p></li>
+<li><p><strong>SUBDOMAIN</strong>: Sub-domain that has to be added for the domain name. <em>Example: <code class="docutils literal notranslate"><span class="pre">tunnel</span></code></em></p></li>
 </ul>
-<p>        :bulb:   This will be the endpoint to access the localhost.</p>
+<p>        :bulb:   <code class="docutils literal notranslate"><span class="pre">tunnel.mywebsite.com</span></code> will be the endpoint to access the localhost from public internet.</p>
 </details></section>
 <section id="certificate">
 <h3>Certificate:<a class="headerlink" href="#certificate" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Securing the tunnel requires the certificate chain and the key file.</p></li>
-<li><p>These two files should be saved as <code class="docutils literal notranslate"><span class="pre">cert.pem</span></code> and <code class="docutils literal notranslate"><span class="pre">key.pem</span></code> in either <code class="docutils literal notranslate"><span class="pre">~.ssh/*.pem</span></code> or within <code class="docutils literal notranslate"><span class="pre">expose</span></code> repository.</p></li>
-<li><p>No certs? No problem. <a class="reference external" href="https://github.com/thevickypedia/expose/blob/main/expose/helpers/cert.py"><code class="docutils literal notranslate"><span class="pre">expose</span></code></a> will
-generate a self-signed certificate and a private key automatically.</p></li>
+<li><p>The certificate and key files should be in <code class="docutils literal notranslate"><span class="pre">pem</span></code> format stored within <code class="docutils literal notranslate"><span class="pre">expose</span></code> directory.</p></li>
+<li><p>File names should be stored as <code class="docutils literal notranslate"><span class="pre">key_file</span></code> and <code class="docutils literal notranslate"><span class="pre">cert_file</span></code> env var.</p></li>
+<li><p>No certs? No problem. <code class="docutils literal notranslate"><span class="pre">expose</span></code> will generate a self-signed certificate and a private key automatically.</p></li>
 </ul>
 <details>
-<summary><strong>Generate private SSL certificate</strong></summary><p>Unfortunately not many SSL certificate providers give the liberty to download key files. But <code class="docutils literal notranslate"><span class="pre">expose</span></code>, can use private certificates.</p>
-<p>:warning:   Some web browsers might throw a warning and some might even block a self-signed certificate/private CA.</p>
+<summary><strong>Generate self-signed SSL certificate</strong></summary><p>:warning:   Some web browsers might throw a warning and some might even block a self-signed certificate/private CA.</p>
 <p>To manually generate a self-signed cert:</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">req</span> <span class="pre">-newkey</span> <span class="pre">rsa:2048</span> <span class="pre">-sha256</span> <span class="pre">-nodes</span> <span class="pre">-keyout</span> <span class="pre">YOURPRIVATE.key</span> <span class="pre">-x509</span> <span class="pre">-days</span> <span class="pre">365</span> <span class="pre">-out</span> <span class="pre">YOURPUBLIC.pem</span> <span class="pre">-subj</span> <span class="pre">&quot;/C=US/ST=New</span> <span class="pre">York/L=Brooklyn/O=Example</span> <span class="pre">Brooklyn</span> <span class="pre">Company/CN=YOURDOMAIN.EXAMPLE&quot;</span></code></p>
@@ -102,8 +98,8 @@ generate a self-signed certificate and a private key automatically.</p></li>
 <p>[OR]</p>
 <p>Simply let <code class="docutils literal notranslate"><span class="pre">expose</span></code> create a self-signed SSL certificate and a private key.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">EMAIL_ADDRESS</span></code>: Email address to create the self-signed SSL and private key. Defaults to <code class="docutils literal notranslate"><span class="pre">USER&#64;expose-localhost.com</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ORGANIZATION</span></code>: Organization name for the certificate. Defaults to the AWS endpoint.</p></li>
+<li><p><strong>EMAIL_ADDRESS</strong>: Email address to create the self-signed SSL and private key. Defaults to <code class="docutils literal notranslate"><span class="pre">USER&#64;expose-localhost.com</span></code></p></li>
+<li><p><strong>ORGANIZATION</strong>: Organization name for the certificate. Defaults to the AWS endpoint.</p></li>
 </ul>
 </details></section>
 </section>
@@ -117,13 +113,24 @@ generate a self-signed certificate and a private key automatically.</p></li>
 </section>
 <section id="tunneling">
 <h3>Tunneling:<a class="headerlink" href="#tunneling" title="Permalink to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">expose</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;env_file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;custom&#39;</span>  <span class="c1"># to load a custom .env file</span>
+
+<span class="kn">import</span> <span class="nn">expose</span>
+
+<span class="c1"># Instantiate object</span>
 <span class="n">tunnel</span> <span class="o">=</span> <span class="n">expose</span><span class="o">.</span><span class="n">Tunnel</span><span class="p">()</span>
-<span class="c1"># set &#39;purge&#39; flag to &#39;True&#39; to delete AWS resources if configuration fails</span>
+
+<span class="c1"># Start tunneling</span>
 <span class="n">tunnel</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="c1"># set &#39;purge&#39; flag to &#39;True&#39; to delete AWS resources if configuration fails</span>
+<span class="c1"># tunnel.start(purge=True)</span>
+
 <span class="c1"># sleep or do something else</span>
-<span class="c1"># set &#39;partial&#39; flag to &#39;True&#39; to skip SG deletion</span>
+
+<span class="c1"># Stop tunneling - deletes all AWS resources acquired</span>
 <span class="n">tunnel</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -144,11 +151,11 @@ Clean code with pre-commit hooks: <a class="reference external" href="https://fl
 <section id="release-notes">
 <h2><a class="reference external" href="https://github.com/thevickypedia/expose/blob/main/release_notes.rst">Release Notes</a><a class="headerlink" href="#release-notes" title="Permalink to this heading">¶</a></h2>
 <p><strong>Requirement</strong></p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>changelog-generator
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>gitverse
 </pre></div>
 </div>
 <p><strong>Usage</strong></p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>changelog<span class="w"> </span>reverse<span class="w"> </span>-f<span class="w"> </span>release_notes.rst<span class="w"> </span>-t<span class="w"> </span><span class="s1">&#39;Release Notes&#39;</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>gitverse-release<span class="w"> </span>reverse<span class="w"> </span>-f<span class="w"> </span>release_notes.rst<span class="w"> </span>-t<span class="w"> </span><span class="s1">&#39;Release Notes&#39;</span>
 </pre></div>
 </div>
 </section>
@@ -156,7 +163,7 @@ Clean code with pre-commit hooks: <a class="reference external" href="https://fl
 <h2>Linting<a class="headerlink" href="#linting" title="Permalink to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">PreCommit</span></code> will ensure linting, and the doc creation are run on every commit.</p>
 <p><strong>Requirement</strong></p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">sphinx</span><span class="o">==</span><span class="m">5</span>.1.1<span class="w"> </span>pre-commit<span class="w"> </span>recommonmark<span class="w"> </span>gitverse
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">sphinx</span><span class="o">==</span><span class="m">5</span>.1.1<span class="w"> </span>pre-commit<span class="w"> </span>recommonmark
 </pre></div>
 </div>
 <p><strong>Usage</strong></p>

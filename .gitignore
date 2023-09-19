@@ -14,9 +14,6 @@ venv
 # Sphinx
 _build
 
-# Test script
-test.py
-
 # Build stuff
 *.egg-info
 dist

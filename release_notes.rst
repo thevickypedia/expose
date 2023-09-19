@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+v0.6a (09/18/2023)
+------------------
+- Release alpha version after major restructure
+
 0.5 (04/07/2023)
 ----------------
 - Load/scan any `.env` file during startup

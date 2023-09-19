@@ -11,6 +11,7 @@ from paramiko.channel import Channel
 from paramiko.transport import Transport
 
 from expose.helpers.auxiliary import flush_screen, write_screen
+from expose.helpers.config import env, settings
 
 
 def join(value: Union[tuple, list, str], separator: str = ':') -> str:
@@ -27,13 +28,9 @@ def join(value: Union[tuple, list, str], separator: str = ':') -> str:
     return separator.join(map(str, value))
 
 
-def print_warning(port: int) -> None:
-    """Prints a message on screen to run an app or api on the specific port.
-
-    Args:
-        port: Port number.
-    """
-    write_screen(f'Run an application on the port {port} to start tunneling.')
+def print_warning() -> None:
+    """Prints a message on screen to run an app or api on the specific port."""
+    write_screen(f'Run an application on the port {env.port} to start tunneling.')
     time.sleep(5)
     flush_screen()
 
@@ -105,7 +102,7 @@ class Server:
         ftp = self.ssh_client.open_sftp()
         for filename, content in data.items():
             if not filename.startswith("/"):
-                filename = f"/home/ubuntu/{filename}"
+                filename = f"{settings.ssh_home}/{filename}"
             file = ftp.file(filename=filename, mode='w')
             file.write(content)
             file.flush()
@@ -143,20 +140,16 @@ class Server:
         socket_.close()
         self.logger.info("Connection closed from %s", join(channel.origin_addr))
 
-    def initiate_tunnel(self, port: int) -> None:
-        """Initiates port forwarding using ``Transport`` which creates a channel.
-
-        Args:
-            port: Port number on which the channel has to be
-        """
+    def initiate_tunnel(self) -> None:
+        """Initiates port forwarding using ``Transport`` which creates a channel."""
         while True:
             try:
-                requests.get(f'http://localhost:{port}')
-                self.logger.info('Application is running on port: %d', port)
+                requests.get(f'http://localhost:{env.port}')
+                self.logger.info('Application is running on port: %d', env.port)
                 flush_screen()
                 break
             except requests.exceptions.RequestException:
-                print_warning(port)
+                print_warning()
         self.logger.info("Awaiting connection...")
         transport: Transport = self.ssh_client.get_transport()
         transport.request_port_forward(address="localhost", port=8080)
@@ -165,7 +158,7 @@ class Server:
             while True:
                 if not (channel := transport.accept(timeout=1000)):
                     continue
-                thread = Thread(target=self._handler, args=(channel, port), daemon=True)
+                thread = Thread(target=self._handler, args=(channel, env.port), daemon=True)
                 thread.start()
                 self.logger.debug("Launching daemon service: %s", thread.ident or thread.native_id)
                 threads.append(thread)

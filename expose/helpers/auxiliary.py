@@ -14,10 +14,6 @@ except Exception:  # noqa
     IP_INFO = {}
 
 
-class NotImplementedWarning(Warning):
-    """Custom implementation warning."""
-
-
 def time_converter(seconds: float) -> str:
     """Modifies seconds to appropriate days/hours/minutes/seconds.
 

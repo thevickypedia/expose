@@ -49,6 +49,7 @@ def change_record_set(client: boto3.client, dns_name: str, source: str, destinat
         dict or None:
         ChangeSet response from AWS.
     """
+    record_type = record_type.upper()
     if record_type not in AWSDefaults.SUPPORTED_RECORDS:
         logger.error('Unsupported record type passed.')
         logger.warning(f"Should be one of {', '.join(sorted(AWSDefaults.SUPPORTED_RECORDS))}")

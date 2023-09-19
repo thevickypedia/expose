@@ -1,10 +1,10 @@
 import binascii
-import getpass
 import os
 
 from OpenSSL import crypto
 
 from expose.helpers.auxiliary import IP_INFO
+from expose.helpers.config import env
 
 
 def _get_serial() -> bytes:
@@ -37,32 +37,24 @@ def _generate_serial_hash(byte_size: int = 18, int_size: int = 36) -> int:
 
 
 def generate_cert(common_name: str,
-                  email_address: str = None,
                   country_name: str = IP_INFO.get('country', 'US'),
                   locality_name: str = IP_INFO.get('city', 'New York'),
                   state_or_province_name: str = IP_INFO.get('region', 'New York'),
-                  organization_name: str = None,
                   organization_unit_name: str = "Information Technology",
-                  key_file: str = "private.key",
-                  cert_file: str = "public.crt",
-                  key_size: int = 2048) -> bool:
-    """Creates a private/self-signed certificate.
+                  key_file: str = env.key_file,
+                  cert_file: str = env.cert_file,
+                  key_size: int = 2048) -> None:
+    """Creates a self-signed certificate.
 
     Args:
         common_name: DNS name of the origin.
-        email_address: Contact email address for the cert. Defaults to ``USER@expose-localhost.com``
         country_name: Name of the country. Defaults to ``US``
         locality_name: Name of the city. Defaults to ``New York``
         state_or_province_name: Name of the state/province. Defaults to ``New York``
-        organization_name: Name of the organization. Defaults to ``common_name``
         organization_unit_name: Name of the organization unit. Defaults to ``Information Technology``
         key_file: Name of the key file.
         cert_file: Name of the certificate.
         key_size: Size of the public key. Defaults to 4096.
-
-    Returns:
-        bool:
-        Boolean flag to indicate whether ``cert.pem`` and ``key.pem`` files are empty.
 
     See Also:
         Use ``openssl x509 -inform pem -in cert.crt -noout -text`` to look at the generated cert using openssl.
@@ -80,10 +72,10 @@ def generate_cert(common_name: str,
     cert.get_subject().C = country_name
     cert.get_subject().ST = state_or_province_name
     cert.get_subject().L = locality_name
-    cert.get_subject().O = organization_name or common_name[0].upper() + common_name.partition('.')[0][1:]  # noqa: E741
+    cert.get_subject().O = env.organization or common_name[0].upper() + common_name.partition('.')[0][1:]  # noqa: E741
     cert.get_subject().OU = organization_unit_name
     cert.get_subject().CN = common_name
-    cert.get_subject().emailAddress = email_address or f"{getpass.getuser()}@expose-localhost.com"
+    cert.get_subject().emailAddress = env.email_address
     cert.set_serial_number(serial=cert.get_serial_number() or _generate_serial_hash())
     cert.gmtime_adj_notBefore(amount=0)
     cert.gmtime_adj_notAfter(amount=365 * 24 * 60 * 60)
@@ -99,6 +91,3 @@ def generate_cert(common_name: str,
     with open(key_file, "w") as f:
         f.write(crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=key).decode("utf-8"))
         f.flush()
-
-    if os.path.isfile(key_file) and os.path.isfile(cert_file):
-        return True
