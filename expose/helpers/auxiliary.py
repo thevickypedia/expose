@@ -3,6 +3,7 @@ import os
 import sys
 from typing import Any
 from urllib.request import urlopen
+from urllib.error import URLError, HTTPError
 
 from expose.helpers.config import settings
 
@@ -10,7 +11,7 @@ DATETIME_FORMAT = '%b-%d-%Y %I:%M:%S %p'
 
 try:
     IP_INFO = json.load(urlopen('http://ipinfo.io/json')) or json.load(urlopen('http://ip.jsontest.com'))
-except Exception:  # noqa
+except (json.JSONDecodeError, URLError, HTTPError):
     IP_INFO = {}
 
 

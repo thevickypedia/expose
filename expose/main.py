@@ -47,6 +47,8 @@ class Tunnel:
         if env.domain:
             if zone_id := get_zone_id(client=self.route53_client, logger=self.logger, dns=env.domain, init=True):
                 self.zone_id = zone_id
+        if settings.entrypoint:
+            self.logger.info(f"Entrypoint: {settings.entrypoint}")
 
     def get_image_id(self) -> None:
         """Fetches AMI ID from public images."""
@@ -549,9 +551,11 @@ class Tunnel:
             san_list.append(f'www.{san}')
         san_list.append(public_ip)
 
-        load_and_copy = self.config_requirements(settings.entrypoint or public_dns,
-                                                 custom_servers,
-                                                 [f'DNS:{san}' for san in san_list])
+        load_and_copy = self.config_requirements(
+            settings.entrypoint or public_dns,
+            custom_servers,
+            [f"IP:{san}" if san == public_ip else f"DNS:{san}" for san in san_list]
+        )
 
         self.logger.info('Copying configuration files to %s', public_dns)
         self.nginx_server.server_write(data=load_and_copy)

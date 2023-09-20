@@ -38,8 +38,6 @@ class EnvConfig(BaseSettings):
     email_address: EmailStr = f"{getpass.getuser()}@expose-localhost.com"
     organization: Union[str, None] = None
 
-    health_check: Union[int, float, PositiveInt, PositiveFloat, None] = Field(None, le=900, ge=5)
-
     # noinspection PyMethodParameters
     @field_validator('domain')
     def domain_validator(cls, v: str) -> Union[str, None]:

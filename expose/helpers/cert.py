@@ -59,11 +59,11 @@ def generate_cert(common_name: str, san_list: List[str],
         san_list: List of Subject Alternative Names (SANs). Defaults to None.
 
     See Also:
-        Use ``openssl x509 -inform pem -in cert.crt -noout -text`` to look at the generated cert using OpenSSL.
+        Use ``openssl x509 -inform pem -in cert.crt -noout -text`` to look at the generated cert using openssl.
     """
     if key_size not in (2048, 4096):
         raise ValueError('Certificate key size should be either 2048 or 4096.')
-    signature_bytes = 256 if key_size == 2048 else 512
+    signature_bytes = 256 if key_size == 2048 else 512  # Refer: https://crypto.stackexchange.com/a/3508
 
     # Creates a key pair
     key = crypto.PKey()
@@ -82,11 +82,19 @@ def generate_cert(common_name: str, san_list: List[str],
     cert.gmtime_adj_notBefore(amount=0)
     cert.gmtime_adj_notAfter(amount=365 * 24 * 60 * 60)
 
-    # Add Subject Alternative Names (SANs) if provided
-    san_extension = crypto.X509Extension(
-        b'subjectAltName', False, ', '.join(san_list).encode('utf-8')
-    )
-    cert.add_extensions([san_extension])
+    # todo: Adding extensions is still questionable across all browsers
+    #   works on safari but not chrome
+    cert.add_extensions([
+        crypto.X509Extension(
+            b"keyUsage", False,
+            b"Digital Signature, Non Repudiation, Key Encipherment"),
+        crypto.X509Extension(
+            b"basicConstraints", False, b"CA:FALSE"),
+        crypto.X509Extension(
+            b"extendedKeyUsage", False, b"serverAuth, clientAuth"),
+        crypto.X509Extension(
+            b"subjectAltName", False, ", ".join(san_list).encode('utf-8'))
+    ])
 
     cert.set_issuer(issuer=cert.get_subject())
     cert.set_pubkey(pkey=key)
@@ -94,9 +102,9 @@ def generate_cert(common_name: str, san_list: List[str],
     cert.sign(pkey=key, digest=f'sha{signature_bytes}')
 
     # Writes the cert file into specified names
-    with open(cert_file, "wb") as f:
-        f.write(crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=cert))
+    with open(cert_file, "w") as f:
+        f.write(crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=cert).decode("utf-8"))
         f.flush()
-    with open(key_file, "wb") as f:
-        f.write(crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=key))
+    with open(key_file, "w") as f:
+        f.write(crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=key).decode("utf-8"))
         f.flush()

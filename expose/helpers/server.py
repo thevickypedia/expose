@@ -1,9 +1,5 @@
-import json
 import logging
-import os
-import random
 import time
-from multiprocessing import Process
 from select import select
 from socket import socket
 from threading import Thread
@@ -56,7 +52,7 @@ class Server:
                  pem_file: str,
                  logger: logging.Logger,
                  username: str = "ubuntu",
-                 timeout: int = 10):
+                 timeout: int = 30):
         """Instantiates the session using RSAKey generated from a ``***.pem`` file.
 
         Args:
@@ -176,8 +172,6 @@ class Server:
                 except KeyboardInterrupt:
                     return
         self.logger.info("Awaiting connection...")
-        health_check_process = Process(target=health_check_recovery, args=(protocol, self.logger))
-        health_check_process.start()
         transport: Transport = self.ssh_client.get_transport()
         transport.request_port_forward(address="localhost", port=8080)
         threads: List[Thread] = []
@@ -192,49 +186,4 @@ class Server:
         except KeyboardInterrupt:
             self.logger.info("Tunneling interrupted")
         finally:
-            health_check_process.kill()
             self.stop_tunnel(transport, threads)
-
-
-def health_check_recovery(protocol: str, logger: logging.Logger) -> None:
-    """Run health checks based on health_check configuration.
-
-    Args:
-        protocol: Protocol to use, either http or https.
-        logger: Custom logger.
-    """
-    if not env.health_check:
-        logger.info("Health check is not configured.")
-        return
-    with open(env.server_info) as file:
-        data = json.load(file)
-    entrypoints = [data['public_dns'], f"{data['public_ip']}:{data['port']}"]
-    if settings.entrypoint:
-        entrypoints.append(settings.entrypoint)
-    session = requests.Session()
-    bundle = None
-    if protocol == "https":
-        session.cert = (env.cert_file, env.key_file)
-        bundle = 'ca_bundle.pem'
-        with (open(env.cert_file, 'rb') as public_file,
-              open(env.key_file, 'rb') as private_file,
-              open(bundle, 'wb') as output_file):
-            public_data = public_file.read()
-            private_data = private_file.read()
-            output_file.write(public_data + private_data)
-        session.verify = bundle
-    session.headers = {'x-status-check': 'true'}
-    while True:
-        entrypoint = random.choice(entrypoints)
-        logger.debug("Entrypoint: %s", entrypoint)
-        try:
-            response = session.get(url=f"{protocol}://{entrypoint}")
-            if not response.ok:
-                response.raise_for_status()
-        except requests.RequestException as error:
-            logger.error(error)
-        except KeyboardInterrupt:
-            break
-        time.sleep(env.health_check)
-    if bundle:
-        os.remove(bundle)
