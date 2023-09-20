@@ -53,7 +53,7 @@ To manually generate a self-signed cert:
 
 [OR]
 
-Simply let `expose` create a self-signed SSL certificate and a private key.
+Simply let `expose` create a self-signed SSL certificate and a private key. **(Default behavior)**
 
 - **EMAIL_ADDRESS**: Email address to create the self-signed SSL and private key. Defaults to `USER@expose-localhost.com`
 - **ORGANIZATION**: Organization name for the certificate. Defaults to the AWS endpoint.
@@ -96,6 +96,16 @@ tunnel.stop()
 > This occurs when `apt` hasn't released the resources yet. Re-running `tunnel.start()` will simply re-configure the instance.
 
 </details>
+
+### Limitations
+Currently `expose` cannot handle, tunneling multiple port numbers without modifying the following env vars in the `.env` file.
+```shell
+KEY_PAIR
+SECURITY_GROUP
+KEY_FILE
+CERT_FILE
+SERVER_INFO
+```
 
 ## Coding Standards
 Docstring format: [`Google`](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) <br>

@@ -96,7 +96,7 @@
 <div><p><code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">req</span> <span class="pre">-newkey</span> <span class="pre">rsa:2048</span> <span class="pre">-sha256</span> <span class="pre">-nodes</span> <span class="pre">-keyout</span> <span class="pre">YOURPRIVATE.key</span> <span class="pre">-x509</span> <span class="pre">-days</span> <span class="pre">365</span> <span class="pre">-out</span> <span class="pre">YOURPUBLIC.pem</span> <span class="pre">-subj</span> <span class="pre">&quot;/C=US/ST=New</span> <span class="pre">York/L=Brooklyn/O=Example</span> <span class="pre">Brooklyn</span> <span class="pre">Company/CN=YOURDOMAIN.EXAMPLE&quot;</span></code></p>
 </div></blockquote>
 <p>[OR]</p>
-<p>Simply let <code class="docutils literal notranslate"><span class="pre">expose</span></code> create a self-signed SSL certificate and a private key.</p>
+<p>Simply let <code class="docutils literal notranslate"><span class="pre">expose</span></code> create a self-signed SSL certificate and a private key. <strong>(Default behavior)</strong></p>
 <ul class="simple">
 <li><p><strong>EMAIL_ADDRESS</strong>: Email address to create the self-signed SSL and private key. Defaults to <code class="docutils literal notranslate"><span class="pre">USER&#64;expose-localhost.com</span></code></p></li>
 <li><p><strong>ORGANIZATION</strong>: Organization name for the certificate. Defaults to the AWS endpoint.</p></li>
@@ -140,6 +140,17 @@
 This occurs when <code class="docutils literal notranslate"><span class="pre">apt</span></code> hasn’t released the resources yet. Re-running <code class="docutils literal notranslate"><span class="pre">tunnel.start()</span></code> will simply re-configure the instance.</p>
 </div></blockquote>
 </details></section>
+</section>
+<section id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this heading">¶</a></h2>
+<p>Currently <code class="docutils literal notranslate"><span class="pre">expose</span></code> cannot handle, tunneling multiple port numbers without modifying the following env vars in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>KEY_PAIR
+SECURITY_GROUP
+KEY_FILE
+CERT_FILE
+SERVER_INFO
+</pre></div>
+</div>
 </section>
 <section id="coding-standards">
 <h2>Coding Standards<a class="headerlink" href="#coding-standards" title="Permalink to this heading">¶</a></h2>
@@ -210,6 +221,7 @@ Clean code with pre-commit hooks: <a class="reference external" href="https://fl
 <li><a class="reference internal" href="#tunneling">Tunneling:</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#limitations">Limitations</a></li>
 <li><a class="reference internal" href="#coding-standards">Coding Standards</a></li>
 <li><a class="reference internal" href="#release-notes">Release Notes</a></li>
 <li><a class="reference internal" href="#linting">Linting</a><ul>

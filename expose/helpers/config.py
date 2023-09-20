@@ -6,7 +6,7 @@ import sys
 from typing import Union
 
 from pydantic import (BaseModel, DirectoryPath, EmailStr, Field, FilePath,
-                      field_validator)
+                      PositiveFloat, PositiveInt, field_validator)
 from pydantic_settings import BaseSettings
 
 
@@ -37,6 +37,8 @@ class EnvConfig(BaseSettings):
     aws_secret_key: Union[str, None] = None
     email_address: EmailStr = f"{getpass.getuser()}@expose-localhost.com"
     organization: Union[str, None] = None
+
+    health_check: Union[int, float, PositiveInt, PositiveFloat, None] = Field(None, le=900, ge=5)
 
     # noinspection PyMethodParameters
     @field_validator('domain')
@@ -75,6 +77,10 @@ class Settings(BaseModel):
     ssh_home: str = "/home/ubuntu"
     key_pair_file: FilePath = f"{env.key_pair}.pem"
     configuration: DirectoryPath = os.path.join(pathlib.Path(__file__).parent.parent, 'configuration')
+    entrypoint: str = None
+    if any((env.domain, env.subdomain)):
+        assert all((env.domain, env.subdomain)), "'subdomain' and 'domain' must co-exist"
+        entrypoint: str = f'{env.subdomain}.{env.domain}'
 
 
 settings = Settings()

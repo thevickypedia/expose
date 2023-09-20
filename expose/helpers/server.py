@@ -1,5 +1,9 @@
+import json
 import logging
+import os
+import random
 import time
+from multiprocessing import Process
 from select import select
 from socket import socket
 from threading import Thread
@@ -52,7 +56,7 @@ class Server:
                  pem_file: str,
                  logger: logging.Logger,
                  username: str = "ubuntu",
-                 timeout: int = 5):
+                 timeout: int = 10):
         """Instantiates the session using RSAKey generated from a ``***.pem`` file.
 
         Args:
@@ -140,7 +144,25 @@ class Server:
         socket_.close()
         self.logger.info("Connection closed from %s", join(channel.origin_addr))
 
-    def initiate_tunnel(self) -> None:
+    def stop_tunnel(self, transport: Transport, threads: List[Thread]) -> None:
+        """Stops port forwarding.
+
+        Args:
+            transport: Transport object that creates the channel
+            threads: Daemon threads handling connections.
+        """
+        if host_keys := self.ssh_client.get_host_keys().keys():
+            self.logger.info("Closing SSH connection on %s", host_keys[0])
+        else:
+            self.logger.info("Closing SSH connection on %s", join(transport.getpeername()))
+        transport.cancel_port_forward(address="localhost", port=8080)
+        self.ssh_client.close()
+        self.logger.info("Daemons launched: %d", len(threads))
+        for thread in threads:
+            self.logger.debug("Awaiting daemon service: %s", thread.ident or thread.native_id)
+            thread.join(timeout=0.5)
+
+    def initiate_tunnel(self, protocol: str) -> None:
         """Initiates port forwarding using ``Transport`` which creates a channel."""
         while True:
             try:
@@ -149,8 +171,13 @@ class Server:
                 flush_screen()
                 break
             except requests.exceptions.RequestException:
-                print_warning()
+                try:
+                    print_warning()
+                except KeyboardInterrupt:
+                    return
         self.logger.info("Awaiting connection...")
+        health_check_process = Process(target=health_check_recovery, args=(protocol, self.logger))
+        health_check_process.start()
         transport: Transport = self.ssh_client.get_transport()
         transport.request_port_forward(address="localhost", port=8080)
         threads: List[Thread] = []
@@ -164,13 +191,50 @@ class Server:
                 threads.append(thread)
         except KeyboardInterrupt:
             self.logger.info("Tunneling interrupted")
-        if host_keys := self.ssh_client.get_host_keys().keys():
-            self.logger.info("Closing SSH connection on %s", host_keys[0])
-        else:
-            self.logger.info("Closing SSH connection on %s", join(transport.getpeername()))
-        transport.cancel_port_forward(address="localhost", port=8080)
-        self.ssh_client.close()
-        self.logger.info("Daemons launched: %d", len(threads))
-        for thread in threads:
-            self.logger.debug("Awaiting daemon service: %s", thread.ident or thread.native_id)
-            thread.join(timeout=0.5)
+        finally:
+            health_check_process.kill()
+            self.stop_tunnel(transport, threads)
+
+
+def health_check_recovery(protocol: str, logger: logging.Logger) -> None:
+    """Run health checks based on health_check configuration.
+
+    Args:
+        protocol: Protocol to use, either http or https.
+        logger: Custom logger.
+    """
+    if not env.health_check:
+        logger.info("Health check is not configured.")
+        return
+    with open(env.server_info) as file:
+        data = json.load(file)
+    entrypoints = [data['public_dns'], f"{data['public_ip']}:{data['port']}"]
+    if settings.entrypoint:
+        entrypoints.append(settings.entrypoint)
+    session = requests.Session()
+    bundle = None
+    if protocol == "https":
+        session.cert = (env.cert_file, env.key_file)
+        bundle = 'ca_bundle.pem'
+        with (open(env.cert_file, 'rb') as public_file,
+              open(env.key_file, 'rb') as private_file,
+              open(bundle, 'wb') as output_file):
+            public_data = public_file.read()
+            private_data = private_file.read()
+            output_file.write(public_data + private_data)
+        session.verify = bundle
+    session.headers = {'x-status-check': 'true'}
+    while True:
+        entrypoint = random.choice(entrypoints)
+        logger.debug("Entrypoint: %s", entrypoint)
+        try:
+            response = session.get(url=f"{protocol}://{entrypoint}")
+            if not response.ok:
+                response.raise_for_status()
+        except requests.RequestException as error:
+            logger.error(error)
+        except KeyboardInterrupt:
+            break
+        time.sleep(env.health_check)
+    if bundle:
+        os.remove(bundle)

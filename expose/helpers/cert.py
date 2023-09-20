@@ -1,5 +1,6 @@
 import binascii
 import os
+from typing import List
 
 from OpenSSL import crypto
 
@@ -36,7 +37,7 @@ def _generate_serial_hash(byte_size: int = 18, int_size: int = 36) -> int:
     return int(binascii.hexlify(os.urandom(byte_size)).decode().upper(), int_size)
 
 
-def generate_cert(common_name: str,
+def generate_cert(common_name: str, san_list: List[str],
                   country_name: str = IP_INFO.get('country', 'US'),
                   locality_name: str = IP_INFO.get('city', 'New York'),
                   state_or_province_name: str = IP_INFO.get('region', 'New York'),
@@ -55,13 +56,14 @@ def generate_cert(common_name: str,
         key_file: Name of the key file.
         cert_file: Name of the certificate.
         key_size: Size of the public key. Defaults to 4096.
+        san_list: List of Subject Alternative Names (SANs). Defaults to None.
 
     See Also:
-        Use ``openssl x509 -inform pem -in cert.crt -noout -text`` to look at the generated cert using openssl.
+        Use ``openssl x509 -inform pem -in cert.crt -noout -text`` to look at the generated cert using OpenSSL.
     """
     if key_size not in (2048, 4096):
         raise ValueError('Certificate key size should be either 2048 or 4096.')
-    signature_bytes = 256 if key_size == 2048 else 512  # Refer: https://crypto.stackexchange.com/a/3508
+    signature_bytes = 256 if key_size == 2048 else 512
 
     # Creates a key pair
     key = crypto.PKey()
@@ -79,15 +81,22 @@ def generate_cert(common_name: str,
     cert.set_serial_number(serial=cert.get_serial_number() or _generate_serial_hash())
     cert.gmtime_adj_notBefore(amount=0)
     cert.gmtime_adj_notAfter(amount=365 * 24 * 60 * 60)
+
+    # Add Subject Alternative Names (SANs) if provided
+    san_extension = crypto.X509Extension(
+        b'subjectAltName', False, ', '.join(san_list).encode('utf-8')
+    )
+    cert.add_extensions([san_extension])
+
     cert.set_issuer(issuer=cert.get_subject())
     cert.set_pubkey(pkey=key)
     # noinspection PyTypeChecker
     cert.sign(pkey=key, digest=f'sha{signature_bytes}')
 
     # Writes the cert file into specified names
-    with open(cert_file, "w") as f:
-        f.write(crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=cert).decode("utf-8"))
+    with open(cert_file, "wb") as f:
+        f.write(crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=cert))
         f.flush()
-    with open(key_file, "w") as f:
-        f.write(crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=key).decode("utf-8"))
+    with open(key_file, "wb") as f:
+        f.write(crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=key))
         f.flush()

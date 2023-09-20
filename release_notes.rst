@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+v0.6b (09/18/2023)
+------------------
+- Release beta version after using pydantic for validations
+
 v0.6a (09/18/2023)
 ------------------
 - Release alpha version after major restructure

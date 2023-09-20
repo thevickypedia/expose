@@ -3,20 +3,21 @@ import logging
 import os
 import time
 import warnings
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 import boto3
 import inflect
 import urllib3.exceptions
 from boto3.resources.base import ServiceResource
 from botocore.exceptions import ClientError, WaiterError
+from OpenSSL.crypto import Error as SSLError
 
 from expose.helpers.auxiliary import IP_INFO
 from expose.helpers.cert import generate_cert
 from expose.helpers.config import env, settings
 from expose.helpers.defaults import AWSDefaults
 from expose.helpers.logger import LOGGER
-from expose.helpers.route_53 import change_record_set
+from expose.helpers.route_53 import change_record_set, get_zone_id
 from expose.helpers.server import Server
 from expose.helpers.warnings import NotImplementedWarning
 
@@ -43,6 +44,9 @@ class Tunnel:
         self.logger = logger or LOGGER
         self.nginx_server = None
         self.image_id = None
+        if env.domain:
+            if zone_id := get_zone_id(client=self.route53_client, logger=self.logger, dns=env.domain, init=True):
+                self.zone_id = zone_id
 
     def get_image_id(self) -> None:
         """Fetches AMI ID from public images."""
@@ -77,7 +81,6 @@ class Tunnel:
             )
         except ClientError as error:
             error = str(error)
-            # todo: Fail on duplicate
             if '(InvalidKeyPair.Duplicate)' in error:
                 self.logger.warning('Found an existing KeyPair named: %s. Re-creating it.',
                                     env.key_pair)
@@ -188,7 +191,6 @@ class Tunnel:
             )
         except ClientError as error:
             error = str(error)
-            # todo: fail on duplicate
             if '(InvalidGroup.Duplicate)' in error and env.security_group in error:
                 security_groups = list(self.ec2_resource.security_groups.all())
                 for security_group in security_groups:
@@ -352,6 +354,7 @@ class Tunnel:
 
         References:
             https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instance-status.html#options
+            https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/instance/wait_until_terminated.html
         """
         if os.path.isfile(env.server_info) and os.path.isfile(settings.key_pair_file):
             self.logger.warning('Received request to start VM, but looks like a session is up and running already.')
@@ -360,9 +363,6 @@ class Tunnel:
                 data = json.load(file)
             self.configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'))
             return
-
-        if not all((env.domain, env.subdomain)):
-            self.logger.warning("DOMAIN and SUBDOMAIN gives a customized access to the tunnel.")
 
         if not self.image_id:
             self.get_image_id()
@@ -401,7 +401,9 @@ class Tunnel:
             self.terminate_ec2_instance(instance=instance)
             if not sg_association:
                 try:
-                    instance.wait_until_terminated()  # todo: setup filters
+                    instance.wait_until_terminated(
+                        Filters=[{"Name": "instance-state-name", "Values": ["terminated"]}]
+                    )
                 except WaiterError as error:
                     self.logger.error(error)
                     warnings.warn(
@@ -455,23 +457,28 @@ class Tunnel:
         """
         self.logger.info('Loading the configuration file: %s.', filename)
         with open(os.path.join(settings.configuration, filename)) as file:
-            return file.read().\
-                replace('SERVER_NAME_HERE', server).\
-                replace('SSH_PATH_HERE', settings.ssh_home).\
-                replace('CERTIFICATE_HERE', f'{settings.ssh_home}/{env.cert_file}').\
+            return file.read(). \
+                replace('SERVER_NAME_HERE', server). \
+                replace('SSH_PATH_HERE', settings.ssh_home). \
+                replace('CERTIFICATE_HERE', f'{settings.ssh_home}/{env.cert_file}'). \
                 replace('PRIVATE_KEY_HERE', f'{settings.ssh_home}/{env.key_file}')
 
-    def config_requirements(self, common_name: str, custom_servers: str) -> Dict[str, str]:
+    def config_requirements(self,
+                            common_name: str,
+                            custom_servers: str,
+                            san_list: List[str]) -> Dict[str, str]:
         """Tries to create a self-signed SSL certificate and loads all the required configuration into a dictionary.
 
         Args:
             common_name: DNS entry for SSL creation.
             custom_servers: Server names to be loaded in the nginx config files.
+            san_list: Subject Alternative Names to validate the certificate for.
 
         Returns:
             Dict[str, str]:
             Dictionary of config file name and the configuration data.
         """
+        self.logger.info("Custom servers: %s", custom_servers)
         config_data = {"server.conf": self.get_config("server.conf", custom_servers)}
         if os.path.isfile(os.path.join(settings.current_dir, env.cert_file)) and \
                 os.path.isfile(os.path.join(settings.current_dir, env.key_file)):
@@ -484,8 +491,9 @@ class Tunnel:
             try:
                 if not all((env.email_address, env.organization)):
                     self.logger.warning("Use 'EMAIL_ADDRESS' and 'ORGANIZATION' to create a specific certificate.")
-                generate_cert(common_name)
-            except AssertionError as error:
+                self.logger.info("SAN list: %s", san_list)
+                generate_cert(common_name, san_list)
+            except SSLError as error:
                 self.logger.error(error)
                 self.logger.warning('Failed to generate self-signed SSL certificate and private key.')
                 config_data["nginx.conf"] = self.get_config("nginx-non-ssl.conf", custom_servers)
@@ -508,33 +516,42 @@ class Tunnel:
             public_ip: Public IP of the EC2 that was created.
             disposal: Boolean flag to delete all AWS resources on failed configuration.
         """
-        self.logger.info('Gathering configuration requirements.')
-        custom_servers = f"{public_dns} {public_ip}"
+        self.logger.info('Connecting to server via SSH')
 
-        endpoint = None
-        if env.domain and env.subdomain:
-            if env.subdomain.endswith(env.domain):
-                endpoint = env.subdomain
-                custom_servers += f' {env.subdomain}'
-            else:
-                endpoint = f'{env.subdomain}.{env.domain}'
-                custom_servers += f' {env.subdomain}.{env.domain}'
-
+        # Max of 10 iterations with 5 second interval between each iteration with default timeout
         for i in range(10):
             try:
                 self.nginx_server = Server(hostname=public_dns, pem_file=settings.key_pair_file, logger=self.logger)
-                self.logger.info("Connection established in %s attempt", inflect.engine().ordinal(i + 1))
+                self.logger.info("Connection established on %s attempt", inflect.engine().ordinal(i + 1))
                 break
             except Exception as error:
                 self.logger.error(error)
-                time.sleep(3)
+                time.sleep(5)
         else:
             self.stop()
             raise TimeoutError(
                 "Unable to connect SSH server"
             )
 
-        load_and_copy = self.config_requirements(common_name=endpoint or public_dns, custom_servers=custom_servers)
+        if not any((env.domain, env.subdomain)):
+            self.logger.warning("DOMAIN and SUBDOMAIN gives a customized access to the tunnel.")
+
+        custom_servers = f"{public_dns} {public_ip}"
+
+        san_list = [public_dns]
+        if settings.entrypoint:
+            san_list.append(settings.entrypoint)
+            custom_servers += f' {settings.entrypoint}'
+        if env.domain and env.domain not in san_list:
+            san_list.append(env.domain)
+        copied_www = san_list.copy()
+        for san in copied_www:
+            san_list.append(f'www.{san}')
+        san_list.append(public_ip)
+
+        load_and_copy = self.config_requirements(settings.entrypoint or public_dns,
+                                                 custom_servers,
+                                                 [f'DNS:{san}' for san in san_list])
 
         self.logger.info('Copying configuration files to %s', public_dns)
         self.nginx_server.server_write(data=load_and_copy)
@@ -559,15 +576,15 @@ class Tunnel:
             return
 
         protocol = 'https' if load_and_copy.get("options-ssl-nginx.conf") else 'http'
-        if endpoint:
-            change_record_set(dns_name=env.domain, source=env.subdomain, destination=public_ip, record_type='A',
-                              logger=self.logger, client=self.route53_client)
-            self.logger.info('%s://%s -> http://localhost:%d', protocol, endpoint, env.port)
+        if settings.entrypoint:
+            change_record_set(source=settings.entrypoint, destination=public_ip, record_type='A',
+                              logger=self.logger, client=self.route53_client, zone_id=self.zone_id)
+            self.logger.info('%s://%s -> http://localhost:%d', protocol, settings.entrypoint, env.port)
         else:
             self.logger.info('%s://%s -> http://localhost:%d', protocol, public_dns, env.port)
 
         self.logger.info('Initiating tunnel')
-        self.nginx_server.initiate_tunnel()
+        self.nginx_server.initiate_tunnel(protocol)
 
     def stop(self, instance_id: str = None, security_group_id: str = None, public_ip: str = None) -> None:
         """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created.
@@ -576,6 +593,9 @@ class Tunnel:
             instance_id: Instance that has to be terminated.
             security_group_id: Security group that has to be removed.
             public_ip: Public IP address to delete the A record from route53.
+
+        References:
+            https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/instance/wait_until_terminated.html
         """
         try:
             with open(env.server_info) as file:
@@ -593,11 +613,13 @@ class Tunnel:
         sg_association = self.disassociate_security_group(instance_id=instance_id, security_group_id=security_group_id)
         instance = self.terminate_ec2_instance(instance_id=instance_id)
         if env.domain and env.subdomain and public_ip:
-            change_record_set(dns_name=env.domain, source=env.subdomain, destination=public_ip,
-                              record_type='A', action='DELETE', logger=self.logger, client=self.route53_client)
+            change_record_set(source=settings.entrypoint, destination=public_ip, record_type='A',
+                              action='DELETE', logger=self.logger, client=self.route53_client, zone_id=self.zone_id)
         if not sg_association and instance:
             try:
-                instance.wait_until_terminated()  # todo: setup filters for wait until terminated
+                instance.wait_until_terminated(
+                    Filters=[{"Name": "instance-state-name", "Values": ["terminated"]}]
+                )
             except WaiterError as error:
                 self.logger.error(error)
         self.delete_security_group(security_group_id)
