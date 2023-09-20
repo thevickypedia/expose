@@ -6,7 +6,7 @@ import sys
 from typing import Union
 
 from pydantic import (BaseModel, DirectoryPath, EmailStr, Field, FilePath,
-                      PositiveFloat, PositiveInt, field_validator)
+                      field_validator)
 from pydantic_settings import BaseSettings
 
 

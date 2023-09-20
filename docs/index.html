@@ -363,7 +363,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="expose.helpers.server.Server">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">expose.helpers.server.</span></span><span class="sig-name descname"><span class="pre">Server</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pem_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ubuntu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#expose.helpers.server.Server" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">expose.helpers.server.</span></span><span class="sig-name descname"><span class="pre">Server</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pem_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ubuntu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#expose.helpers.server.Server" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initiates <code class="docutils literal notranslate"><span class="pre">Server</span></code> object to create an SSH session to configure the server and intiate the tunneling.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Server</span>
 </pre></div>
@@ -445,20 +445,6 @@ forwarding makes sure that you can SSH back to the server machine.</p>
 <dd><p>Initiates port forwarding using <code class="docutils literal notranslate"><span class="pre">Transport</span></code> which creates a channel.</p>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="expose.helpers.server.health_check_recovery">
-<span class="sig-prename descclassname"><span class="pre">expose.helpers.server.</span></span><span class="sig-name descname"><span class="pre">health_check_recovery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">protocol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#expose.helpers.server.health_check_recovery" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run health checks based on health_check configuration.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>protocol</strong> – Protocol to use, either http or https.</p></li>
-<li><p><strong>logger</strong> – Custom logger.</p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 </section>
@@ -617,7 +603,7 @@ forwarding makes sure that you can SSH back to the server machine.</p>
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
-<p>Use <code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">x509</span> <span class="pre">-inform</span> <span class="pre">pem</span> <span class="pre">-in</span> <span class="pre">cert.crt</span> <span class="pre">-noout</span> <span class="pre">-text</span></code> to look at the generated cert using OpenSSL.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">x509</span> <span class="pre">-inform</span> <span class="pre">pem</span> <span class="pre">-in</span> <span class="pre">cert.crt</span> <span class="pre">-noout</span> <span class="pre">-text</span></code> to look at the generated cert using openssl.</p>
 </div>
 </dd></dl>
 

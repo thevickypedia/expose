@@ -2,8 +2,8 @@ import json
 import os
 import sys
 from typing import Any
+from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
-from urllib.error import URLError, HTTPError
 
 from expose.helpers.config import settings
 
