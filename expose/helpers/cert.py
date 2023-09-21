@@ -55,7 +55,7 @@ def generate_cert(common_name: str, san_list: List[str],
         organization_unit_name: Name of the organization unit. Defaults to ``Information Technology``
         key_file: Name of the key file.
         cert_file: Name of the certificate.
-        key_size: Size of the public key. Defaults to 4096.
+        key_size: Size of the public key. Defaults to 2048.
         san_list: List of Subject Alternative Names (SANs). Defaults to None.
 
     See Also:
@@ -82,18 +82,16 @@ def generate_cert(common_name: str, san_list: List[str],
     cert.gmtime_adj_notBefore(amount=0)
     cert.gmtime_adj_notAfter(amount=365 * 24 * 60 * 60)
 
-    # todo: Adding extensions is still questionable across all browsers
-    #   works on safari but not chrome
     cert.add_extensions([
         crypto.X509Extension(
             b"keyUsage", False,
-            b"Digital Signature, Non Repudiation, Key Encipherment"),
+            b"digitalSignature, nonRepudiation, keyEncipherment"),
         crypto.X509Extension(
             b"basicConstraints", False, b"CA:FALSE"),
         crypto.X509Extension(
-            b"extendedKeyUsage", False, b"serverAuth, clientAuth"),
+            b"extendedKeyUsage", True, b"serverAuth"),
         crypto.X509Extension(
-            b"subjectAltName", False, ", ".join(san_list).encode('utf-8'))
+            b"subjectAltName", False, ",".join(san_list).encode('utf-8'))
     ])
 
     cert.set_issuer(issuer=cert.get_subject())

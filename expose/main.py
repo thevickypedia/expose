@@ -48,7 +48,8 @@ class Tunnel:
             if zone_id := get_zone_id(client=self.route53_client, logger=self.logger, dns=env.domain, init=True):
                 self.zone_id = zone_id
         if settings.entrypoint:
-            self.logger.info(f"Entrypoint: {settings.entrypoint}")
+            self.logger.info("Entrypoint: %s will be created in the hosted zone [%s] %s",
+                             settings.entrypoint, self.zone_id, env.domain)
 
     def get_image_id(self) -> None:
         """Fetches AMI ID from public images."""
@@ -546,9 +547,9 @@ class Tunnel:
             custom_servers += f' {settings.entrypoint}'
         if env.domain and env.domain not in san_list:
             san_list.append(env.domain)
-        copied_www = san_list.copy()
-        for san in copied_www:
-            san_list.append(f'www.{san}')
+
+        # Add web interface for all SANs to maximize compatibility
+        san_list += [f'www.{san}' for san in san_list]
         san_list.append(public_ip)
 
         load_and_copy = self.config_requirements(

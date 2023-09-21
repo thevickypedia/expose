@@ -31,8 +31,8 @@ class EnvConfig(BaseSettings):
     server_info: str = Field("server_info.json", pattern=r".+\.json$")
 
     image_id: Union[str, None] = None
-    domain: Union[str, None] = None
-    subdomain: Union[str, None] = None
+    domain: Union[str, None] = None  # todo: change this to hosted zone name
+    subdomain: Union[str, None] = None  # todo: change this to A record
     aws_access_key: Union[str, None] = None
     aws_secret_key: Union[str, None] = None
     email_address: EmailStr = f"{getpass.getuser()}@expose-localhost.com"
