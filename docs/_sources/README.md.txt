@@ -1,5 +1,5 @@
 # Expose localhost using EC2
-Expose an app/api running on local host to public internet using AWS EC2
+Reverse proxy that creates a secure tunnel from public endpoint to locally running web service
 
 ### Requirements
 - Access to an AWS account and [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html#getting-started-install-instructions) configured.
@@ -29,7 +29,7 @@ The public DNS names for EC2 instances are long and messy. To avoid that, an `A`
 
 :warning: &nbsp; Requires an active hosted zone on `route53`.
 
-- **DOMAIN**: Domain name registered using `route53`. *Example: `mywebsite.com`*
+- **HOSTED_ZONE**: Hosted zone name registered using `route53`. *Example: `mywebsite.com`*
 - **SUBDOMAIN**: Sub-domain that has to be added for the domain name. *Example: `tunnel`*
 
 &nbsp; &nbsp; &nbsp; &nbsp; :bulb: &nbsp; `tunnel.mywebsite.com` will be the endpoint to access the localhost from public internet.
@@ -47,16 +47,16 @@ The public DNS names for EC2 instances are long and messy. To avoid that, an `A`
 
 :warning: &nbsp; Some web browsers might throw a warning and some might even block a self-signed certificate/private CA.
 
-To manually generate a self-signed cert:
-
-> `openssl req -newkey rsa:2048 -sha256 -nodes -keyout YOURPRIVATE.key -x509 -days 365 -out YOURPUBLIC.pem -subj "/C=US/ST=New York/L=Brooklyn/O=Example Brooklyn Company/CN=YOURDOMAIN.EXAMPLE"`
-
-[OR]
-
-Simply let `expose` create a self-signed SSL certificate and a private key. **(Default behavior)**
+`expose` creates a self-signed SSL certificate and a private key by default.
 
 - **EMAIL_ADDRESS**: Email address to create the self-signed SSL and private key. Defaults to `USER@expose-localhost.com`
 - **ORGANIZATION**: Organization name for the certificate. Defaults to the AWS endpoint.
+
+**Manually generate self-signed certificate**
+> `openssl req -newkey rsa:2048 -sha256 -nodes -keyout private.pem -x509 -days 365 -out public.pem -subj "/C=US/ST=New York/L=Brooklyn/O=Example Brooklyn Company/CN=tunnel.example.com"`
+
+**To verify the generated certificate**
+> `openssl x509 -inform pem -in public.pem -noout -text`
 
 </details>
 
@@ -80,10 +80,8 @@ tunnel = expose.Tunnel()
 # Start tunneling
 tunnel.start()
 
-# set 'purge' flag to 'True' to delete AWS resources if configuration fails
+# set 'purge' flag to 'True' to reclaim AWS resources if configuration fails
 # tunnel.start(purge=True)
-
-# sleep or do something else
 
 # Stop tunneling - deletes all AWS resources acquired
 tunnel.stop()
@@ -100,11 +98,11 @@ tunnel.stop()
 ### Limitations
 Currently `expose` cannot handle, tunneling multiple port numbers without modifying the following env vars in the `.env` file.
 ```shell
-KEY_PAIR
-SECURITY_GROUP
-KEY_FILE
-CERT_FILE
-SERVER_INFO
+KEY_PAIR        # SSH connection to AWS ec2
+KEY_FILE        # Private key filename for self signed SSL
+CERT_FILE       # Public certificate filename for self signed SSL
+SERVER_INFO     # Filename to dump JSON data with server configuration information
+SECURITY_GROUP  # Ingress and egress firewall rules to control traffic allowed via VPC
 ```
 
 ## Coding Standards
@@ -149,6 +147,6 @@ pre-commit run --all-files
 
 ## License & copyright
 
-&copy; Vignesh Sivanandha Rao
+&copy; Vignesh Rao
 
 Licensed under the [MIT License](https://github.com/thevickypedia/expose/blob/main/LICENSE)

@@ -2,12 +2,10 @@
 
 import logging
 
-from expose.helpers.auxiliary import DATETIME_FORMAT
-
 LOGGER = logging.getLogger(__name__)
 formatter = logging.Formatter(
     fmt='%(asctime)s - %(levelname)s - [%(module)s:%(lineno)d] - %(funcName)s - %(message)s',
-    datefmt=DATETIME_FORMAT
+    datefmt='%b-%d-%Y %I:%M:%S %p'
 )
 handler = logging.StreamHandler()
 handler.setFormatter(fmt=formatter)

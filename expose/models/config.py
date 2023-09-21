@@ -1,13 +1,31 @@
 import getpass
 import os
 import pathlib
-import re
 import sys
-from typing import Union
+from typing import Dict, Union
 
-from pydantic import (BaseModel, DirectoryPath, EmailStr, Field, FilePath,
-                      field_validator)
+from pydantic import BaseModel, DirectoryPath, EmailStr, Field, FilePath
 from pydantic_settings import BaseSettings
+
+
+class AWSDefaults(BaseModel):
+    """Default values for missing AWS configuration.
+
+    >>> AWSDefaults
+
+    """
+
+    DEFAULT_AMI_NAME: str = "aerospike-ubuntu-20.04-20211114101915"
+
+    IMAGE_MAP: Dict[str, str] = {
+        "us-east-1": "ami-0eaca42ad8ff8647d",
+        "us-east-2": "ami-0971e839208a0d58a",
+        "us-west-1": "ami-0005fe7be6ce06e3c",
+        "us-west-2": "ami-06e20d17437157772"
+    }
+
+
+aws = AWSDefaults()
 
 
 class EnvConfig(BaseSettings):
@@ -31,24 +49,12 @@ class EnvConfig(BaseSettings):
     server_info: str = Field("server_info.json", pattern=r".+\.json$")
 
     image_id: Union[str, None] = None
-    domain: Union[str, None] = None  # todo: change this to hosted zone name
-    subdomain: Union[str, None] = None  # todo: change this to A record
+    hosted_zone: Union[str, None] = None
+    subdomain: Union[str, None] = None
     aws_access_key: Union[str, None] = None
     aws_secret_key: Union[str, None] = None
     email_address: EmailStr = f"{getpass.getuser()}@expose-localhost.com"
     organization: Union[str, None] = None
-
-    # noinspection PyMethodParameters
-    @field_validator('domain')
-    def domain_validator(cls, v: str) -> Union[str, None]:
-        """Custom validation for 'domain' field."""
-        if not v:
-            return None
-        if re.match(pattern=r"(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)", string=v):
-            if len(v.split('.')) == 2:
-                return v
-            raise ValueError("Field 'domain' should ONLY be a FQDN, 'subdomain' should be set separately")
-        raise ValueError("Field 'domain' should be a fully qualified domain name")
 
     class Config:
         """Extra config for .env file and extra."""
@@ -76,9 +82,9 @@ class Settings(BaseModel):
     key_pair_file: FilePath = f"{env.key_pair}.pem"
     configuration: DirectoryPath = os.path.join(pathlib.Path(__file__).parent.parent, 'configuration')
     entrypoint: str = None
-    if any((env.domain, env.subdomain)):
-        assert all((env.domain, env.subdomain)), "'subdomain' and 'domain' must co-exist"
-        entrypoint: str = f'{env.subdomain}.{env.domain}'
+    if any((env.hosted_zone, env.subdomain)):
+        assert all((env.hosted_zone, env.subdomain)), "'subdomain' and 'hosted_zone' must co-exist"
+        entrypoint: str = f'{env.subdomain}.{env.hosted_zone}'
 
 
 settings = Settings()

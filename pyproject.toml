@@ -1,9 +1,9 @@
 [project]
 name = "expose-localhost"
 dynamic = ["version", "dependencies"]
-description = "Expose an app/api running on local host to public internet using AWS EC2"
+description = "Reverse proxy that creates a secure tunnel from public endpoint to locally running web service"
 readme = "README.md"
-authors = [{ name = "Vignesh Sivanandha Rao", email = "svignesh1793@gmail.com" }]
+authors = [{ name = "Vignesh Rao", email = "svignesh1793@gmail.com" }]
 license = { file = "LICENSE" }
 classifiers = [
     "Development Status :: 5 - Production/Stable",

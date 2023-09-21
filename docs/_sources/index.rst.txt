@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Expose's documentation!
-==================================
+Expose - Expose a web service on localhost to public internet using AWS EC2
+===========================================================================
 
 .. toctree::
    :maxdepth: 2
@@ -19,46 +19,64 @@ Expose - Main Module
    :members:
    :undoc-members:
 
-Expose - Configuration
-======================
-
-.. automodule:: expose.helpers.server
-   :members:
-   :undoc-members:
-
-Expose - Route53
-================
-
-.. automodule:: expose.helpers.route_53
-   :members:
-   :undoc-members:
-
 Expose - Auxiliary
 ==================
 
-.. automodule:: expose.helpers.auxiliary
+.. automodule:: expose.models.auxiliary
    :members:
    :undoc-members:
 
 Expose - Certificates
 =====================
 
-.. automodule:: expose.helpers.cert
+.. automodule:: expose.models.cert
    :members:
    :undoc-members:
 
-Expose - AWS Defaults
-=====================
+Expose - Configuration
+======================
 
-.. automodule:: expose.helpers.defaults
+.. autoclass:: expose.models.config.AWSDefaults(pydantic.BaseModel)
+   :members:
+   :exclude-members: _abc_impl, model_config, model_fields
+
+====
+
+.. autoclass:: expose.models.config.EnvConfig(pydantic_settings.BaseSettings)
+   :members:
+   :exclude-members: _abc_impl, model_config, model_fields
+
+====
+
+.. autoclass:: expose.models.config.Settings(pydantic.BaseModel)
+   :members:
+   :exclude-members: _abc_impl, model_config, model_fields
+
+Expose - Exceptions
+===================
+
+.. automodule:: expose.models.exceptions
    :members:
    :undoc-members:
-   :exclude-members: DEFAULT_AMI_NAME, IMAGE_MAP
 
 Expose - LOGGER
 ===============
 
-.. automodule:: expose.helpers.logger
+.. automodule:: expose.models.logger
+   :members:
+   :undoc-members:
+
+Expose - Route53
+================
+
+.. automodule:: expose.models.route_53
+   :members:
+   :undoc-members:
+
+Expose - Server Configuration
+=============================
+
+.. automodule:: expose.models.server
    :members:
    :undoc-members:
 

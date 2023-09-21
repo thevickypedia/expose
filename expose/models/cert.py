@@ -4,8 +4,8 @@ from typing import List
 
 from OpenSSL import crypto
 
-from expose.helpers.auxiliary import IP_INFO
-from expose.helpers.config import env
+from expose.models.auxiliary import IP_INFO
+from expose.models.config import env
 
 
 def _get_serial() -> bytes:
@@ -59,7 +59,7 @@ def generate_cert(common_name: str, san_list: List[str],
         san_list: List of Subject Alternative Names (SANs). Defaults to None.
 
     See Also:
-        Use ``openssl x509 -inform pem -in cert.crt -noout -text`` to look at the generated cert using openssl.
+        Use ``openssl x509 -inform pem -in public.pem -noout -text`` to look at the generated cert using openssl.
     """
     if key_size not in (2048, 4096):
         raise ValueError('Certificate key size should be either 2048 or 4096.')

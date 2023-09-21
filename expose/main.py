@@ -3,7 +3,7 @@ import logging
 import os
 import time
 import warnings
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import boto3
 import inflect
@@ -12,14 +12,13 @@ from boto3.resources.base import ServiceResource
 from botocore.exceptions import ClientError, WaiterError
 from OpenSSL.crypto import Error as SSLError
 
-from expose.helpers.auxiliary import IP_INFO
-from expose.helpers.cert import generate_cert
-from expose.helpers.config import env, settings
-from expose.helpers.defaults import AWSDefaults
-from expose.helpers.logger import LOGGER
-from expose.helpers.route_53 import change_record_set, get_zone_id
-from expose.helpers.server import Server
-from expose.helpers.warnings import NotImplementedWarning
+from expose.models.auxiliary import IP_INFO
+from expose.models.cert import generate_cert
+from expose.models.config import aws, env, settings
+from expose.models.exceptions import NotImplementedWarning
+from expose.models.logger import LOGGER
+from expose.models.route_53 import change_record_set, get_zone_id
+from expose.models.server import Server
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # Disable warnings for self-signed certificates
 
@@ -44,22 +43,26 @@ class Tunnel:
         self.logger = logger or LOGGER
         self.nginx_server = None
         self.image_id = None
-        if env.domain:
-            if zone_id := get_zone_id(client=self.route53_client, logger=self.logger, dns=env.domain, init=True):
+        if env.hosted_zone:
+            if zone_id := get_zone_id(client=self.route53_client, logger=self.logger, dns=env.hosted_zone, init=True):
                 self.zone_id = zone_id
+            else:
+                raise ValueError(
+                    f"{env.hosted_zone} doesn't match with any hosted zone names that are available"
+                )
         if settings.entrypoint:
             self.logger.info("Entrypoint: %s will be created in the hosted zone [%s] %s",
-                             settings.entrypoint, self.zone_id, env.domain)
+                             settings.entrypoint, self.zone_id, env.hosted_zone)
 
     def get_image_id(self) -> None:
-        """Fetches AMI ID from public images."""
+        """Fetches AMI ID from public images and stores it in the object."""
         if env.aws_region_name.startswith('us'):
-            self.image_id = AWSDefaults.IMAGE_MAP[env.aws_region_name]
+            self.image_id = aws.IMAGE_MAP[env.aws_region_name]
             return
 
         try:
             images = list(self.ec2_resource.images.filter(
-                Filters=[{'Name': 'name', 'Values': [AWSDefaults.DEFAULT_AMI_NAME]}]
+                Filters=[{'Name': 'name', 'Values': [aws.DEFAULT_AMI_NAME]}]
             ))
         except ClientError as error:
             self.logger.warning('API call to retrieve AMI ID for %s has failed.', env.aws_region_name)
@@ -75,7 +78,7 @@ class Tunnel:
 
         Returns:
             bool:
-            Flag to indicate the calling function if a ``KeyPair`` was created.
+            Boolean flag to indicate the calling function if a ``KeyPair`` was created.
         """
         try:
             key_pair = self.ec2_resource.create_key_pair(
@@ -99,11 +102,11 @@ class Tunnel:
         self.logger.info('Stored KeyPair as %s', settings.key_pair_file)
         return True
 
-    def get_vpc_id(self) -> str or None:
-        """Gets the default VPC id.
+    def get_vpc_id(self) -> Union[str, None]:
+        """Fetches the default VPC id.
 
         Returns:
-            str or None:
+            Union[str, None]:
             Default VPC id.
         """
         try:
@@ -111,7 +114,7 @@ class Tunnel:
         except ClientError as error:
             self.logger.warning('API call to get VPC ID has failed.')
             self.logger.error(error)
-            return None
+            return
         default_vpc = None
         for vpc in vpcs:
             if vpc.is_default:
@@ -126,15 +129,23 @@ class Tunnel:
     def authorize_security_group(self,
                                  security_group_id: str,
                                  public_ip: str) -> bool:
-        """Authorizes the security group for certain ingress list.
+        """Authorizes the security group, to allow ingress and egress traffic via VPC on certain ports.
 
         Args:
             security_group_id: Takes the SecurityGroup ID as an argument.
             public_ip: Public IP address of the ec2 instance.
 
+        See Also:
+            Ports allowed:
+                - 22: Only for ec2 and host machine's public IP with CIDR notation 32.
+                - 80: HTTP port for self.
+                - 443: HTTPS port for self.
+
+            Apart from the above, the SG is authorized for the port number requested to forward.
+
         Returns:
             bool:
-            Flag to indicate the calling function whether the security group was authorized.
+            Boolean flag to indicate the calling function whether the security group was authorized successfully.
         """
         try:
             security_group = self.ec2_resource.SecurityGroup(security_group_id)
@@ -149,6 +160,7 @@ class Tunnel:
                      'FromPort': 443,
                      'ToPort': 443,
                      'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},
+                    # todo: set as env var to allow specific port access, since http and https are already allowed
                     {'IpProtocol': 'tcp',
                      'FromPort': env.port,
                      'ToPort': env.port,
@@ -176,11 +188,14 @@ class Tunnel:
                 self.logger.info(log + 'with CIDR ' + ip_range['CidrIp'])
         return True
 
-    def create_security_group(self) -> str or None:
-        """Calls the class method ``_get_vpc_id`` and uses the VPC ID to create a ``SecurityGroup`` for the instance.
+    def create_security_group(self) -> Union[str, None]:
+        """Gets VPC id and creates a security group for the ec2 instance.
+
+        Warnings:
+            Deletes and re-creates the SG, in case an SG exists with the same name already.
 
         Returns:
-            str or None:
+            Union[str, None]:
             SecurityGroup ID
         """
         if not (vpc_id := self.get_vpc_id()):
@@ -209,12 +224,12 @@ class Tunnel:
         self.logger.info('Security Group created %s in VPC %s', security_group_id, vpc_id)
         return security_group_id
 
-    def create_ec2_instance(self) -> Tuple[str, str] or None:
-        """Creates an EC2 instance of type ``t2.nano`` with the pre-configured AMI id.
+    def create_ec2_instance(self) -> Union[Tuple[str, str], None]:
+        """Creates an EC2 instance with a pre-configured AMI id.
 
         Returns:
-            Tuple[str, str, str, str]:
-            Instance ID, SecurityGroup ID, Public DNS name, Public IP address
+            Union[Tuple[str, str], None]:
+            Instance ID, SecurityGroup ID if successful.
         """
         if not (security_group_id := self.create_security_group()):
             self.delete_key_pair()
@@ -227,7 +242,7 @@ class Tunnel:
                 ImageId=self.image_id,
                 MinCount=1,
                 MaxCount=1,
-                InstanceType="t2.nano",
+                InstanceType="t2.nano",  # todo: set as env var
                 KeyName=env.key_pair,
                 SecurityGroupIds=[security_group_id]
             )
@@ -244,11 +259,11 @@ class Tunnel:
         return instance_id, security_group_id
 
     def delete_key_pair(self) -> bool:
-        """Deletes the ``KeyPair``.
+        """Deletes the ``KeyPair`` created to access the ec2 instance.
 
         Returns:
             bool:
-            Flag to indicate the calling function if the KeyPair was deleted.
+            Boolean flag to indicate the calling function if the KeyPair was deleted successfully.
         """
         try:
             key_pair = self.ec2_resource.KeyPair(env.key_pair)
@@ -271,7 +286,7 @@ class Tunnel:
                                     security_group_id: str,
                                     instance: object = None,
                                     instance_id: str = None) -> bool:
-        """Disassociate a security group from the instance.
+        """Disassociates an SG from the ec2 instance by assigning it to the default security group.
 
         Args:
             security_group_id: Security group ID
@@ -280,7 +295,7 @@ class Tunnel:
 
         Returns:
             bool:
-            Boolean value based on disassociation result.
+            Boolean flag to indicate the calling function whether the disassociation was successful.
         """
         try:
             if not instance:
@@ -306,7 +321,7 @@ class Tunnel:
 
         Returns:
             bool:
-            Flag to indicate the calling function whether the SecurityGroup was deleted.
+            Boolean flag to indicate the calling function whether the SecurityGroup was deleted.
         """
         try:
             security_group = self.ec2_resource.SecurityGroup(security_group_id)
@@ -326,12 +341,12 @@ class Tunnel:
         """Terminates the requested instance.
 
         Args:
-            instance_id: Takes instance ID as an argument. Defaults to the instance that was created previously.
+            instance_id: Takes instance ID as an argument.
             instance: Takes the instance object as an optional argument.
 
         Returns:
             bool:
-            Flag to indicate the calling function whether the instance was terminated.
+            Boolean flag to indicate the calling function whether the instance was terminated.
         """
         try:
             if not instance:
@@ -347,7 +362,7 @@ class Tunnel:
         return instance
 
     def start(self, purge: bool = False) -> None:
-        """Starts an ec2 instances, and initiates VM configuration.
+        """Starts the reverse proxy server using nginx to initiate port forwarding.
 
         Args:
             purge: Boolean flag to delete all AWS resource if initial configuration fails.
@@ -356,8 +371,9 @@ class Tunnel:
             Automatic purge works only during initial setup, and not during re-configuration.
 
         References:
-            https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instance-status.html#options
-            https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/instance/wait_until_terminated.html
+            - https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instance-status.html#options
+            - | https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/instance/
+              | wait_until_terminated.html
         """
         if os.path.isfile(env.server_info) and os.path.isfile(settings.key_pair_file):
             self.logger.warning('Received request to start VM, but looks like a session is up and running already.')
@@ -437,7 +453,7 @@ class Tunnel:
         self.configure_vm(public_dns=instance.public_dns_name, public_ip=instance.public_ip_address, disposal=purge)
 
     def server_copy(self, source: str, destination: str) -> None:
-        """Reads a file in localhost and writes it within SSH connection.
+        """Reads a file in localhost and writes it within the ec2 instance using SSH connection.
 
         Args:
             source: Name of the source file in localhost.
@@ -447,8 +463,8 @@ class Tunnel:
         with open(source) as f:
             self.nginx_server.server_write(data={destination: f.read()})
 
-    def get_config(self, filename: str, server: str):
-        """Downloads configuration files from GitHub.
+    def get_config(self, filename: str, server: str) -> str:
+        """Loads the configuration file and returns the data.
 
         Args:
             filename: Name of the file that has to be downloaded.
@@ -492,8 +508,6 @@ class Tunnel:
             config_data["nginx.conf"] = self.get_config("nginx-ssl.conf", custom_servers)
         else:
             try:
-                if not all((env.email_address, env.organization)):
-                    self.logger.warning("Use 'EMAIL_ADDRESS' and 'ORGANIZATION' to create a specific certificate.")
                 self.logger.info("SAN list: %s", san_list)
                 generate_cert(common_name, san_list)
             except SSLError as error:
@@ -511,8 +525,8 @@ class Tunnel:
     def configure_vm(self,
                      public_dns: str,
                      public_ip: str,
-                     disposal: bool = False):
-        """Configures the ec2 instance to take traffic from localhost.
+                     disposal: bool = False) -> None:
+        """Configures the ec2 instance to take traffic from localhost and initiates tunneling.
 
         Args:
             public_dns: Public DNS name of the EC2 that was created.
@@ -524,7 +538,7 @@ class Tunnel:
         # Max of 10 iterations with 5 second interval between each iteration with default timeout
         for i in range(10):
             try:
-                self.nginx_server = Server(hostname=public_dns, pem_file=settings.key_pair_file, logger=self.logger)
+                self.nginx_server = Server(hostname=public_dns, logger=self.logger)
                 self.logger.info("Connection established on %s attempt", inflect.engine().ordinal(i + 1))
                 break
             except Exception as error:
@@ -533,11 +547,8 @@ class Tunnel:
         else:
             self.stop()
             raise TimeoutError(
-                "Unable to connect SSH server"
+                "Unable to connect SSH server, please call the 'start' function once again if instance looks healthy"
             )
-
-        if not any((env.domain, env.subdomain)):
-            self.logger.warning("DOMAIN and SUBDOMAIN gives a customized access to the tunnel.")
 
         custom_servers = f"{public_dns} {public_ip}"
 
@@ -545,8 +556,8 @@ class Tunnel:
         if settings.entrypoint:
             san_list.append(settings.entrypoint)
             custom_servers += f' {settings.entrypoint}'
-        if env.domain and env.domain not in san_list:
-            san_list.append(env.domain)
+        if env.hosted_zone and env.hosted_zone not in san_list:
+            san_list.append(env.hosted_zone)
 
         # Add web interface for all SANs to maximize compatibility
         san_list += [f'www.{san}' for san in san_list]
@@ -582,32 +593,37 @@ class Tunnel:
 
         protocol = 'https' if load_and_copy.get("options-ssl-nginx.conf") else 'http'
         if settings.entrypoint:
-            change_record_set(source=settings.entrypoint, destination=public_ip, record_type='A',
-                              logger=self.logger, client=self.route53_client, zone_id=self.zone_id)
+            change_record_set(source=settings.entrypoint, destination=public_ip, logger=self.logger,
+                              client=self.route53_client, zone_id=self.zone_id, action='UPSERT')
             self.logger.info('%s://%s -> http://localhost:%d', protocol, settings.entrypoint, env.port)
         else:
             self.logger.info('%s://%s -> http://localhost:%d', protocol, public_dns, env.port)
 
         self.logger.info('Initiating tunnel')
-        self.nginx_server.initiate_tunnel(protocol)
+        self.nginx_server.initiate_tunnel()
 
     def stop(self, instance_id: str = None, security_group_id: str = None, public_ip: str = None) -> None:
-        """Disables tunnelling by terminating the ``EC2`` instance, ``KeyPair``, and the ``SecurityGroup`` created.
+        """Disables tunnelling by removing all AWS resources acquired.
 
         Args:
             instance_id: Instance that has to be terminated.
             security_group_id: Security group that has to be removed.
             public_ip: Public IP address to delete the A record from route53.
 
+        See Also:
+            Doesn't require any argument, as long as the JSON dump is neither removed nor modified by hand.
+
         References:
-            https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/instance/wait_until_terminated.html
+            - | https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/instance/
+              | wait_until_terminated.html
         """
         try:
             with open(env.server_info) as file:
                 data = json.load(file)
         except FileNotFoundError:
             assert instance_id and security_group_id, \
-                f'\n\nInput file: {env.server_info} is missing. Arguments are required to proceed.'
+                (f"\n\nInput file: {env.server_info!r} is missing. "
+                 "Arguments 'instance_id' and 'security_group_id' are required to proceed.")
             data = {}
 
         security_group_id = security_group_id or data.get('security_group_id')
@@ -617,9 +633,9 @@ class Tunnel:
         self.delete_key_pair()
         sg_association = self.disassociate_security_group(instance_id=instance_id, security_group_id=security_group_id)
         instance = self.terminate_ec2_instance(instance_id=instance_id)
-        if env.domain and env.subdomain and public_ip:
-            change_record_set(source=settings.entrypoint, destination=public_ip, record_type='A',
-                              action='DELETE', logger=self.logger, client=self.route53_client, zone_id=self.zone_id)
+        if env.hosted_zone and env.subdomain and public_ip:
+            change_record_set(source=settings.entrypoint, destination=public_ip, logger=self.logger,
+                              client=self.route53_client, zone_id=self.zone_id, action='DELETE')
         if not sg_association and instance:
             try:
                 instance.wait_until_terminated(

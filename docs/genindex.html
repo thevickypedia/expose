@@ -48,9 +48,13 @@
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#J"><strong>J</strong></a>
+ | <a href="#K"><strong>K</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
@@ -61,13 +65,13 @@
 <h2 id="_">_</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#expose.helpers.cert._generate_serial_hash">_generate_serial_hash() (in module expose.helpers.cert)</a>
+      <li><a href="index.html#expose.models.cert._generate_serial_hash">_generate_serial_hash() (in module expose.models.cert)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#expose.helpers.cert._get_serial">_get_serial() (in module expose.helpers.cert)</a>
+      <li><a href="index.html#expose.models.cert._get_serial">_get_serial() (in module expose.models.cert)</a>
 </li>
-      <li><a href="index.html#expose.helpers.server.Server._handler">_handler() (expose.helpers.server.Server method)</a>
+      <li><a href="index.html#expose.models.server.Server._handler">_handler() (expose.models.server.Server method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -77,9 +81,17 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#expose.main.Tunnel.authorize_security_group">authorize_security_group() (expose.main.Tunnel method)</a>
 </li>
+      <li><a href="index.html#expose.models.config.EnvConfig.aws_access_key">aws_access_key (expose.models.config.EnvConfig attribute)</a>
+</li>
+      <li><a href="index.html#expose.models.config.EnvConfig.aws_region_name">aws_region_name (expose.models.config.EnvConfig attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#expose.helpers.defaults.AWSDefaults">AWSDefaults (class in expose.helpers.defaults)</a>
+      <li><a href="index.html#expose.models.config.EnvConfig.aws_secret_key">aws_secret_key (expose.models.config.EnvConfig attribute)</a>
+</li>
+      <li><a href="index.html#expose.models.config.AWSDefaults">AWSDefaults (class in expose.models.config)</a>
+</li>
+      <li><a href="index.html#expose.models.exceptions.AWSResourceError">AWSResourceError</a>
 </li>
   </ul></td>
 </tr></table>
@@ -87,19 +99,25 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#expose.helpers.route_53.change_record_set">change_record_set() (in module expose.helpers.route_53)</a>
+      <li><a href="index.html#expose.models.config.EnvConfig.cert_file">cert_file (expose.models.config.EnvConfig attribute)</a>
+</li>
+      <li><a href="index.html#expose.models.route_53.change_record_set">change_record_set() (in module expose.models.route_53)</a>
 </li>
       <li><a href="index.html#expose.main.Tunnel.config_requirements">config_requirements() (expose.main.Tunnel method)</a>
 </li>
-      <li><a href="index.html#expose.main.Tunnel.configure_vm">configure_vm() (expose.main.Tunnel method)</a>
+      <li><a href="index.html#expose.models.config.Settings.configuration">configuration (expose.models.config.Settings attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#expose.main.Tunnel.configure_vm">configure_vm() (expose.main.Tunnel method)</a>
+</li>
       <li><a href="index.html#expose.main.Tunnel.create_ec2_instance">create_ec2_instance() (expose.main.Tunnel method)</a>
 </li>
       <li><a href="index.html#expose.main.Tunnel.create_key_pair">create_key_pair() (expose.main.Tunnel method)</a>
 </li>
       <li><a href="index.html#expose.main.Tunnel.create_security_group">create_security_group() (expose.main.Tunnel method)</a>
+</li>
+      <li><a href="index.html#expose.models.config.Settings.current_dir">current_dir (expose.models.config.Settings attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -107,6 +125,8 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#expose.models.config.AWSDefaults.DEFAULT_AMI_NAME">DEFAULT_AMI_NAME (expose.models.config.AWSDefaults attribute)</a>
+</li>
       <li><a href="index.html#expose.main.Tunnel.delete_key_pair">delete_key_pair() (expose.main.Tunnel method)</a>
 </li>
   </ul></td>
@@ -115,56 +135,24 @@
 </li>
       <li><a href="index.html#expose.main.Tunnel.disassociate_security_group">disassociate_security_group() (expose.main.Tunnel method)</a>
 </li>
+      <li><a href="index.html#expose.models.exceptions.DuplicateResource">DuplicateResource</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    expose.helpers.auxiliary
-
-      <ul>
-        <li><a href="index.html#module-expose.helpers.auxiliary">module</a>
+      <li><a href="index.html#expose.models.config.EnvConfig.email_address">email_address (expose.models.config.EnvConfig attribute)</a>
 </li>
-      </ul></li>
-      <li>
-    expose.helpers.cert
-
-      <ul>
-        <li><a href="index.html#module-expose.helpers.cert">module</a>
+      <li><a href="index.html#expose.models.config.Settings.entrypoint">entrypoint (expose.models.config.Settings attribute)</a>
 </li>
-      </ul></li>
-      <li>
-    expose.helpers.defaults
-
-      <ul>
-        <li><a href="index.html#module-expose.helpers.defaults">module</a>
+      <li><a href="index.html#expose.models.config.EnvConfig.Config.env_file">env_file (expose.models.config.EnvConfig.Config attribute)</a>
 </li>
-      </ul></li>
-      <li>
-    expose.helpers.logger
-
-      <ul>
-        <li><a href="index.html#module-expose.helpers.logger">module</a>
+      <li><a href="index.html#expose.models.config.EnvConfig">EnvConfig (class in expose.models.config)</a>
 </li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    expose.helpers.route_53
-
-      <ul>
-        <li><a href="index.html#module-expose.helpers.route_53">module</a>
+      <li><a href="index.html#expose.models.config.EnvConfig.Config">EnvConfig.Config (class in expose.models.config)</a>
 </li>
-      </ul></li>
-      <li>
-    expose.helpers.server
-
-      <ul>
-        <li><a href="index.html#module-expose.helpers.server">module</a>
-</li>
-      </ul></li>
       <li>
     expose.main
 
@@ -172,13 +160,59 @@
         <li><a href="index.html#module-expose.main">module</a>
 </li>
       </ul></li>
+      <li>
+    expose.models.auxiliary
+
+      <ul>
+        <li><a href="index.html#module-expose.models.auxiliary">module</a>
+</li>
+      </ul></li>
+      <li>
+    expose.models.cert
+
+      <ul>
+        <li><a href="index.html#module-expose.models.cert">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    expose.models.exceptions
+
+      <ul>
+        <li><a href="index.html#module-expose.models.exceptions">module</a>
+</li>
+      </ul></li>
+      <li>
+    expose.models.logger
+
+      <ul>
+        <li><a href="index.html#module-expose.models.logger">module</a>
+</li>
+      </ul></li>
+      <li>
+    expose.models.route_53
+
+      <ul>
+        <li><a href="index.html#module-expose.models.route_53">module</a>
+</li>
+      </ul></li>
+      <li>
+    expose.models.server
+
+      <ul>
+        <li><a href="index.html#module-expose.models.server">module</a>
+</li>
+      </ul></li>
+      <li><a href="index.html#expose.models.config.EnvConfig.Config.extra">extra (expose.models.config.EnvConfig.Config attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#expose.helpers.auxiliary.flush_screen">flush_screen() (in module expose.helpers.auxiliary)</a>
+      <li><a href="index.html#expose.models.auxiliary.flush_screen">flush_screen() (in module expose.models.auxiliary)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -186,7 +220,7 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#expose.helpers.cert.generate_cert">generate_cert() (in module expose.helpers.cert)</a>
+      <li><a href="index.html#expose.models.cert.generate_cert">generate_cert() (in module expose.models.cert)</a>
 </li>
       <li><a href="index.html#expose.main.Tunnel.get_config">get_config() (expose.main.Tunnel method)</a>
 </li>
@@ -196,7 +230,15 @@
 </li>
       <li><a href="index.html#expose.main.Tunnel.get_vpc_id">get_vpc_id() (expose.main.Tunnel method)</a>
 </li>
-      <li><a href="index.html#expose.helpers.route_53.get_zone_id">get_zone_id() (in module expose.helpers.route_53)</a>
+      <li><a href="index.html#expose.models.route_53.get_zone_id">get_zone_id() (in module expose.models.route_53)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#expose.models.config.EnvConfig.hosted_zone">hosted_zone (expose.models.config.EnvConfig attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -204,7 +246,15 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#expose.helpers.server.Server.initiate_tunnel">initiate_tunnel() (expose.helpers.server.Server method)</a>
+      <li><a href="index.html#expose.models.config.EnvConfig.image_id">image_id (expose.models.config.EnvConfig attribute)</a>
+</li>
+      <li><a href="index.html#expose.models.config.AWSDefaults.IMAGE_MAP">IMAGE_MAP (expose.models.config.AWSDefaults attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#expose.models.server.Server.initiate_tunnel">initiate_tunnel() (expose.models.server.Server method)</a>
+</li>
+      <li><a href="index.html#expose.models.config.Settings.interactive">interactive (expose.models.config.Settings attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -212,7 +262,21 @@
 <h2 id="J">J</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#expose.helpers.server.join">join() (in module expose.helpers.server)</a>
+      <li><a href="index.html#expose.models.server.join">join() (in module expose.models.server)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#expose.models.config.EnvConfig.key_file">key_file (expose.models.config.EnvConfig attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#expose.models.config.EnvConfig.key_pair">key_pair (expose.models.config.EnvConfig attribute)</a>
+</li>
+      <li><a href="index.html#expose.models.config.Settings.key_pair_file">key_pair_file (expose.models.config.Settings attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -224,28 +288,48 @@
     module
 
       <ul>
-        <li><a href="index.html#module-expose.helpers.auxiliary">expose.helpers.auxiliary</a>
-</li>
-        <li><a href="index.html#module-expose.helpers.cert">expose.helpers.cert</a>
-</li>
-        <li><a href="index.html#module-expose.helpers.defaults">expose.helpers.defaults</a>
-</li>
-        <li><a href="index.html#module-expose.helpers.logger">expose.helpers.logger</a>
-</li>
-        <li><a href="index.html#module-expose.helpers.route_53">expose.helpers.route_53</a>
-</li>
-        <li><a href="index.html#module-expose.helpers.server">expose.helpers.server</a>
-</li>
         <li><a href="index.html#module-expose.main">expose.main</a>
 </li>
+        <li><a href="index.html#module-expose.models.auxiliary">expose.models.auxiliary</a>
+</li>
+        <li><a href="index.html#module-expose.models.cert">expose.models.cert</a>
+</li>
+        <li><a href="index.html#module-expose.models.exceptions">expose.models.exceptions</a>
+</li>
+        <li><a href="index.html#module-expose.models.logger">expose.models.logger</a>
+</li>
+        <li><a href="index.html#module-expose.models.route_53">expose.models.route_53</a>
+</li>
+        <li><a href="index.html#module-expose.models.server">expose.models.server</a>
+</li>
       </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#expose.models.exceptions.NotImplementedWarning">NotImplementedWarning</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#expose.models.config.EnvConfig.organization">organization (expose.models.config.EnvConfig attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#expose.helpers.server.print_warning">print_warning() (in module expose.helpers.server)</a>
+      <li><a href="index.html#expose.models.config.EnvConfig.port">port (expose.models.config.EnvConfig attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#expose.models.server.print_warning">print_warning() (in module expose.models.server)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -253,7 +337,7 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#expose.helpers.server.Server.run_interactive_ssh">run_interactive_ssh() (expose.helpers.server.Server method)</a>
+      <li><a href="index.html#expose.models.server.Server.run_interactive_ssh">run_interactive_ssh() (expose.models.server.Server method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -261,23 +345,29 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#expose.helpers.server.Server">Server (class in expose.helpers.server)</a>
+      <li><a href="index.html#expose.models.config.EnvConfig.security_group">security_group (expose.models.config.EnvConfig attribute)</a>
+</li>
+      <li><a href="index.html#expose.models.server.Server">Server (class in expose.models.server)</a>
 </li>
       <li><a href="index.html#expose.main.Tunnel.server_copy">server_copy() (expose.main.Tunnel method)</a>
 </li>
-      <li><a href="index.html#expose.helpers.server.Server.server_write">server_write() (expose.helpers.server.Server method)</a>
+      <li><a href="index.html#expose.models.config.EnvConfig.server_info">server_info (expose.models.config.EnvConfig attribute)</a>
 </li>
-      <li><a href="index.html#expose.main.Tunnel.start">start() (expose.main.Tunnel method)</a>
+      <li><a href="index.html#expose.models.server.Server.server_write">server_write() (expose.models.server.Server method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#expose.models.config.Settings">Settings (class in expose.models.config)</a>
+</li>
+      <li><a href="index.html#expose.models.config.Settings.ssh_home">ssh_home (expose.models.config.Settings attribute)</a>
+</li>
+      <li><a href="index.html#expose.main.Tunnel.start">start() (expose.main.Tunnel method)</a>
+</li>
       <li><a href="index.html#expose.main.Tunnel.stop">stop() (expose.main.Tunnel method)</a>
 </li>
-      <li><a href="index.html#expose.helpers.server.Server.stop_tunnel">stop_tunnel() (expose.helpers.server.Server method)</a>
+      <li><a href="index.html#expose.models.server.Server.stop_tunnel">stop_tunnel() (expose.models.server.Server method)</a>
 </li>
-      <li><a href="index.html#expose.helpers.defaults.AWSDefaults.SUPPORTED_ACTIONS">SUPPORTED_ACTIONS (expose.helpers.defaults.AWSDefaults attribute)</a>
-</li>
-      <li><a href="index.html#expose.helpers.defaults.AWSDefaults.SUPPORTED_RECORDS">SUPPORTED_RECORDS (expose.helpers.defaults.AWSDefaults attribute)</a>
+      <li><a href="index.html#expose.models.config.EnvConfig.subdomain">subdomain (expose.models.config.EnvConfig attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -289,8 +379,6 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#expose.helpers.auxiliary.time_converter">time_converter() (in module expose.helpers.auxiliary)</a>
-</li>
       <li><a href="index.html#expose.main.Tunnel">Tunnel (class in expose.main)</a>
 </li>
   </ul></td>
@@ -299,7 +387,7 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#expose.helpers.auxiliary.write_screen">write_screen() (in module expose.helpers.auxiliary)</a>
+      <li><a href="index.html#expose.models.auxiliary.write_screen">write_screen() (in module expose.models.auxiliary)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -340,7 +428,7 @@
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2021, Vignesh Sivanandha Rao.
+        &#169; Copyright 2021, Vignesh Rao.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
     </div>
   </body>

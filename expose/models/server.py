@@ -10,8 +10,8 @@ from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from paramiko.channel import Channel
 from paramiko.transport import Transport
 
-from expose.helpers.auxiliary import flush_screen, write_screen
-from expose.helpers.config import env, settings
+from expose.models.auxiliary import flush_screen, write_screen
+from expose.models.config import env, settings
 
 
 def join(value: Union[tuple, list, str], separator: str = ':') -> str:
@@ -49,19 +49,17 @@ class Server:
 
     def __init__(self,
                  hostname: str,
-                 pem_file: str,
                  logger: logging.Logger,
                  username: str = "ubuntu",
                  timeout: int = 30):
-        """Instantiates the session using RSAKey generated from a ``***.pem`` file.
+        """Instantiates the session using RSAKey generated from the ec2's keypair ``PEM`` file.
 
         Args:
             hostname: Hostname of the server to connect to.
-            pem_file: Takes the .pem filename to authenticate.
             username: Takes the username of the server to authenticate.
             timeout: Connection timeout for SSH server.
         """
-        pem_key = RSAKey.from_private_key_file(filename=pem_file)
+        pem_key = RSAKey.from_private_key_file(filename=settings.key_pair_file)
         self.ssh_client = SSHClient()
         self.ssh_client.load_system_host_keys()
         self.ssh_client.set_missing_host_key_policy(AutoAddPolicy())
@@ -69,14 +67,14 @@ class Server:
         self.logger = logger
 
     def run_interactive_ssh(self, commands: Tuple[str, str, str, str, str]) -> bool:
-        """Authenticates remote server using a ``*.pem`` file and runs interactive ssh commands using ``paramiko``.
+        """Authenticates remote server using a ``PEM`` file and runs interactive ssh commands.
 
         Args:
-            commands: List of commands to be executed.
+            commands: Iterable of commands to be executed.
 
         Returns:
             bool:
-            Returns a boolean flag if all commands were successful.
+            Boolean flag to indicate the calling function if all the commands were executed successfully.
         """
         for command in commands:
             self.logger.info("Executing '%s'", command)
@@ -94,10 +92,10 @@ class Server:
         return True
 
     def server_write(self, data: dict) -> None:
-        """Writes data into files.
+        """Writes configuration data into dedicated files using FTP.
 
         Args:
-            data: Takes a dictionary of key-value pair filename and content.
+            data: Takes a dictionary of filename and content as key-value pairs.
         """
         ftp = self.ssh_client.open_sftp()
         for filename, content in data.items():
@@ -158,7 +156,7 @@ class Server:
             self.logger.debug("Awaiting daemon service: %s", thread.ident or thread.native_id)
             thread.join(timeout=0.5)
 
-    def initiate_tunnel(self, protocol: str) -> None:
+    def initiate_tunnel(self) -> None:
         """Initiates port forwarding using ``Transport`` which creates a channel."""
         while True:
             try:
@@ -177,6 +175,7 @@ class Server:
         threads: List[Thread] = []
         try:
             while True:
+                # todo: check if latency can be improved with timeout, if so set to env var
                 if not (channel := transport.accept(timeout=1000)):
                     continue
                 thread = Thread(target=self._handler, args=(channel, env.port), daemon=True)

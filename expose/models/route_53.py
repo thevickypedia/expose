@@ -5,8 +5,7 @@ from typing import Dict, Union
 import boto3
 from botocore.exceptions import ClientError
 
-from expose.helpers.defaults import AWSDefaults
-from expose.helpers.warnings import AWSResourceError
+from expose.models.exceptions import AWSResourceError
 
 
 def get_zone_id(client: boto3.client,
@@ -16,10 +15,10 @@ def get_zone_id(client: boto3.client,
     """Gets the zone ID of a DNS name registered in route53.
 
     Args:
-        client: Pre instantiated boto3 client.
+        client: Pre-instantiated boto3 client.
         logger: Custom logger.
-        dns: Takes the hosted zone name.
-        init: Initializer.
+        dns: Hosted zone name.
+        init: Boolean flag to raise an error in case of missing zone ID.
 
     Returns:
         str or None:
@@ -46,49 +45,35 @@ def get_zone_id(client: boto3.client,
 def change_record_set(client: boto3.client,
                       source: str,
                       destination: str,
-                      record_type: str,
                       logger: logging.Logger,
                       zone_id: str,
-                      action: str = 'UPSERT') -> Union[Dict, None]:
-    """Adds a record set under an existing hosted zone.
+                      action: str) -> Union[Dict, None]:
+    """Changes a record set within an existing hosted zone.
 
     Args:
-        client: Pre instantiated boto3 client.
-        source: Source DNS name. Can be either ``subdomain.domain.com`` or just the ``subdomain``.
-        destination: Destination hostnames or IP addresses.
-        record_type: Type of the record to be added.
+        client: Pre-instantiated boto3 client.
+        source: Source DNS name.
+        destination: Destination hostname or IP address.
         logger: Custom logger.
         zone_id: Hosted zone ID.
-        action: The action to perform.
+        action: Action to perform. Example: UPSERT or DELETE
 
     Returns:
         dict or None:
         ChangeSet response from AWS.
     """
-    record_type = record_type.upper()
-    if record_type not in AWSDefaults.SUPPORTED_RECORDS:
-        logger.error('Unsupported record type passed.')
-        logger.warning(f"Should be one of {', '.join(sorted(AWSDefaults.SUPPORTED_RECORDS))}")
-        return
-
-    action = action.upper()
-    if action not in AWSDefaults.SUPPORTED_ACTIONS:
-        logger.error('Unsupported action type passed.')
-        logger.warning(f"Should be one of {', '.join(sorted(AWSDefaults.SUPPORTED_ACTIONS))}")
-        return
-
-    logger.info("%s `%s` record::%s -> %s", action, record_type, source, destination)
+    logger.info("%s `%s` record::%s -> %s", action, 'A', source, destination)
     try:
         response = client.change_resource_record_sets(
             HostedZoneId=zone_id,
             ChangeBatch={
-                'Comment': f'{record_type}: {source} -> {destination}',
+                'Comment': f'A: {source} -> {destination}',
                 'Changes': [
                     {
                         'Action': action,
                         'ResourceRecordSet': {
                             'Name': source,
-                            'Type': record_type,
+                            'Type': 'A',
                             'TTL': 300,
                             'ResourceRecords': [{'Value': destination}],
                         }
