@@ -36,7 +36,7 @@ Expose - Certificates
 Expose - Configuration
 ======================
 
-.. autoclass:: expose.models.config.AWSDefaults(pydantic.BaseModel)
+.. autoclass:: expose.models.config.AMIBase(pydantic.BaseModel)
    :members:
    :exclude-members: _abc_impl, model_config, model_fields
 
@@ -56,6 +56,13 @@ Expose - Exceptions
 ===================
 
 .. automodule:: expose.models.exceptions
+   :members:
+   :undoc-members:
+
+Expose - ImageFactory
+=====================
+
+.. automodule:: expose.models.image_factory
    :members:
    :undoc-members:
 

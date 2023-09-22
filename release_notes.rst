@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v0.6.2a (09/20/2023)
+--------------------
+- Folder restructure
+- Remove redundancies
+- Update README.md and docs
+
 v0.6b (09/18/2023)
 ------------------
 - Release beta version after using pydantic for validations

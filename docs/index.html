@@ -48,10 +48,8 @@
 <p class="caption" role="heading"><span class="caption-text">Read Me:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="README.html">Expose localhost using EC2</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="README.html#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#setup">Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#usage">Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="README.html#limitations">Limitations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#coding-standards">Coding Standards</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#release-notes">Release Notes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#linting">Linting</a></li>
@@ -71,10 +69,20 @@
 </pre></div>
 </div>
 <p>Instantiates all required AWS resources.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>logger</strong> – Bring your own logger.</p>
+</dd>
+</dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="expose.main.Tunnel.get_image_id">
-<span class="sig-name descname"><span class="pre">get_image_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#expose.main.Tunnel.get_image_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetches AMI ID from public images and stores it in the object.</p>
+<dt class="sig sig-object py" id="expose.main.Tunnel.init">
+<span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#expose.main.Tunnel.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializer function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>start</strong> – Boolean flag to indicate if its startup or shutdown.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -463,10 +471,10 @@
 <section id="expose-configuration">
 <h1>Expose - Configuration<a class="headerlink" href="#expose-configuration" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="expose.models.config.AWSDefaults">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">expose.models.config.</span></span><span class="sig-name descname"><span class="pre">AWSDefaults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pydantic.BaseModel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#expose.models.config.AWSDefaults" title="Permalink to this definition">¶</a></dt>
-<dd><p>Default values for missing AWS configuration.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">AWSDefaults</span>
+<dt class="sig sig-object py" id="expose.models.config.AMIBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">expose.models.config.</span></span><span class="sig-name descname"><span class="pre">AMIBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pydantic.BaseModel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#expose.models.config.AMIBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default values to fetch AMI image ID.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">AMIBase</span>
 </pre></div>
 </div>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
@@ -475,14 +483,69 @@ validated to form a valid model.</p>
 <p><cite>__init__</cite> uses <cite>__pydantic_self__</cite> instead of the more common <cite>self</cite> for the first arg to
 allow <cite>self</cite> as a field name.</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="expose.models.config.AWSDefaults.DEFAULT_AMI_NAME">
-<span class="sig-name descname"><span class="pre">DEFAULT_AMI_NAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#expose.models.config.AWSDefaults.DEFAULT_AMI_NAME" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.models.config.AMIBase._BASE_URL">
+<span class="sig-name descname"><span class="pre">_BASE_URL</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">ModelPrivateAttr(default='https://aws.amazon.com/marketplace/server/configuration?productId={productId}')</span></em><a class="headerlink" href="#expose.models.config.AMIBase._BASE_URL" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="expose.models.config.AWSDefaults.IMAGE_MAP">
-<span class="sig-name descname"><span class="pre">IMAGE_MAP</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#expose.models.config.AWSDefaults.IMAGE_MAP" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="expose.models.config.AMIBase._BASE_SSM">
+<span class="sig-name descname"><span class="pre">_BASE_SSM</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">ModelPrivateAttr(default='/aws/service/marketplace/prod-{path}')</span></em><a class="headerlink" href="#expose.models.config.AMIBase._BASE_SSM" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="expose.models.config.AMIBase.PRODUCT_PAGE">
+<span class="sig-name descname"><span class="pre">PRODUCT_PAGE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Url</span></em><a class="headerlink" href="#expose.models.config.AMIBase.PRODUCT_PAGE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="expose.models.config.AMIBase.NAME">
+<span class="sig-name descname"><span class="pre">NAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#expose.models.config.AMIBase.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="expose.models.config.AMIBase.ALIAS">
+<span class="sig-name descname"><span class="pre">ALIAS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#expose.models.config.AMIBase.ALIAS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="expose.models.config.AMIBase.PRODUCT_CODE">
+<span class="sig-name descname"><span class="pre">PRODUCT_CODE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#expose.models.config.AMIBase.PRODUCT_CODE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="expose.models.config.AMIBase.S_PRODUCT_PAGE">
+<span class="sig-name descname"><span class="pre">S_PRODUCT_PAGE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Url</span></em><a class="headerlink" href="#expose.models.config.AMIBase.S_PRODUCT_PAGE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="expose.models.config.AMIBase.S_NAME">
+<span class="sig-name descname"><span class="pre">S_NAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#expose.models.config.AMIBase.S_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="expose.models.config.AMIBase.S_ALIAS">
+<span class="sig-name descname"><span class="pre">S_ALIAS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#expose.models.config.AMIBase.S_ALIAS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="expose.models.config.AMIBase.S_PRODUCT_CODE">
+<span class="sig-name descname"><span class="pre">S_PRODUCT_CODE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#expose.models.config.AMIBase.S_PRODUCT_CODE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.models.config.AMIBase.model_post_init">
+<span class="sig-name descname"><span class="pre">model_post_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">__context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#expose.models.config.AMIBase.model_post_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is meant to behave like a BaseModel method to initialise private attributes.</p>
+<p>It takes context as an argument since that’s what pydantic-core passes when calling it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – The BaseModel instance.</p></li>
+<li><p><strong>__context</strong> – The context.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -504,6 +567,26 @@ allow <cite>self</cite> as a field name.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="expose.models.config.EnvConfig.port">
 <span class="sig-name descname"><span class="pre">port</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#expose.models.config.EnvConfig.port" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="expose.models.config.EnvConfig.open_port">
+<span class="sig-name descname"><span class="pre">open_port</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#expose.models.config.EnvConfig.open_port" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="expose.models.config.EnvConfig.channel_timeout">
+<span class="sig-name descname"><span class="pre">channel_timeout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#expose.models.config.EnvConfig.channel_timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="expose.models.config.EnvConfig.image_id">
+<span class="sig-name descname"><span class="pre">image_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#expose.models.config.EnvConfig.image_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="expose.models.config.EnvConfig.instance_type">
+<span class="sig-name descname"><span class="pre">instance_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#expose.models.config.EnvConfig.instance_type" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -534,11 +617,6 @@ allow <cite>self</cite> as a field name.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="expose.models.config.EnvConfig.server_info">
 <span class="sig-name descname"><span class="pre">server_info</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#expose.models.config.EnvConfig.server_info" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="expose.models.config.EnvConfig.image_id">
-<span class="sig-name descname"><span class="pre">image_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#expose.models.config.EnvConfig.image_id" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -632,6 +710,11 @@ allow <cite>self</cite> as a field name.</p>
 <span class="sig-name descname"><span class="pre">entrypoint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#expose.models.config.Settings.entrypoint" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="expose.models.config.Settings.nginx_config_commands">
+<span class="sig-name descname"><span class="pre">nginx_config_commands</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#expose.models.config.Settings.nginx_config_commands" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </section>
@@ -653,6 +736,72 @@ allow <cite>self</cite> as a field name.</p>
 <dt class="sig sig-object py" id="expose.models.exceptions.AWSResourceError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">expose.models.exceptions.</span></span><span class="sig-name descname"><span class="pre">AWSResourceError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status_code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#expose.models.exceptions.AWSResourceError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Custom resource error for AWS resources.</p>
+</dd></dl>
+
+</section>
+<section id="module-expose.models.image_factory">
+<span id="expose-imagefactory"></span><h1>Expose - ImageFactory<a class="headerlink" href="#module-expose.models.image_factory" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="expose.models.image_factory.ImageFactory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">expose.models.image_factory.</span></span><span class="sig-name descname"><span class="pre">ImageFactory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#expose.models.image_factory.ImageFactory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles retrieving AMI ID from multiple sources.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ImageFactory</span>
+</pre></div>
+</div>
+<p>Instantiates the <code class="docutils literal notranslate"><span class="pre">ImageFactory</span></code> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>session</strong> – boto3 session instantiated in the origin class.</p></li>
+<li><p><strong>logger</strong> – Custom logger.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.models.image_factory.ImageFactory.get_ami_id_ssm">
+<span class="sig-name descname"><span class="pre">get_ami_id_ssm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.models.image_factory.ImageFactory.get_ami_id_ssm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve AMI ID using Ami Alias.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.models.image_factory.ImageFactory.get_ami_id_product_code">
+<span class="sig-name descname"><span class="pre">get_ami_id_product_code</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.models.image_factory.ImageFactory.get_ami_id_product_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve AMI ID using Product Code.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.models.image_factory.ImageFactory.get_ami_id_name">
+<span class="sig-name descname"><span class="pre">get_ami_id_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.models.image_factory.ImageFactory.get_ami_id_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve AMI ID using Ami Name.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="expose.models.image_factory.ImageFactory.get_image_id">
+<span class="sig-name descname"><span class="pre">get_image_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#expose.models.image_factory.ImageFactory.get_image_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to get image id from multiple sources, sequentially.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>Executes in sequence as fastest first.
+- Alias on SSM points to a single parameter that possibly contains a single AMI ID as its value.
+- Lookup AMI with image name is specific and possibly points to a single AMI ID.
+- Lookup AMI with product code will possibly return many images, so grabs the most recently created one.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>AMI image ID.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#expose.models.exceptions.AWSResourceError" title="expose.models.exceptions.AWSResourceError"><strong>AWSResourceError</strong></a> – </p></li>
+<li><p><strong>If unable to fetch AMI ID from any source.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -735,6 +884,13 @@ allow <cite>self</cite> as a field name.</p>
 <dt class="sig sig-object py" id="expose.models.server.print_warning">
 <span class="sig-prename descclassname"><span class="pre">expose.models.server.</span></span><span class="sig-name descname"><span class="pre">print_warning</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#expose.models.server.print_warning" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prints a message on screen to run an app or api on the specific port.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p>This is a safety net to improve latency.</p></li>
+<li><p>This function will block instantiating channel transport until the port is locked for tunneling.</p></li>
+</ul>
+</div>
 </dd></dl>
 
 <dl class="py class">
@@ -760,17 +916,14 @@ forwarding makes sure that you can SSH back to the server machine.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="expose.models.server.Server.run_interactive_ssh">
-<span class="sig-name descname"><span class="pre">run_interactive_ssh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">commands</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.models.server.Server.run_interactive_ssh" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">run_interactive_ssh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#expose.models.server.Server.run_interactive_ssh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Authenticates remote server using a <code class="docutils literal notranslate"><span class="pre">PEM</span></code> file and runs interactive ssh commands.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>commands</strong> – Iterable of commands to be executed.</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boolean flag to indicate the calling function if all the commands were executed successfully.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Boolean flag to indicate the calling function if all the commands were executed successfully.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -848,6 +1001,7 @@ forwarding makes sure that you can SSH back to the server machine.</p>
 <li><a class="reference internal" href="#module-expose.models.cert">Expose - Certificates</a></li>
 <li><a class="reference internal" href="#expose-configuration">Expose - Configuration</a></li>
 <li><a class="reference internal" href="#module-expose.models.exceptions">Expose - Exceptions</a></li>
+<li><a class="reference internal" href="#module-expose.models.image_factory">Expose - ImageFactory</a></li>
 <li><a class="reference internal" href="#module-expose.models.logger">Expose - LOGGER</a></li>
 <li><a class="reference internal" href="#module-expose.models.route_53">Expose - Route53</a></li>
 <li><a class="reference internal" href="#module-expose.models.server">Expose - Server Configuration</a></li>

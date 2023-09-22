@@ -14,8 +14,9 @@ from OpenSSL.crypto import Error as SSLError
 
 from expose.models.auxiliary import IP_INFO
 from expose.models.cert import generate_cert
-from expose.models.config import aws, env, settings
+from expose.models.config import env, settings
 from expose.models.exceptions import NotImplementedWarning
+from expose.models.image_factory import ImageFactory
 from expose.models.logger import LOGGER
 from expose.models.route_53 import change_record_set, get_zone_id
 from expose.models.server import Server
@@ -31,47 +32,45 @@ class Tunnel:
     """
 
     def __init__(self, logger: logging.Logger = None):
-        """Instantiates all required AWS resources."""
-        # AWS client and resource setup
-        session = boto3.Session(region_name=env.aws_region_name,
-                                aws_access_key_id=env.aws_access_key,
-                                aws_secret_access_key=env.aws_secret_key)
-        self.ec2_resource = session.resource(service_name='ec2')
-        self.route53_client = session.client(service_name='route53')
+        """Instantiates all required AWS resources.
 
+        Args:
+            logger: Bring your own logger.
+        """
         # Tunnelling requirements setup
         self.logger = logger or LOGGER
         self.nginx_server = None
+
+        # AWS client and resource setup
+        self.session = boto3.Session(region_name=env.aws_region_name,
+                                     aws_access_key_id=env.aws_access_key,
+                                     aws_secret_access_key=env.aws_secret_key)
+        self.logger.info("Session instantiated for region: '%s' with '%s' instance",
+                         self.session.region_name, env.instance_type)
+        self.ec2_resource = self.session.resource(service_name='ec2')
+        self.route53_client = self.session.client(service_name='route53')
         self.image_id = None
-        if env.hosted_zone:
-            if zone_id := get_zone_id(client=self.route53_client, logger=self.logger, dns=env.hosted_zone, init=True):
-                self.zone_id = zone_id
+        self.zone_id = None
+
+    def init(self, start: bool) -> None:
+        """Initializer function.
+
+        Args:
+            start: Boolean flag to indicate if its startup or shutdown.
+        """
+        if start:  # Not required during shutdown, since image_id is only used to create an ec2 instance
+            variable = "created in"  # var for logging if entrypoint is present
+            if env.image_id:
+                self.image_id = env.image_id
             else:
-                raise ValueError(
-                    f"{env.hosted_zone} doesn't match with any hosted zone names that are available"
-                )
+                self.image_id = ImageFactory(self.session, self.logger).get_image_id()
+        else:
+            variable = "removed from"  # var for logging if entrypoint is present
+        if env.hosted_zone:
+            self.zone_id = get_zone_id(client=self.route53_client, logger=self.logger, dns=env.hosted_zone, init=True)
         if settings.entrypoint:
-            self.logger.info("Entrypoint: %s will be created in the hosted zone [%s] %s",
-                             settings.entrypoint, self.zone_id, env.hosted_zone)
-
-    def get_image_id(self) -> None:
-        """Fetches AMI ID from public images and stores it in the object."""
-        if env.aws_region_name.startswith('us'):
-            self.image_id = aws.IMAGE_MAP[env.aws_region_name]
-            return
-
-        try:
-            images = list(self.ec2_resource.images.filter(
-                Filters=[{'Name': 'name', 'Values': [aws.DEFAULT_AMI_NAME]}]
-            ))
-        except ClientError as error:
-            self.logger.warning('API call to retrieve AMI ID for %s has failed.', env.aws_region_name)
-            self.logger.error(error)
-            raise
-
-        if not images:
-            raise LookupError(f'Failed to retrieve AMI ID for {env.aws_region_name}. Set one manually.')
-        self.image_id = images[0].id
+            self.logger.info("Entrypoint: %s will be %s the hosted zone [%s] %s",
+                             settings.entrypoint, variable, self.zone_id, env.hosted_zone)
 
     def create_key_pair(self) -> bool:
         """Creates a ``KeyPair`` of type ``RSA`` stored as a ``PEM`` file to use with ``OpenSSH``.
@@ -147,29 +146,33 @@ class Tunnel:
             bool:
             Boolean flag to indicate the calling function whether the security group was authorized successfully.
         """
+        ssh_range = [{'CidrIp': f'{public_ip}/32'}]
+        if IP_INFO.get('ip'):
+            ssh_range.append({'CidrIp': f"{IP_INFO['ip']}/32"})
+        firewall_rules = [
+            {'IpProtocol': 'tcp',
+             'FromPort': 22,
+             'ToPort': 22,
+             'IpRanges': ssh_range},
+            {'IpProtocol': 'tcp',
+             'FromPort': 443,
+             'ToPort': 443,
+             'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},
+            {'IpProtocol': 'tcp',
+             'FromPort': 80,
+             'ToPort': 80,
+             'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},
+        ]
+        if env.open_port:
+            firewall_rules.append(
+                {'IpProtocol': 'tcp',
+                 'FromPort': env.port,
+                 'ToPort': env.port,
+                 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},
+            )
         try:
             security_group = self.ec2_resource.SecurityGroup(security_group_id)
-            security_group.authorize_ingress(
-                IpPermissions=[
-                    {'IpProtocol': 'tcp',
-                     'FromPort': 22,
-                     'ToPort': 22,
-                     # 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},  # Makes instanceID accessible from anywhere but insecure
-                     'IpRanges': [{'CidrIp': f'{public_ip}/32'}, {'CidrIp': f"{IP_INFO.get('ip')}/32"}]},
-                    {'IpProtocol': 'tcp',
-                     'FromPort': 443,
-                     'ToPort': 443,
-                     'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},
-                    # todo: set as env var to allow specific port access, since http and https are already allowed
-                    {'IpProtocol': 'tcp',
-                     'FromPort': env.port,
-                     'ToPort': env.port,
-                     'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},
-                    {'IpProtocol': 'tcp',
-                     'FromPort': 80,
-                     'ToPort': 80,
-                     'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},
-                ])
+            security_group.authorize_ingress(IpPermissions=firewall_rules)
         except ClientError as error:
             error = str(error)
             if '(InvalidPermission.Duplicate)' in error:
@@ -242,7 +245,7 @@ class Tunnel:
                 ImageId=self.image_id,
                 MinCount=1,
                 MaxCount=1,
-                InstanceType="t2.nano",  # todo: set as env var
+                InstanceType=env.instance_type,
                 KeyName=env.key_pair,
                 SecurityGroupIds=[security_group_id]
             )
@@ -375,6 +378,7 @@ class Tunnel:
             - | https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/instance/
               | wait_until_terminated.html
         """
+        self.init(True)
         if os.path.isfile(env.server_info) and os.path.isfile(settings.key_pair_file):
             self.logger.warning('Received request to start VM, but looks like a session is up and running already.')
             self.logger.warning('Initiating re-configuration.')
@@ -382,11 +386,6 @@ class Tunnel:
                 data = json.load(file)
             self.configure_vm(public_dns=data.get('public_dns'), public_ip=data.get('public_ip'))
             return
-
-        if not self.image_id:
-            self.get_image_id()
-            self.logger.info("AMI ID was not set. Using the default AMI ID '%s' for the region '%s'",
-                             self.image_id, env.aws_region_name)
 
         if ec2_info := self.create_ec2_instance():
             instance_id, security_group_id = ec2_info
@@ -573,15 +572,7 @@ class Tunnel:
         self.nginx_server.server_write(data=load_and_copy)
 
         self.logger.info('Configuring nginx server.')
-        nginx_status = self.nginx_server.run_interactive_ssh(
-            commands=(
-                "sudo apt-get update -y",
-                "echo Y | sudo -S apt-get install nginx -y",
-                f"sudo mv {settings.ssh_home}/nginx.conf /etc/nginx/nginx.conf",
-                f"sudo mv {settings.ssh_home}/server.conf /etc/nginx/conf.d/server.conf",
-                "sudo systemctl restart nginx"
-            )
-        )
+        nginx_status = self.nginx_server.run_interactive_ssh()
         if nginx_status:
             self.logger.info('Nginx server was configured successfully.')
         else:
@@ -625,7 +616,7 @@ class Tunnel:
                 (f"\n\nInput file: {env.server_info!r} is missing. "
                  "Arguments 'instance_id' and 'security_group_id' are required to proceed.")
             data = {}
-
+        self.init(False)
         security_group_id = security_group_id or data.get('security_group_id')
         instance_id = instance_id or data.get('instance_id')
         public_ip = public_ip or data.get('public_ip')

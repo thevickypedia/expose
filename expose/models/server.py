@@ -3,7 +3,7 @@ import time
 from select import select
 from socket import socket
 from threading import Thread
-from typing import List, Tuple, Union
+from typing import List, Union
 
 import requests
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
@@ -29,9 +29,14 @@ def join(value: Union[tuple, list, str], separator: str = ':') -> str:
 
 
 def print_warning() -> None:
-    """Prints a message on screen to run an app or api on the specific port."""
+    """Prints a message on screen to run an app or api on the specific port.
+
+    See Also:
+        - This is a safety net to improve latency.
+        - This function will block instantiating channel transport until the port is locked for tunneling.
+    """
     write_screen(f'Run an application on the port {env.port} to start tunneling.')
-    time.sleep(5)
+    time.sleep(3)
     flush_screen()
 
 
@@ -66,29 +71,41 @@ class Server:
         self.ssh_client.connect(hostname=hostname, username=username, pkey=pem_key, timeout=timeout)
         self.logger = logger
 
-    def run_interactive_ssh(self, commands: Tuple[str, str, str, str, str]) -> bool:
+    def run_interactive_ssh(self) -> bool:
         """Authenticates remote server using a ``PEM`` file and runs interactive ssh commands.
-
-        Args:
-            commands: Iterable of commands to be executed.
 
         Returns:
             bool:
             Boolean flag to indicate the calling function if all the commands were executed successfully.
         """
-        for command in commands:
+        self.logger.info("Running %d commands sequentially", len(settings.nginx_config_commands))
+        for command, critical in settings.nginx_config_commands.items():
             self.logger.info("Executing '%s'", command)
             stdin, stdout, stderr = self.ssh_client.exec_command(command)
-            if output := stdout.read().decode('utf-8').strip():
+            if output := stdout.read().decode("utf-8").strip():
                 self.logger.info(output)
             if error := stderr.read().decode("utf-8").strip():
+                # Don't bother if non-critical tasks fail
+                # This can happen during re-configuration if unattended-upgrades are either masked or purged already
+                if not critical:
+                    continue
                 if error.startswith('debconf:') or 'could not get lock' in error.lower():
                     self.logger.warning(error)
+                    # Retry logic in case of lock file error
+                    if "/var/lib/dpkg/lock" in error:
+                        self.logger.info("Deleting lock file")
+                        self.ssh_client.exec_command("sudo rm -f /var/lib/dpkg/lock")
+                        self.logger.info("Re-executing '%s'", command)
+                        stdin, stdout, stderr = self.ssh_client.exec_command(command)
+                        if output := stdout.read().decode("utf-8").strip():
+                            self.logger.info(output)
+                        if error := stderr.read().decode("utf-8").strip():
+                            self.logger.error(error)  # cannot recover
+                            return False
                 else:
                     self.logger.error(error)
                     self.ssh_client.close()
                     return False
-            time.sleep(2)
         return True
 
     def server_write(self, data: dict) -> None:
@@ -175,8 +192,7 @@ class Server:
         threads: List[Thread] = []
         try:
             while True:
-                # todo: check if latency can be improved with timeout, if so set to env var
-                if not (channel := transport.accept(timeout=1000)):
+                if not (channel := transport.accept(timeout=env.channel_timeout)):
                     continue
                 thread = Thread(target=self._handler, args=(channel, env.port), daemon=True)
                 thread.start()
