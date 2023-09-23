@@ -76,11 +76,11 @@
 <p>Shorter timeouts can make your server more responsive to incoming connections but may also lead to false negatives if network latency is high.
 If connections take longer to establish due to network conditions, a short timeout might reject valid connections prematurely.</p>
 <p><strong>Connection Rate</strong></p>
-<p>If your server expects a high rate of incoming connections and you want to process them quickly, a shorter timeout can be beneficial.
-However, it also means that your server needs to handle and process connections rapidly.</p>
+<p>If your server expects a high rate of incoming connections, and you want to process them quickly, a shorter timeout can be beneficial.
+However, it also means that your server needs to be able to process connections rapidly.</p>
 <p><strong>Resource Usage</strong></p>
 <p>Short timeouts can lead to a higher rate of repeated checks, which may consume more CPU resources on the server.
-Ensure that your server has the capacity to handle frequent connection checks.</p>
+Ensure that your server has the capacity to handle frequent connection checks, if you are setting <code class="docutils literal notranslate"><span class="pre">CHANNEL_TIMEOUT</span></code> too low.</p>
 </details><details>
 <summary><strong>Custom endpoint</strong></summary><p>The public DNS names for EC2 instances are long and messy. To avoid that, an <code class="docutils literal notranslate"><span class="pre">A</span></code> record can be added to the <code class="docutils literal notranslate"><span class="pre">route53</span></code> hosted zone.</p>
 <p>:warning:   Requires an active hosted zone on <code class="docutils literal notranslate"><span class="pre">route53</span></code>.</p>

@@ -170,8 +170,9 @@ class Server:
         self.ssh_client.close()
         self.logger.info("Daemons launched: %d", len(threads))
         for thread in threads:
-            self.logger.debug("Awaiting daemon service: %s", thread.ident or thread.native_id)
-            thread.join(timeout=0.5)
+            if thread.is_alive():
+                self.logger.debug("Awaiting daemon service: %s", thread.ident or thread.native_id)
+                thread.join(timeout=0.5)
 
     def initiate_tunnel(self) -> None:
         """Initiates port forwarding using ``Transport`` which creates a channel."""
@@ -201,4 +202,11 @@ class Server:
         except KeyboardInterrupt:
             self.logger.info("Tunneling interrupted")
         finally:
-            self.stop_tunnel(transport, threads)
+            try:
+                self.stop_tunnel(transport, threads)
+            except KeyboardInterrupt:  # If user is hasty to stop the process
+                if list(filter(lambda t: t.is_alive(), threads)):
+                    # Raise a warning only if any of the threads are still running
+                    raise UserWarning(
+                        "Not all threads were awaited for completion, daemon threads might still run in the background."
+                    )

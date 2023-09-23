@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+v0.6.9a (09/22/2023)
+--------------------
+- Add pre-release before optimized stable version
+
 v0.6.2a (09/20/2023)
 --------------------
 - Folder restructure

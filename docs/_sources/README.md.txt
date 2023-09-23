@@ -40,13 +40,13 @@ If connections take longer to establish due to network conditions, a short timeo
 
 **Connection Rate**
 
-If your server expects a high rate of incoming connections and you want to process them quickly, a shorter timeout can be beneficial.
-However, it also means that your server needs to handle and process connections rapidly.
+If your server expects a high rate of incoming connections, and you want to process them quickly, a shorter timeout can be beneficial.
+However, it also means that your server needs to be able to process connections rapidly.
 
 **Resource Usage**
 
 Short timeouts can lead to a higher rate of repeated checks, which may consume more CPU resources on the server.
-Ensure that your server has the capacity to handle frequent connection checks.
+Ensure that your server has the capacity to handle frequent connection checks, if you are setting `CHANNEL_TIMEOUT` too low.
 </details>
 
 <details>

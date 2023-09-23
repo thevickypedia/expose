@@ -92,6 +92,7 @@ class Settings(BaseModel):
     ssh_home: str = "/home/ubuntu"
     key_pair_file: FilePath = f"{env.key_pair}.pem"
     configuration: DirectoryPath = os.path.join(pathlib.Path(__file__).parent.parent, 'configuration')
+    ami_deprecation: int = 30
     entrypoint: str = None
     if any((env.hosted_zone, env.subdomain)):
         assert all((env.hosted_zone, env.subdomain)), "'subdomain' and 'hosted_zone' must co-exist"
