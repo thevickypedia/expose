@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+v0.7 (09/22/2023)
+-----------------
+- Redesign backed functionalities to vastly improve user experience
+- Improved latency in port forwarding and reduces delay when streaming
+- Allows users to set instance type and open port
+- Cuts startup time in half, by using optimized waiters and deletion dependencies
+- SSH connectivity to ec2 has been improved by setting up retry logic
+- Nginx server configuration has been optimized to avoid potential re-configuration
+- Improved reliability by adding fallback options for AMI ID retrieval
+- Includes SAN list in self-signed certificates for better compatibility
+
 v0.6.9a (09/22/2023)
 --------------------
 - Add pre-release before optimized stable version
