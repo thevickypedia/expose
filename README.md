@@ -1,3 +1,22 @@
+![Python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue)
+
+###### Platform Supported
+![Generic badge](https://img.shields.io/badge/Platform-MacOS|Windows-1f425f.svg)
+
+###### Repo Stats
+[![GitHub](https://img.shields.io/github/license/thevickypedia/expose)][LICENSE]
+[![GitHub repo size](https://img.shields.io/github/repo-size/thevickypedia/expose)][API_REPO]
+[![GitHub code size](https://img.shields.io/github/languages/code-size/thevickypedia/expose)][API_REPO]
+
+###### Deployments
+[![doc](https://github.com/thevickypedia/expose/actions/workflows/pages/pages-build-deployment/badge.svg)][gha_pages]
+[![pypi](https://github.com/thevickypedia/expose/actions/workflows/python-publish.yml/badge.svg)][gha_pypi]
+[![markdown](https://github.com/thevickypedia/expose/actions/workflows/markdown-validation.yml/badge.svg)][gha_markdown]
+
+[![Pypi-format](https://img.shields.io/pypi/format/expose-localhost)](https://pypi.org/project/expose-localhost/#files)
+[![Pypi-status](https://img.shields.io/pypi/status/expose-localhost)](https://pypi.org/project/expose-localhost)
+[![sourcerank](https://img.shields.io/librariesio/sourcerank/pypi/expose-localhost)](https://libraries.io/pypi/expose-localhost)
+
 # Expose localhost using EC2
 Reverse proxy that creates a secure tunnel from public endpoint to locally running web service
 
@@ -133,7 +152,7 @@ Styling conventions: [`PEP 8`](https://www.python.org/dev/peps/pep-0008/) <br>
 Clean code with pre-commit hooks: [`flake8`](https://flake8.pycqa.org/en/latest/) and 
 [`isort`](https://pycqa.github.io/isort/)
 
-## [Release Notes](https://github.com/thevickypedia/expose/blob/main/release_notes.rst)
+## [Release Notes][release-notes]
 **Requirement**
 ```shell
 python -m pip install gitverse
@@ -158,17 +177,28 @@ pre-commit run --all-files
 ```
 
 ### Pypi Package
-[![pypi-module](https://img.shields.io/badge/Software%20Repository-pypi-1f425f.svg)](https://packaging.python.org/tutorials/packaging-projects/)
+[![pypi-module](https://img.shields.io/badge/Software%20Repository-pypi-1f425f.svg)][pypi-read]
 
-[https://pypi.org/project/expose-localhost/](https://pypi.org/project/expose-localhost/)
+[https://pypi.org/project/expose-localhost/][pypi]
 
 ### Runbook
-[![made-with-sphinx-doc](https://img.shields.io/badge/Code%20Docs-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/en/master/man/sphinx-autogen.html)
+[![made-with-sphinx-doc](https://img.shields.io/badge/Code%20Docs-Sphinx-1f425f.svg)][sphinx-read]
 
-[https://thevickypedia.github.io/expose/](https://thevickypedia.github.io/expose/)
+[https://thevickypedia.github.io/expose/][docs]
 
 ## License & copyright
 
 &copy; Vignesh Rao
 
-Licensed under the [MIT License](https://github.com/thevickypedia/expose/blob/main/LICENSE)
+Licensed under the [MIT License][LICENSE]
+
+[LICENSE]: https://github.com/thevickypedia/expose/blob/main/LICENSE
+[API_REPO]: https://api.github.com/repos/thevickypedia/expose
+[pypi]: https://pypi.org/project/expose-localhost/
+[pypi-read]: https://packaging.python.org/tutorials/packaging-projects/
+[sphinx-read]: https://www.sphinx-doc.org/en/master/man/sphinx-autogen.html
+[docs]: https://thevickypedia.github.io/expose/
+[release-notes]: https://github.com/thevickypedia/expose/blob/main/release_notes.rst
+[gha_pages]: https://github.com/thevickypedia/expose/actions/workflows/pages/pages-build-deployment
+[gha_pypi]: https://github.com/thevickypedia/expose/actions/workflows/python-publish.yml
+[gha_markdown]: https://github.com/thevickypedia/expose/actions/workflows/markdown-validation.yml
