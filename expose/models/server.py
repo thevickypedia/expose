@@ -5,7 +5,6 @@ from socket import socket
 from threading import Thread
 from typing import List, Union
 
-import requests
 from paramiko import AutoAddPolicy, RSAKey, SSHClient
 from paramiko.channel import Channel
 from paramiko.transport import Transport
@@ -71,6 +70,26 @@ class Server:
         self.ssh_client.connect(hostname=hostname, username=username, pkey=pem_key, timeout=timeout)
         self.logger = logger
 
+    def run_ondemand_ssh(self, ondemand: str, command: str) -> bool:
+        """Runs on demand SSH commands in case of recoverable errors.
+
+        Args:
+            ondemand: Recovery command that needs to run.
+            command: Original command that failed.
+
+        Returns:
+            bool:
+            To indicate if recovery failed.
+        """
+        self.ssh_client.exec_command(ondemand)
+        self.logger.info("Re-executing '%s'", command)
+        stdin, stdout, stderr = self.ssh_client.exec_command(command)
+        if output := stdout.read().decode("utf-8").strip():
+            self.logger.info(output)
+        if error := stderr.read().decode("utf-8").strip():
+            self.logger.error(error)  # cannot recover
+            return True
+
     def run_interactive_ssh(self) -> bool:
         """Authenticates remote server using a ``PEM`` file and runs interactive ssh commands.
 
@@ -89,18 +108,16 @@ class Server:
                 # This can happen during re-configuration if unattended-upgrades are either masked or purged already
                 if not critical:
                     continue
+                if "sudo dpkg --configure -a" in error:
+                    self.logger.warning(error)
+                    if self.run_ondemand_ssh("sudo dpkg --configure -a", command):
+                        return False
                 if error.startswith('debconf:') or 'could not get lock' in error.lower():
                     self.logger.warning(error)
                     # Retry logic in case of lock file error
                     if "/var/lib/dpkg/lock" in error:
                         self.logger.info("Deleting lock file")
-                        self.ssh_client.exec_command("sudo rm -f /var/lib/dpkg/lock")
-                        self.logger.info("Re-executing '%s'", command)
-                        stdin, stdout, stderr = self.ssh_client.exec_command(command)
-                        if output := stdout.read().decode("utf-8").strip():
-                            self.logger.info(output)
-                        if error := stderr.read().decode("utf-8").strip():
-                            self.logger.error(error)  # cannot recover
+                        if self.run_ondemand_ssh("sudo rm -f /var/lib/dpkg/lock", command):
                             return False
                 else:
                     self.logger.error(error)
@@ -176,17 +193,6 @@ class Server:
 
     def initiate_tunnel(self) -> None:
         """Initiates port forwarding using ``Transport`` which creates a channel."""
-        while True:
-            try:
-                requests.get(f'http://localhost:{env.port}')
-                self.logger.info('Application is running on port: %d', env.port)
-                flush_screen()
-                break
-            except requests.exceptions.RequestException:
-                try:
-                    print_warning()
-                except KeyboardInterrupt:
-                    return
         self.logger.info("Awaiting connection...")
         transport: Transport = self.ssh_client.get_transport()
         transport.request_port_forward(address="localhost", port=8080)

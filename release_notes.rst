@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+v0.8 (09/22/2023)
+-----------------
+- Includes stability improvements
+- Eliminates process blocker for application running on port
+
 v0.7 (09/22/2023)
 -----------------
 - Redesign backed functionalities to vastly improve user experience

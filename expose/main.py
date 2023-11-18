@@ -393,7 +393,7 @@ class Tunnel:
             return
 
         instance = self.ec2_resource.Instance(instance_id)
-        self.logger.info("Waiting for instance to enter 'running' state")
+        self.logger.info("Awaiting instance to enter 'running' state")
         try:
             instance.wait_until_running(
                 Filters=[{"Name": "instance-state-name", "Values": ["running"]}]
@@ -401,7 +401,7 @@ class Tunnel:
         except WaiterError as error:
             self.logger.error(error)
             warnings.warn(
-                "Failed on waiting for instance to enter 'running' state, please raise an issue at:\n"
+                "Failed on awaiting instance to enter 'running' state, please raise an issue at:\n"
                 "https://github.com/thevickypedia/expose/issues",
                 NotImplementedWarning
             )
@@ -425,7 +425,7 @@ class Tunnel:
                 except WaiterError as error:
                     self.logger.error(error)
                     warnings.warn(
-                        "Failed on waiting for instance to enter 'running' state, please raise an issue at:\n"
+                        "Failed on awaiting instance to enter 'running' state, please raise an issue at:\n"
                         "https://github.com/thevickypedia/expose/issues",
                         NotImplementedWarning
                     )
@@ -501,10 +501,6 @@ class Tunnel:
         if os.path.isfile(os.path.join(settings.current_dir, env.cert_file)) and \
                 os.path.isfile(os.path.join(settings.current_dir, env.key_file)):
             self.logger.info('Found certificate and key in %s', settings.current_dir)
-            self.server_copy(source=os.path.join(settings.current_dir, env.cert_file), destination=env.cert_file)
-            self.server_copy(source=os.path.join(settings.current_dir, env.key_file), destination=env.key_file)
-            config_data["options-ssl-nginx.conf"] = self.get_config("options-ssl-nginx.conf", custom_servers)
-            config_data["nginx.conf"] = self.get_config("nginx-ssl.conf", custom_servers)
         else:
             try:
                 self.logger.info("SAN list: %s", san_list)
@@ -513,12 +509,12 @@ class Tunnel:
                 self.logger.error(error)
                 self.logger.warning('Failed to generate self-signed SSL certificate and private key.')
                 config_data["nginx.conf"] = self.get_config("nginx-non-ssl.conf", custom_servers)
-            else:
-                self.logger.info('Generated self-signed SSL certificate and private key.')
-                self.server_copy(source=os.path.join(settings.current_dir, env.cert_file), destination=env.cert_file)
-                self.server_copy(source=os.path.join(settings.current_dir, env.key_file), destination=env.key_file)
-                config_data["options-ssl-nginx.conf"] = self.get_config("options-ssl-nginx.conf", custom_servers)
-                config_data["nginx.conf"] = self.get_config("nginx-ssl.conf", custom_servers)
+                return config_data
+            self.logger.info('Generated self-signed SSL certificate and private key.')
+        self.server_copy(source=os.path.join(settings.current_dir, env.cert_file), destination=env.cert_file)
+        self.server_copy(source=os.path.join(settings.current_dir, env.key_file), destination=env.key_file)
+        config_data["options-ssl-nginx.conf"] = self.get_config("options-ssl-nginx.conf", custom_servers)
+        config_data["nginx.conf"] = self.get_config("nginx-ssl.conf", custom_servers)
         return config_data
 
     def configure_vm(self,
